@@ -46,48 +46,48 @@ import Cutf8proc
 /// Maps to utf8proc category constants for consistency
 public enum UnicodeCategory {
     // Letters
-    case uppercaseLetter        // Lu
-    case lowercaseLetter        // Ll
-    case titlecaseLetter        // Lt
-    case modifierLetter         // Lm
-    case otherLetter           // Lo
-    
+    case uppercaseLetter // Lu
+    case lowercaseLetter // Ll
+    case titlecaseLetter // Lt
+    case modifierLetter // Lm
+    case otherLetter // Lo
+
     // Marks
-    case nonspacingMark        // Mn
-    case spacingMark           // Mc
-    case enclosingMark         // Me
-    
+    case nonspacingMark // Mn
+    case spacingMark // Mc
+    case enclosingMark // Me
+
     // Numbers
-    case decimalNumber         // Nd
-    case letterNumber          // Nl
-    case otherNumber           // No
-    
+    case decimalNumber // Nd
+    case letterNumber // Nl
+    case otherNumber // No
+
     // Punctuation
-    case connectorPunctuation  // Pc
-    case dashPunctuation       // Pd
-    case openPunctuation       // Ps
-    case closePunctuation      // Pe
-    case initialPunctuation    // Pi
-    case finalPunctuation      // Pf
-    case otherPunctuation      // Po
-    
+    case connectorPunctuation // Pc
+    case dashPunctuation // Pd
+    case openPunctuation // Ps
+    case closePunctuation // Pe
+    case initialPunctuation // Pi
+    case finalPunctuation // Pf
+    case otherPunctuation // Po
+
     // Symbols
-    case mathSymbol            // Sm
-    case currencySymbol        // Sc
-    case modifierSymbol        // Sk
-    case otherSymbol           // So
-    
+    case mathSymbol // Sm
+    case currencySymbol // Sc
+    case modifierSymbol // Sk
+    case otherSymbol // So
+
     // Separators
-    case spaceSeparator        // Zs
-    case lineSeparator         // Zl
-    case paragraphSeparator    // Zp
-    
+    case spaceSeparator // Zs
+    case lineSeparator // Zl
+    case paragraphSeparator // Zp
+
     // Other
-    case control               // Cc
-    case format                // Cf
-    case surrogate             // Cs
-    case privateUse            // Co
-    case unassigned            // Cn
+    case control // Cc
+    case format // Cf
+    case surrogate // Cs
+    case privateUse // Co
+    case unassigned // Cn
 }
 
 /// Main API for Unicode character categorization
@@ -95,7 +95,6 @@ public enum UnicodeCategory {
 /// This enum provides static methods for Unicode character analysis using utf8proc.
 /// All methods are thread-safe and optimized for performance.
 public enum UnicodeCategories {
-
     /// Get the Unicode version supported by the underlying utf8proc library
     /// - Returns: Unicode version string in MAJOR.MINOR.PATCH format
     public static func unicodeVersion() -> String {
@@ -110,40 +109,40 @@ public enum UnicodeCategories {
     /// - Returns: Corresponding Swift UnicodeCategory
     private static func convertCategory(_ utf8procCategory: utf8proc_category_t) -> UnicodeCategory {
         switch utf8procCategory {
-        case UTF8PROC_CATEGORY_LU: return .uppercaseLetter
-        case UTF8PROC_CATEGORY_LL: return .lowercaseLetter
-        case UTF8PROC_CATEGORY_LT: return .titlecaseLetter
-        case UTF8PROC_CATEGORY_LM: return .modifierLetter
-        case UTF8PROC_CATEGORY_LO: return .otherLetter
-        case UTF8PROC_CATEGORY_MN: return .nonspacingMark
-        case UTF8PROC_CATEGORY_MC: return .spacingMark
-        case UTF8PROC_CATEGORY_ME: return .enclosingMark
-        case UTF8PROC_CATEGORY_ND: return .decimalNumber
-        case UTF8PROC_CATEGORY_NL: return .letterNumber
-        case UTF8PROC_CATEGORY_NO: return .otherNumber
-        case UTF8PROC_CATEGORY_PC: return .connectorPunctuation
-        case UTF8PROC_CATEGORY_PD: return .dashPunctuation
-        case UTF8PROC_CATEGORY_PS: return .openPunctuation
-        case UTF8PROC_CATEGORY_PE: return .closePunctuation
-        case UTF8PROC_CATEGORY_PI: return .initialPunctuation
-        case UTF8PROC_CATEGORY_PF: return .finalPunctuation
-        case UTF8PROC_CATEGORY_PO: return .otherPunctuation
-        case UTF8PROC_CATEGORY_SM: return .mathSymbol
-        case UTF8PROC_CATEGORY_SC: return .currencySymbol
-        case UTF8PROC_CATEGORY_SK: return .modifierSymbol
-        case UTF8PROC_CATEGORY_SO: return .otherSymbol
-        case UTF8PROC_CATEGORY_ZS: return .spaceSeparator
-        case UTF8PROC_CATEGORY_ZL: return .lineSeparator
-        case UTF8PROC_CATEGORY_ZP: return .paragraphSeparator
-        case UTF8PROC_CATEGORY_CC: return .control
-        case UTF8PROC_CATEGORY_CF: return .format
-        case UTF8PROC_CATEGORY_CS: return .surrogate
-        case UTF8PROC_CATEGORY_CO: return .privateUse
-        case UTF8PROC_CATEGORY_CN: return .unassigned
-        default: return .unassigned
+        case UTF8PROC_CATEGORY_LU: .uppercaseLetter
+        case UTF8PROC_CATEGORY_LL: .lowercaseLetter
+        case UTF8PROC_CATEGORY_LT: .titlecaseLetter
+        case UTF8PROC_CATEGORY_LM: .modifierLetter
+        case UTF8PROC_CATEGORY_LO: .otherLetter
+        case UTF8PROC_CATEGORY_MN: .nonspacingMark
+        case UTF8PROC_CATEGORY_MC: .spacingMark
+        case UTF8PROC_CATEGORY_ME: .enclosingMark
+        case UTF8PROC_CATEGORY_ND: .decimalNumber
+        case UTF8PROC_CATEGORY_NL: .letterNumber
+        case UTF8PROC_CATEGORY_NO: .otherNumber
+        case UTF8PROC_CATEGORY_PC: .connectorPunctuation
+        case UTF8PROC_CATEGORY_PD: .dashPunctuation
+        case UTF8PROC_CATEGORY_PS: .openPunctuation
+        case UTF8PROC_CATEGORY_PE: .closePunctuation
+        case UTF8PROC_CATEGORY_PI: .initialPunctuation
+        case UTF8PROC_CATEGORY_PF: .finalPunctuation
+        case UTF8PROC_CATEGORY_PO: .otherPunctuation
+        case UTF8PROC_CATEGORY_SM: .mathSymbol
+        case UTF8PROC_CATEGORY_SC: .currencySymbol
+        case UTF8PROC_CATEGORY_SK: .modifierSymbol
+        case UTF8PROC_CATEGORY_SO: .otherSymbol
+        case UTF8PROC_CATEGORY_ZS: .spaceSeparator
+        case UTF8PROC_CATEGORY_ZL: .lineSeparator
+        case UTF8PROC_CATEGORY_ZP: .paragraphSeparator
+        case UTF8PROC_CATEGORY_CC: .control
+        case UTF8PROC_CATEGORY_CF: .format
+        case UTF8PROC_CATEGORY_CS: .surrogate
+        case UTF8PROC_CATEGORY_CO: .privateUse
+        case UTF8PROC_CATEGORY_CN: .unassigned
+        default: .unassigned
         }
     }
-    
+
     /// Get the Unicode category for a given scalar
     ///
     /// This method uses utf8proc to determine the precise Unicode General Category
@@ -164,7 +163,7 @@ public enum UnicodeCategories {
         let utf8procCategory = utf8proc_category(codePoint)
         return convertCategory(utf8procCategory)
     }
-    
+
     /// Check if a Unicode scalar is a combining mark
     ///
     /// Combining marks are characters that combine with preceding base characters
@@ -189,10 +188,10 @@ public enum UnicodeCategories {
 
         // Combining marks are in categories Mn, Mc, and Me
         return utf8procCategory == UTF8PROC_CATEGORY_MN ||
-               utf8procCategory == UTF8PROC_CATEGORY_MC ||
-               utf8procCategory == UTF8PROC_CATEGORY_ME
+            utf8procCategory == UTF8PROC_CATEGORY_MC ||
+            utf8procCategory == UTF8PROC_CATEGORY_ME
     }
-    
+
     /// Check if a Unicode scalar is an emoji
     ///
     /// This method uses the Extended_Pictographic property from the Unicode Standard
@@ -222,8 +221,8 @@ public enum UnicodeCategories {
         // This is the most accurate way to detect emoji scalars
         let boundclass = property.pointee.boundclass
         return boundclass == UTF8PROC_BOUNDCLASS_EXTENDED_PICTOGRAPHIC.rawValue ||
-               boundclass == UTF8PROC_BOUNDCLASS_E_BASE.rawValue ||
-               boundclass == UTF8PROC_BOUNDCLASS_E_MODIFIER.rawValue
+            boundclass == UTF8PROC_BOUNDCLASS_E_BASE.rawValue ||
+            boundclass == UTF8PROC_BOUNDCLASS_E_MODIFIER.rawValue
     }
 }
 
@@ -265,7 +264,6 @@ public enum UnicodeNormalizationForm {
 /// to Unicode Standard Annex #15. Normalization is essential for text processing,
 /// comparison, and ensuring consistent representation across different systems.
 public enum UnicodeNormalization {
-
     /// Normalize a Unicode string using the specified normalization form
     ///
     /// This method applies Unicode normalization to ensure consistent text
@@ -286,16 +284,15 @@ public enum UnicodeNormalization {
     /// ```
     public static func normalize(_ string: String, form: UnicodeNormalizationForm) -> String {
         // Convert normalization form to utf8proc options
-        let options: utf8proc_option_t
-        switch form {
+        let options: utf8proc_option_t = switch form {
         case .nfc:
-            options = UTF8PROC_COMPOSE
+            UTF8PROC_COMPOSE
         case .nfd:
-            options = UTF8PROC_DECOMPOSE
+            UTF8PROC_DECOMPOSE
         case .nfkc:
-            options = utf8proc_option_t(UTF8PROC_COMPOSE.rawValue | UTF8PROC_COMPAT.rawValue)
+            utf8proc_option_t(UTF8PROC_COMPOSE.rawValue | UTF8PROC_COMPAT.rawValue)
         case .nfkd:
-            options = utf8proc_option_t(UTF8PROC_DECOMPOSE.rawValue | UTF8PROC_COMPAT.rawValue)
+            utf8proc_option_t(UTF8PROC_DECOMPOSE.rawValue | UTF8PROC_COMPAT.rawValue)
         }
 
         // Convert Swift string to UTF-8 bytes
