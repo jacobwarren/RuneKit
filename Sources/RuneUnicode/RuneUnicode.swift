@@ -1,5 +1,5 @@
 /// RuneUnicode module - Unicode width calculations and text processing
-/// 
+///
 /// This module provides functionality for accurately calculating the display
 /// width of Unicode strings in terminal environments. It handles complex
 /// cases like emoji, CJK characters, combining marks, and zero-width joiners.

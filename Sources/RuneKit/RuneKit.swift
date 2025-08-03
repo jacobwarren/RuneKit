@@ -48,7 +48,7 @@
 
 // Re-export all modules for convenient access
 @_exported import RuneANSI
-@_exported import RuneUnicode
+@_exported import RuneComponents
 @_exported import RuneLayout
 @_exported import RuneRenderer
-@_exported import RuneComponents
+@_exported import RuneUnicode

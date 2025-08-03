@@ -1,5 +1,5 @@
 /// RuneComponents module - UI components for terminal interfaces
-/// 
+///
 /// This module provides a collection of reusable UI components for building
 /// terminal-based user interfaces. Components handle their own rendering
 /// within provided layout rectangles.

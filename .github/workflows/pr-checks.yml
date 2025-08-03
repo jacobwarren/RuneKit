@@ -1,0 +1,54 @@
+name: PR Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [ main, develop ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Quick validation for PRs
+  quick-validation:
+    name: Quick Validation
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Swift
+      uses: swift-actions/setup-swift@v2
+      with:
+        swift-version: '6.1'
+
+    - name: Quick Build Check
+      run: swift build
+
+    - name: Package Resolution Check
+      run: swift package resolve
+
+    - name: Package Dump Check
+      run: swift package dump-package
+
+  # PR Ready for Review check
+  pr-ready-for-review:
+    name: PR Ready for Review
+    runs-on: ubuntu-latest
+    needs: [quick-validation]
+    if: always() && github.event.pull_request.draft == false
+
+    steps:
+    - name: Check PR requirements
+      run: |
+        echo "Quick validation: ${{ needs.quick-validation.result }}"
+
+        if [[ "${{ needs.quick-validation.result }}" != "success" ]]; then
+          echo "❌ Quick validation failed"
+          exit 1
+        fi
+
+        echo "✅ PR checks passed! Ready for review."
