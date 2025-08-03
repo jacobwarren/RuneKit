@@ -1,5 +1,5 @@
 /// RuneLayout module - Flexbox layout engine for terminal UIs
-/// 
+///
 /// This module provides a flexbox-inspired layout system optimized for
 /// terminal user interfaces. It handles the arrangement of components
 /// within containers using flexible sizing and alignment.

@@ -1,0 +1,130 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SWIFT_VERSION: '6.1'
+
+jobs:
+  # Main build and test matrix across platforms
+  build-and-test:
+    name: Build & Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+        include:
+          - os: macos-latest
+            cache-path: ~/Library/Caches/org.swift.swiftpm
+          - os: ubuntu-latest
+            cache-path: ~/.cache/org.swift.swiftpm
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Swift
+      uses: swift-actions/setup-swift@v2
+      with:
+        swift-version: ${{ env.SWIFT_VERSION }}
+        
+    - name: Cache Swift Package Manager
+      uses: actions/cache@v4
+      with:
+        path: ${{ matrix.cache-path }}
+        key: ${{ runner.os }}-spm-${{ hashFiles('Package.swift', 'Package.resolved') }}
+        restore-keys: |
+          ${{ runner.os }}-spm-
+          
+    - name: Swift Version
+      run: swift --version
+      
+    - name: Build Package (Debug)
+      run: swift build -c debug
+
+    - name: Build Package (Release)
+      run: swift build -c release
+
+    - name: Run Tests
+      run: swift test
+
+    - name: Verify CLI Executable
+      run: swift run RuneCLI
+
+  # Code quality checks (non-blocking)
+  code-quality:
+    name: Code Quality
+    runs-on: macos-latest
+    continue-on-error: true
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Swift
+      uses: swift-actions/setup-swift@v2
+      with:
+        swift-version: ${{ env.SWIFT_VERSION }}
+        
+    - name: Install SwiftFormat
+      run: brew install swiftformat
+      
+    - name: Install SwiftLint
+      run: brew install swiftlint
+      
+    - name: Check SwiftFormat
+      run: swiftformat --lint . || echo "SwiftFormat issues found"
+      
+    - name: Check SwiftLint
+      run: swiftlint lint || echo "SwiftLint issues found"
+
+  # Basic sanitizer test (address only) - Optional
+  sanitizer-test:
+    name: Sanitizer Test (Address)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    if: false  # Temporarily disabled until sanitizer issues are resolved
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Swift
+      uses: swift-actions/setup-swift@v2
+      with:
+        swift-version: ${{ env.SWIFT_VERSION }}
+
+    - name: Build with Address Sanitizer
+      run: swift build -c debug -Xswiftc -sanitize=address
+
+    - name: Test with Address Sanitizer
+      run: swift test -c debug -Xswiftc -sanitize=address
+
+  # All critical checks must pass
+  all-checks:
+    name: All Critical Checks Passed
+    runs-on: ubuntu-latest
+    needs: [build-and-test]
+    if: always()
+    
+    steps:
+    - name: Check critical jobs
+      run: |
+        echo "Build and test: ${{ needs.build-and-test.result }}"
+        
+        if [[ "${{ needs.build-and-test.result }}" != "success" ]]; then
+          echo "❌ Critical build and test failed"
+          exit 1
+        fi
+        
+        echo "✅ All critical checks passed!"

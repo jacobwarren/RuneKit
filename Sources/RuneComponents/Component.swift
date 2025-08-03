@@ -2,7 +2,7 @@ import RuneLayout
 import RuneRenderer
 
 /// Base protocol for all RuneKit components
-/// 
+///
 /// Components are the building blocks of RuneKit UIs. They define how
 /// content should be rendered within a given layout rectangle.
 public protocol Component {
@@ -15,27 +15,27 @@ public protocol Component {
 /// A simple text component
 public struct Text: Component {
     public let content: String
-    
+
     public init(_ content: String) {
         self.content = content
     }
-    
+
     public func render(in rect: FlexLayout.Rect) -> [String] {
         // TODO: Implement proper text rendering with wrapping
         // For now, just return the content as a single line
-        guard rect.height > 0 && rect.width > 0 else {
+        guard rect.height > 0, rect.width > 0 else {
             return []
         }
-        
+
         // Simple implementation: just return the content, truncated if needed
         let truncated = String(content.prefix(rect.width))
         var lines = [truncated]
-        
+
         // Fill remaining height with empty lines
         while lines.count < rect.height {
             lines.append("")
         }
-        
+
         return lines
     }
 }
@@ -48,23 +48,23 @@ public struct Box: Component {
         case double
         case rounded
     }
-    
+
     public let borderStyle: BorderStyle
     public let child: Component?
-    
+
     public init(border: BorderStyle = .none, child: Component? = nil) {
-        self.borderStyle = border
+        borderStyle = border
         self.child = child
     }
-    
+
     public func render(in rect: FlexLayout.Rect) -> [String] {
         // TODO: Implement proper box rendering with borders
         // For now, just render the child if present
-        guard rect.height > 0 && rect.width > 0 else {
+        guard rect.height > 0, rect.width > 0 else {
             return []
         }
-        
-        if let child = child {
+
+        if let child {
             return child.render(in: rect)
         } else {
             // Return empty lines
