@@ -25,6 +25,9 @@ struct RuneCLI {
 
         // Demonstrate basic functionality
         await demonstrateBasicFunctionality()
+
+        // Demonstrate styled text spans
+        demonstrateStyledTextSpans()
     }
 
     /// Demonstrate basic RuneKit functionality
@@ -57,5 +60,71 @@ struct RuneCLI {
         print("Renderer: Created successfully")
 
         print("All modules working correctly! 🚀")
+    }
+
+    /// Demonstrate styled text spans functionality
+    static func demonstrateStyledTextSpans() {
+        print("\n--- Styled Text Spans Demo ---")
+
+        let tokenizer = ANSITokenizer()
+        let converter = ANSISpanConverter()
+
+        // Example 1: Basic conversion
+        print("\n1. Basic ANSI to Spans Conversion:")
+        let input = "\u{001B}[1;31mError:\u{001B}[0m \u{001B}[33mWarning message\u{001B}[0m"
+        let tokens = tokenizer.tokenize(input)
+        let styledText = converter.tokensToStyledText(tokens)
+
+        print("   Input: \(input)")
+        print("   Parsed into \(styledText.spans.count) spans:")
+        for (index, span) in styledText.spans.enumerated() {
+            let attrs = span.attributes
+            var attrDesc = ""
+            if attrs.bold { attrDesc += "bold " }
+            if let color = attrs.color { attrDesc += "\(color) " }
+            print("     \(index): '\(span.text)' (\(attrDesc.isEmpty ? "plain" : attrDesc.trimmingCharacters(in: .whitespaces)))")
+        }
+
+        // Example 2: Merging spans
+        print("\n2. Merging Adjacent Spans:")
+        let redBold = TextAttributes(color: .red, bold: true)
+        let spans = [
+            TextSpan(text: "Hello ", attributes: redBold),
+            TextSpan(text: "beautiful ", attributes: redBold),
+            TextSpan(text: "world", attributes: redBold)
+        ]
+        let multiSpanText = StyledText(spans: spans)
+        let merged = multiSpanText.mergingAdjacentSpans()
+
+        print("   Before: \(multiSpanText.spans.count) spans")
+        print("   After:  \(merged.spans.count) spans")
+        print("   Result: '\(merged.plainText)'")
+
+        // Example 3: Splitting text
+        print("\n3. Splitting Text at Column Boundaries:")
+        let mixedText = StyledText(spans: [
+            TextSpan(text: "Hello ", attributes: TextAttributes(color: .red)),
+            TextSpan(text: "beautiful ", attributes: TextAttributes(bold: true)),
+            TextSpan(text: "world!", attributes: TextAttributes(color: .blue))
+        ])
+
+        let (left, right) = mixedText.split(at: 10)
+        print("   Original: '\(mixedText.plainText)' (\(mixedText.length) chars)")
+        print("   Split at column 10:")
+        print("     Left:  '\(left.plainText)' (\(left.spans.count) spans)")
+        print("     Right: '\(right.plainText)' (\(right.spans.count) spans)")
+
+        // Example 4: Round-trip verification
+        print("\n4. Round-trip Conversion:")
+        let originalTokens = tokenizer.tokenize("\u{001B}[38;2;255;165;0mRGB Orange\u{001B}[0m")
+        let roundTripSpans = converter.tokensToStyledText(originalTokens)
+        let backToTokens = converter.styledTextToTokens(roundTripSpans)
+        let finalString = tokenizer.encode(backToTokens)
+
+        print("   Original ANSI: \(tokenizer.encode(originalTokens))")
+        print("   Round-trip:    \(finalString)")
+        print("   Identical:     \(tokenizer.encode(originalTokens) == finalString)")
+
+        print("\nStyled text spans working correctly! ✨")
     }
 }
