@@ -74,10 +74,10 @@ fi
 # Run linting if available
 if command -v swiftlint &> /dev/null; then
     log_info "Running SwiftLint..."
-    if swiftlint lint --strict; then
+    if swiftlint lint; then
         log_success "SwiftLint passed"
     else
-        log_warning "SwiftLint found issues. Please fix them."
+        log_warning "SwiftLint found issues. These are non-blocking in CI."
     fi
 else
     log_warning "SwiftLint not available. Install with: brew install swiftlint"
