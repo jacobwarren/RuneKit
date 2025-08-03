@@ -1,0 +1,22 @@
+{
+  "configurations": [
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:RuneKit}",
+      "name": "Debug RuneCLI",
+      "program": "${workspaceFolder:RuneKit}/.build/debug/RuneCLI",
+      "preLaunchTask": "swift: Build Debug RuneCLI"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:RuneKit}",
+      "name": "Release RuneCLI",
+      "program": "${workspaceFolder:RuneKit}/.build/release/RuneCLI",
+      "preLaunchTask": "swift: Build Release RuneCLI"
+    }
+  ]
+}
