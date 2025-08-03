@@ -9,6 +9,7 @@
 /// - Support for emoji (including complex sequences)
 /// - CJK character width handling
 /// - Zero-width character detection
+/// - Unicode category detection and combining mark identification
 /// - Foundation for text wrapping and alignment
 
 // Re-export main types for convenience

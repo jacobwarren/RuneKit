@@ -23,7 +23,10 @@ jobs:
     - name: Setup Swift
       uses: SwiftyLab/setup-swift@latest
       with:
-        swift-version: '6.2'
+        swift-version: '6.1'
+
+    - name: Install utf8proc
+      run: sudo apt-get update && sudo apt-get install -y libutf8proc-dev pkg-config
 
     - name: Quick Build Check
       run: swift build

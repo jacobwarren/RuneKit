@@ -1,0 +1,5 @@
+module Cutf8proc {
+    header "shim.h"
+    link "utf8proc"
+    export *
+}

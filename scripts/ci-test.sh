@@ -46,6 +46,28 @@ if ! swift --version | grep -q "6\."; then
     log_warning "Expected Swift 6.x, but found: $SWIFT_VERSION"
 fi
 
+# Check utf8proc dependency
+log_info "Checking utf8proc dependency..."
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    if brew list utf8proc &> /dev/null; then
+        log_success "utf8proc is installed via Homebrew"
+    else
+        log_error "utf8proc not found. Install with: brew install utf8proc"
+        exit 1
+    fi
+elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    if pkg-config --exists libutf8proc; then
+        log_success "utf8proc is installed"
+        UTF8PROC_VERSION=$(pkg-config --modversion libutf8proc)
+        log_info "utf8proc version: $UTF8PROC_VERSION"
+    else
+        log_error "utf8proc not found. Install with: sudo apt-get install libutf8proc-dev"
+        exit 1
+    fi
+else
+    log_warning "Unknown OS type: $OSTYPE. Cannot verify utf8proc installation."
+fi
+
 # Clean build directory
 log_info "Cleaning build directory..."
 rm -rf .build
