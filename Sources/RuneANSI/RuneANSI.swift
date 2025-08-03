@@ -14,10 +14,12 @@
 /// ## Key Features
 ///
 /// - **Complete ANSI Support**: Handles SGR (styling), cursor movement, erase sequences, and OSC commands
-/// - **Lossless Round-trip**: Tokens can be encoded back to identical ANSI sequences
+/// - **Styled Text Spans**: High-level attributed text model for easier manipulation
+/// - **Lossless Round-trip**: Tokens and spans can be converted back to identical ANSI sequences
+/// - **Span Utilities**: Merge adjacent spans and split at column boundaries for text layout
 /// - **Graceful Error Handling**: Malformed sequences are handled without crashing
 /// - **High Performance**: Single-pass parsing with minimal memory allocations
-/// - **Type Safety**: Structured tokens prevent common parsing errors
+/// - **Type Safety**: Structured tokens and spans prevent common parsing errors
 ///
 /// ## Usage
 ///
@@ -25,26 +27,36 @@
 /// import RuneANSI
 ///
 /// let tokenizer = ANSITokenizer()
+/// let converter = ANSISpanConverter()
 ///
 /// // Parse terminal output with colors and formatting
 /// let input = "\u{001B}[1;31mError:\u{001B}[0m Something went wrong"
 /// let tokens = tokenizer.tokenize(input)
 ///
-/// // Process tokens
-/// for token in tokens {
-///     switch token {
-///     case .text(let content):
-///         print("Text: \(content)")
-///     case .sgr(let params):
-///         print("Styling: \(params)")
-///     default:
-///         break
+/// // Convert to styled text spans for easier manipulation
+/// let styledText = converter.tokensToStyledText(tokens)
+///
+/// // Work with structured spans
+/// for span in styledText.spans {
+///     print("Text: '\(span.text)'")
+///     if span.attributes.bold {
+///         print("  - Bold")
+///     }
+///     if let color = span.attributes.color {
+///         print("  - Color: \(color)")
 ///     }
 /// }
 ///
-/// // Round-trip encoding
-/// let encoded = tokenizer.encode(tokens)
+/// // Convert back to tokens for output
+/// let outputTokens = converter.styledTextToTokens(styledText)
+/// let encoded = tokenizer.encode(outputTokens)
 /// assert(encoded == input) // Perfect round-trip
+///
+/// // Merge adjacent spans with same attributes
+/// let merged = styledText.mergingAdjacentSpans()
+///
+/// // Split text at column boundaries for wrapping
+/// let (left, right) = styledText.split(at: 20)
 /// ```
 ///
 /// ## Supported ANSI Sequences
@@ -68,6 +80,13 @@
 /// - Window title setting
 /// - Icon name setting
 /// - Custom commands
+///
+/// ### Styled Text Spans
+/// - Structured text attributes (color, bold, italic, underline, etc.)
+/// - Efficient span-based text representation
+/// - Merge adjacent spans with identical attributes
+/// - Split spans at column boundaries for text wrapping
+/// - Lossless conversion between ANSI tokens and spans
 ///
 /// ## Error Handling
 ///
