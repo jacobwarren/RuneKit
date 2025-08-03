@@ -88,7 +88,7 @@ struct ComponentTests {
 
         // Assert
         #expect(lines.count == 3, "Should return correct number of lines")
-        #expect(lines.allSatisfy { $0.isEmpty }, "All lines should be empty")
+        #expect(lines.allSatisfy(\.isEmpty), "All lines should be empty")
     }
 
     @Test("Box with text child")
@@ -118,7 +118,7 @@ struct ComponentTests {
 
         // Assert
         #expect(lines.count == 3, "Should return correct number of lines")
-        #expect(lines.allSatisfy { $0.isEmpty }, "All lines should be empty for no border")
+        #expect(lines.allSatisfy(\.isEmpty), "All lines should be empty for no border")
     }
 
     @Test("Box with zero dimensions")

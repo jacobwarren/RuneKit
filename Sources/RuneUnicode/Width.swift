@@ -30,17 +30,70 @@ public enum Width {
     public static func displayWidth(of string: String) -> Int {
         var totalWidth = 0
 
-        for scalar in string.unicodeScalars {
-            totalWidth += displayWidth(of: scalar)
+        for cluster in string {
+            totalWidth += displayWidth(of: cluster)
         }
 
         return totalWidth
     }
 
-    /// Calculate the display width of a single Unicode scalar
+    /// Calculate the display width of an extended grapheme cluster
+    /// - Parameter cluster: The extended grapheme cluster to measure
+    /// - Returns: Number of terminal columns the cluster will occupy
+    public static func displayWidth(of cluster: Character) -> Int {
+        let scalars = Array(cluster.unicodeScalars)
+
+        // Check if this is an emoji sequence first
+        if let emojiWidth = EmojiWidth.emojiWidth(of: scalars) {
+            return emojiWidth
+        }
+
+        // Single scalar case - use enhanced width calculation
+        if scalars.count == 1 {
+            return displayWidthEnhanced(of: scalars[0])
+        }
+
+        // Multi-scalar case - check for combining characters
+        // If we have combining characters, the base character determines width
+        var baseWidth = 0
+        var hasCombining = false
+
+        for scalar in scalars {
+            if UnicodeCategories.isCombining(scalar) {
+                hasCombining = true
+                // Combining characters don't add to width
+                continue
+            } else {
+                // Non-combining character
+                baseWidth += displayWidthEnhanced(of: scalar)
+            }
+        }
+
+        // If we had combining characters, return the base width
+        if hasCombining {
+            return baseWidth
+        }
+
+        // Fallback: sum all scalar widths
+        var totalWidth = 0
+        for scalar in scalars {
+            totalWidth += displayWidthEnhanced(of: scalar)
+        }
+
+        return totalWidth
+    }
+
+    /// Calculate the display width of a single Unicode scalar (legacy method)
     /// - Parameter scalar: The Unicode scalar to measure
     /// - Returns: Number of terminal columns (0, 1, or 2)
     public static func displayWidth(of scalar: Unicode.Scalar) -> Int {
+        displayWidthEnhanced(of: scalar)
+    }
+
+    /// Enhanced display width calculation with East Asian Width support
+    /// - Parameter scalar: The Unicode scalar to measure
+    /// - Returns: Number of terminal columns (0, 1, or 2)
+    private static func displayWidthEnhanced(of scalar: Unicode.Scalar) -> Int {
         let codePoint = scalar.value
 
         // Handle special cases first before calling wcwidth
@@ -52,6 +105,12 @@ public enum Width {
                 return 1
             }
             return 0 // Other control characters have zero width
+        }
+
+        // Check East Asian Width property first for accurate CJK/fullwidth handling
+        let eastAsianWidth = EastAsianWidth.terminalWidth(of: scalar)
+        if eastAsianWidth == 2 {
+            return 2
         }
 
         // Use wcwidth for baseline width calculation if available
@@ -181,32 +240,32 @@ public enum Width {
         }
 
         // Combining Diacritical Marks (U+0300-U+036F)
-        if codePoint >= 0x0300 && codePoint <= 0x036F {
+        if codePoint >= 0x0300, codePoint <= 0x036F {
             return 0
         }
 
         // Combining Diacritical Marks Extended (U+1AB0-U+1AFF)
-        if codePoint >= 0x1AB0 && codePoint <= 0x1AFF {
+        if codePoint >= 0x1AB0, codePoint <= 0x1AFF {
             return 0
         }
 
         // Combining Diacritical Marks Supplement (U+1DC0-U+1DFF)
-        if codePoint >= 0x1DC0 && codePoint <= 0x1DFF {
+        if codePoint >= 0x1DC0, codePoint <= 0x1DFF {
             return 0
         }
 
         // Combining Half Marks (U+FE20-U+FE2F)
-        if codePoint >= 0xFE20 && codePoint <= 0xFE2F {
+        if codePoint >= 0xFE20, codePoint <= 0xFE2F {
             return 0
         }
 
         // CJK Unified Ideographs (U+4E00-U+9FFF) - Wide characters
-        if codePoint >= 0x4E00 && codePoint <= 0x9FFF {
+        if codePoint >= 0x4E00, codePoint <= 0x9FFF {
             return 2
         }
 
         // CJK Symbols and Punctuation (U+3000-U+303F)
-        if codePoint >= 0x3000 && codePoint <= 0x303F {
+        if codePoint >= 0x3000, codePoint <= 0x303F {
             // U+3000 IDEOGRAPHIC SPACE is wide
             if codePoint == 0x3000 {
                 return 2
@@ -215,36 +274,36 @@ public enum Width {
         }
 
         // Hangul Syllables (U+AC00-U+D7AF) - Wide characters
-        if codePoint >= 0xAC00 && codePoint <= 0xD7AF {
+        if codePoint >= 0xAC00, codePoint <= 0xD7AF {
             return 2
         }
 
         // Hiragana (U+3040-U+309F) - Wide characters
-        if codePoint >= 0x3040 && codePoint <= 0x309F {
+        if codePoint >= 0x3040, codePoint <= 0x309F {
             return 2
         }
 
         // Katakana (U+30A0-U+30FF) - Wide characters
-        if codePoint >= 0x30A0 && codePoint <= 0x30FF {
+        if codePoint >= 0x30A0, codePoint <= 0x30FF {
             return 2
         }
 
         // Latin-1 Supplement (U+00A0-U+00FF)
-        if codePoint >= 0x00A0 && codePoint <= 0x00FF {
+        if codePoint >= 0x00A0, codePoint <= 0x00FF {
             return 1
         }
 
         // General Punctuation (U+2000-U+206F)
-        if codePoint >= 0x2000 && codePoint <= 0x206F {
+        if codePoint >= 0x2000, codePoint <= 0x206F {
             // Zero-width spaces and format characters
-            if codePoint >= 0x200B && codePoint <= 0x200F {
-                return 0  // Zero-width spaces
+            if codePoint >= 0x200B, codePoint <= 0x200F {
+                return 0 // Zero-width spaces
             }
-            if codePoint >= 0x202A && codePoint <= 0x202E {
-                return 0  // Bidirectional format characters
+            if codePoint >= 0x202A, codePoint <= 0x202E {
+                return 0 // Bidirectional format characters
             }
-            if codePoint >= 0x2060 && codePoint <= 0x2064 {
-                return 0  // Invisible characters
+            if codePoint >= 0x2060, codePoint <= 0x2064 {
+                return 0 // Invisible characters
             }
             return 1
         }

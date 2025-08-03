@@ -54,6 +54,39 @@ This directory contains essential development and CI validation scripts for Rune
 - Ensures consistent development environment
 - Reduces failed GitHub Actions runs
 
+### 📊 `generate_unicode_tables.swift` - Unicode Data Table Generation
+
+**Purpose:** Generates optimized Unicode lookup tables from official Unicode data files.
+
+**What it does:**
+- Downloads official Unicode data files from unicode.org
+- Parses East Asian Width property data (UAX #11)
+- Parses emoji property data (Extended_Pictographic)
+- Generates optimized Swift lookup tables
+- Creates files in `Sources/RuneUnicode/Generated/`
+
+**Usage:**
+```bash
+swift Scripts/generate_unicode_tables.swift
+```
+
+**Generated Files:**
+- `Sources/RuneUnicode/Generated/EastAsianWidthTables.swift`
+- `Sources/RuneUnicode/Generated/EmojiTables.swift`
+
+**When to use:**
+- When updating to a new Unicode version
+- When Unicode property definitions change
+- During initial project setup (if generated files are missing)
+
+**Update Process:**
+1. Update Unicode version in the script
+2. Run the generation script
+3. Review generated files for correctness
+4. Run tests: `swift test --filter RuneUnicodeTests`
+5. Run performance benchmarks
+6. Commit the updated tables
+
 ## Development Workflow
 
 ### New Contributors
