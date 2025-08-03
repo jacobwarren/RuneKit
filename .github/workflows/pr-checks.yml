@@ -23,7 +23,7 @@ jobs:
     - name: Setup Swift
       uses: SwiftyLab/setup-swift@latest
       with:
-        swift-version: '6.1'
+        swift-version: '6.2'
 
     - name: Quick Build Check
       run: swift build

@@ -6,7 +6,7 @@
 
 import Foundation
 
-// Since we can't import the package directly in a script, 
+// Since we can't import the package directly in a script,
 // you would need to copy the relevant source files or use this as a template
 // for a proper Swift Playground in Xcode.
 

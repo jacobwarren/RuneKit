@@ -41,9 +41,8 @@
 /// minimal memory allocations. It can handle large terminal outputs without
 /// significant performance degradation.
 public struct ANSITokenizer: ANSITokenizing, ANSIEncoding {
-    
     public init() {}
-    
+
     /// Tokenizes ANSI escape sequences from input string
     /// - Parameter input: Raw terminal string with ANSI codes
     /// - Returns: Array of tokens preserving original semantics
@@ -60,7 +59,7 @@ public struct ANSITokenizer: ANSITokenizing, ANSIEncoding {
             if let escapeIndex = input[currentIndex...].firstIndex(of: "\u{001B}") {
                 // Add any text before the escape sequence
                 if escapeIndex > currentIndex {
-                    let textContent = String(input[currentIndex..<escapeIndex])
+                    let textContent = String(input[currentIndex ..< escapeIndex])
                     tokens.append(.text(textContent))
                 }
 
@@ -71,7 +70,7 @@ public struct ANSITokenizer: ANSITokenizing, ANSIEncoding {
                 } else {
                     // If we can't parse the escape sequence, treat it as text
                     let nextIndex = input.index(after: escapeIndex)
-                    let invalidSequence = String(input[escapeIndex..<nextIndex])
+                    let invalidSequence = String(input[escapeIndex ..< nextIndex])
                     tokens.append(.text(invalidSequence))
                     currentIndex = nextIndex
                 }
@@ -91,7 +90,10 @@ public struct ANSITokenizer: ANSITokenizing, ANSIEncoding {
     ///   - input: The input string containing the escape sequence
     ///   - startIndex: The index of the escape character (\u{001B})
     /// - Returns: A tuple of the parsed token and the index after the sequence, or nil if parsing fails
-    private func parseEscapeSequence(from input: String, startingAt startIndex: String.Index) -> (ANSIToken, String.Index)? {
+    private func parseEscapeSequence(
+        from input: String,
+        startingAt startIndex: String.Index,
+    ) -> (ANSIToken, String.Index)? {
         guard startIndex < input.endIndex else { return nil }
 
         let escapeIndex = input.index(after: startIndex)
@@ -109,7 +111,7 @@ public struct ANSITokenizer: ANSITokenizing, ANSIEncoding {
         default:
             // Other escape sequences - treat as control
             let endIndex = input.index(after: escapeIndex)
-            let controlSequence = String(input[startIndex..<endIndex])
+            let controlSequence = String(input[startIndex ..< endIndex])
             return (.control(controlSequence), endIndex)
         }
     }
@@ -119,7 +121,10 @@ public struct ANSITokenizer: ANSITokenizing, ANSIEncoding {
     ///   - input: The input string
     ///   - startIndex: The index of the '[' character
     /// - Returns: A tuple of the parsed token and the index after the sequence, or nil if parsing fails
-    private func parseCSISequence(from input: String, startingAt startIndex: String.Index) -> (ANSIToken, String.Index)? {
+    private func parseCSISequence(
+        from input: String,
+        startingAt startIndex: String.Index,
+    ) -> (ANSIToken, String.Index)? {
         var currentIndex = input.index(after: startIndex) // Skip the '['
         var parameters: [String] = []
         var currentParam = ""
@@ -148,7 +153,7 @@ public struct ANSITokenizer: ANSITokenizing, ANSIEncoding {
                 if hasInvalidParams {
                     // Treat as control sequence if parameters are invalid
                     let escapeIndex = input.index(before: startIndex) // This points to the ESC character
-                    let fullSequence = String(input[escapeIndex..<nextIndex])
+                    let fullSequence = String(input[escapeIndex ..< nextIndex])
                     return (.control(fullSequence), nextIndex)
                 }
 
@@ -169,7 +174,7 @@ public struct ANSITokenizer: ANSITokenizing, ANSIEncoding {
                 default:
                     // Other CSI sequences
                     let escapeIndex = input.index(before: startIndex) // This points to the ESC character
-                    let fullSequence = String(input[escapeIndex..<nextIndex])
+                    let fullSequence = String(input[escapeIndex ..< nextIndex])
                     return (.control(fullSequence), nextIndex)
                 }
             } else {
@@ -190,7 +195,10 @@ public struct ANSITokenizer: ANSITokenizing, ANSIEncoding {
     ///   - input: The input string
     ///   - startIndex: The index of the ']' character
     /// - Returns: A tuple of the parsed token and the index after the sequence, or nil if parsing fails
-    private func parseOSCSequence(from input: String, startingAt startIndex: String.Index) -> (ANSIToken, String.Index)? {
+    private func parseOSCSequence(
+        from input: String,
+        startingAt startIndex: String.Index,
+    ) -> (ANSIToken, String.Index)? {
         var currentIndex = input.index(after: startIndex) // Skip the ']'
         var command = ""
         var data = ""
@@ -201,18 +209,18 @@ public struct ANSITokenizer: ANSITokenizing, ANSIEncoding {
             let char = input[currentIndex]
 
             if char == "\u{0007}" || (char == "\u{001B}" &&
-                                      input.index(after: currentIndex) < input.endIndex &&
-                                      input[input.index(after: currentIndex)] == "\\") {
+                input.index(after: currentIndex) < input.endIndex &&
+                input[input.index(after: currentIndex)] == "\\"
+            ) {
                 // Found terminator (BEL or ESC\)
-                let nextIndex: String.Index
-                if char == "\u{0007}" {
-                    nextIndex = input.index(after: currentIndex)
+                let nextIndex: String.Index = if char == "\u{0007}" {
+                    input.index(after: currentIndex)
                 } else {
-                    nextIndex = input.index(currentIndex, offsetBy: 2)
+                    input.index(currentIndex, offsetBy: 2)
                 }
 
                 return (.osc(command, data), nextIndex)
-            } else if char == ";" && !foundSeparator {
+            } else if char == ";", !foundSeparator {
                 // First semicolon separates command from data
                 foundSeparator = true
             } else if foundSeparator {
@@ -232,7 +240,7 @@ public struct ANSITokenizer: ANSITokenizing, ANSIEncoding {
     /// - Parameter tokens: Array of ANSI tokens to encode
     /// - Returns: String containing the encoded ANSI escape sequences
     public func encode(_ tokens: [ANSIToken]) -> String {
-        return tokens.map { encodeToken($0) }.joined()
+        tokens.map { encodeToken($0) }.joined()
     }
 
     /// Encodes a single ANSI token back to its escape sequence
@@ -240,26 +248,26 @@ public struct ANSITokenizer: ANSITokenizing, ANSIEncoding {
     /// - Returns: String representation of the token
     private func encodeToken(_ token: ANSIToken) -> String {
         switch token {
-        case .text(let content):
+        case let .text(content):
             return content
-        case .sgr(let parameters):
+        case let .sgr(parameters):
             let paramString = parameters.map { String($0) }.joined(separator: ";")
             return "\u{001B}[\(paramString)m"
-        case .cursor(let count, let direction):
+        case let .cursor(count, direction):
             if count == 1 {
                 return "\u{001B}[\(direction)"
             } else {
                 return "\u{001B}[\(count)\(direction)"
             }
-        case .erase(let mode, let type):
+        case let .erase(mode, type):
             if mode == 0 {
                 return "\u{001B}[\(type)"
             } else {
                 return "\u{001B}[\(mode)\(type)"
             }
-        case .osc(let command, let data):
+        case let .osc(command, data):
             return "\u{001B}]\(command);\(data)\u{0007}"
-        case .control(let sequence):
+        case let .control(sequence):
             return sequence
         }
     }
