@@ -43,11 +43,11 @@ struct TerminalRendererTests {
     @Test("Renderer initialization with default output")
     func rendererInitializationDefault() async {
         // Act
-        let renderer = TerminalRenderer()
+        let _ = TerminalRenderer()
 
         // Assert - Just verify it can be created without crashing
         // Note: renderer is non-optional, so this test just verifies no crash during init
-        #expect(true, "Renderer should initialize successfully")
+        #expect(Bool(true), "Renderer should initialize successfully")
     }
 
     @Test("Renderer initialization with custom output")
@@ -57,11 +57,11 @@ struct TerminalRendererTests {
         let output = pipe.fileHandleForWriting
 
         // Act
-        let renderer = TerminalRenderer(output: output)
+        let _ = TerminalRenderer(output: output)
 
         // Assert - Just verify it can be created without crashing
         // Note: renderer is non-optional, so this test just verifies no crash during init
-        #expect(true, "Renderer should initialize with custom output")
+        #expect(Bool(true), "Renderer should initialize with custom output")
 
         // Cleanup
         output.closeFile()
