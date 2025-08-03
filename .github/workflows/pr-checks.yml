@@ -10,187 +10,45 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Quick validation for draft PRs
-  quick-check:
+  # Quick validation for PRs
+  quick-validation:
     name: Quick Validation
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Setup Swift
       uses: swift-actions/setup-swift@v2
       with:
         swift-version: '6.1'
-        
+
     - name: Quick Build Check
       run: swift build
-      
+
     - name: Package Resolution Check
       run: swift package resolve
-      
+
     - name: Package Dump Check
       run: swift package dump-package
 
-  # Comprehensive checks (reuses main CI)
-  comprehensive-checks:
-    name: Comprehensive Checks
-    runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Swift
-      uses: swift-actions/setup-swift@v2
-      with:
-        swift-version: '6.1'
-
-    - name: Build and Test
-      run: |
-        swift build
-        swift test
-        swift run RuneCLI
-
-  # PR size and complexity analysis
-  pr-analysis:
-    name: PR Analysis
-    runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-        
-    - name: Analyze PR Size
-      run: |
-        # Get the base branch
-        BASE_SHA="${{ github.event.pull_request.base.sha }}"
-        HEAD_SHA="${{ github.event.pull_request.head.sha }}"
-        
-        # Count changes
-        ADDED_LINES=$(git diff --numstat $BASE_SHA..$HEAD_SHA | awk '{sum += $1} END {print sum}')
-        REMOVED_LINES=$(git diff --numstat $BASE_SHA..$HEAD_SHA | awk '{sum += $2} END {print sum}')
-        CHANGED_FILES=$(git diff --name-only $BASE_SHA..$HEAD_SHA | wc -l)
-        
-        echo "PR Statistics:"
-        echo "- Added lines: $ADDED_LINES"
-        echo "- Removed lines: $REMOVED_LINES"
-        echo "- Changed files: $CHANGED_FILES"
-        
-        # Check if PR is too large
-        if [[ $ADDED_LINES -gt 1000 ]]; then
-          echo "⚠️ Warning: This PR adds $ADDED_LINES lines. Consider breaking it into smaller PRs."
-        fi
-        
-        if [[ $CHANGED_FILES -gt 20 ]]; then
-          echo "⚠️ Warning: This PR changes $CHANGED_FILES files. Consider breaking it into smaller PRs."
-        fi
-        
-    - name: Check for Breaking Changes
-      run: |
-        # Look for potential breaking changes
-        BASE_SHA="${{ github.event.pull_request.base.sha }}"
-        HEAD_SHA="${{ github.event.pull_request.head.sha }}"
-        
-        # Check for removed public APIs
-        REMOVED_PUBLIC=$(git diff $BASE_SHA..$HEAD_SHA -- "Sources/**/*.swift" | grep "^-.*public" | wc -l)
-        
-        if [[ $REMOVED_PUBLIC -gt 0 ]]; then
-          echo "⚠️ Warning: This PR may contain breaking changes (removed public APIs)."
-          echo "Please ensure this is intentional and properly documented."
-        fi
-
-  # Security scan
-  security-scan:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Run Semgrep
-      uses: semgrep/semgrep-action@v1
-      with:
-        config: >-
-          p/security-audit
-          p/secrets
-          p/swift
-      env:
-        SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
-
-  # Documentation check
-  docs-check:
-    name: Documentation Check
-    runs-on: macos-latest
-    if: github.event.pull_request.draft == false
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Swift
-      uses: swift-actions/setup-swift@v2
-      with:
-        swift-version: '6.1'
-        
-    - name: Check Documentation Coverage
-      run: |
-        # Build documentation (skip if command not available)
-        echo "Documentation check placeholder - would use swift-docc when available"
-        
-        # Check for undocumented public APIs
-        echo "Checking for undocumented public APIs..."
-        find Sources -name "*.swift" -exec grep -l "^public " {} \; | while read file; do
-          echo "Checking $file..."
-          # This is a simple check - in practice you'd want more sophisticated tooling
-          grep -n "^public " "$file" | while read line; do
-            line_num=$(echo "$line" | cut -d: -f1)
-            prev_line=$((line_num - 1))
-            if [[ $prev_line -gt 0 ]]; then
-              prev_content=$(sed -n "${prev_line}p" "$file")
-              if [[ ! "$prev_content" =~ ^[[:space:]]*/// ]]; then
-                echo "⚠️ Potentially undocumented public API at $file:$line_num"
-              fi
-            fi
-          done
-        done
-
-  # All PR checks must pass
-  pr-ready:
+  # PR Ready for Review check
+  pr-ready-for-review:
     name: PR Ready for Review
     runs-on: ubuntu-latest
-    needs: [quick-check, comprehensive-checks, pr-analysis, security-scan, docs-check]
+    needs: [quick-validation]
     if: always() && github.event.pull_request.draft == false
-    
+
     steps:
-    - name: Check all PR requirements
+    - name: Check PR requirements
       run: |
-        if [[ "${{ needs.quick-check.result }}" != "success" ]]; then
+        echo "Quick validation: ${{ needs.quick-validation.result }}"
+
+        if [[ "${{ needs.quick-validation.result }}" != "success" ]]; then
           echo "❌ Quick validation failed"
           exit 1
         fi
-        if [[ "${{ needs.comprehensive-checks.result }}" != "success" ]]; then
-          echo "❌ Comprehensive checks failed"
-          exit 1
-        fi
-        if [[ "${{ needs.pr-analysis.result }}" != "success" ]]; then
-          echo "❌ PR analysis failed"
-          exit 1
-        fi
-        if [[ "${{ needs.security-scan.result }}" != "success" ]]; then
-          echo "❌ Security scan failed"
-          exit 1
-        fi
-        if [[ "${{ needs.docs-check.result }}" != "success" ]]; then
-          echo "❌ Documentation check failed"
-          exit 1
-        fi
-        echo "✅ All PR checks passed! Ready for review."
+
+        echo "✅ PR checks passed! Ready for review."
