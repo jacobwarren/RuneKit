@@ -1,0 +1,94 @@
+# SwiftFormat configuration for RuneKit
+# Follows Swift API Design Guidelines and modern Swift conventions
+
+# Enabled rules
+--enable isEmpty
+--enable sortedImports
+--enable duplicateImports
+--enable unusedArguments
+--enable void
+--enable trailingCommas
+--enable redundantSelf
+--enable redundantReturn
+--enable redundantParens
+--enable redundantGet
+--enable redundantInit
+--enable redundantVoidReturnType
+--enable redundantNilInit
+--enable redundantLet
+--enable redundantPattern
+--enable redundantRawValues
+--enable redundantExtensionACL
+--enable redundantFileprivate
+--enable redundantClosure
+--enable redundantBreak
+--enable redundantBackticks
+--enable strongifiedSelf
+--enable conditionalAssignment
+--enable wrapMultilineStatementBraces
+--enable braces
+--enable semicolons
+--enable andOperator
+--enable anyObjectProtocol
+--enable blankLinesAtEndOfScope
+--enable blankLinesAtStartOfScope
+--enable blankLinesBetweenScopes
+--enable consecutiveBlankLines
+--enable consecutiveSpaces
+--enable duplicateImports
+--enable elseOnSameLine
+--enable emptyBraces
+--enable hoistPatternLet
+--enable indent
+--enable leadingDelimiters
+--enable linebreakAtEndOfFile
+--enable numberFormatting
+--enable preferKeyPath
+--enable spaceAroundBraces
+--enable spaceAroundBrackets
+--enable spaceAroundComments
+--enable spaceAroundGenerics
+--enable spaceAroundOperators
+--enable spaceAroundParens
+--enable spaceInsideBraces
+--enable spaceInsideBrackets
+--enable spaceInsideComments
+--enable spaceInsideGenerics
+--enable spaceInsideParens
+--enable specifiers
+--enable todos
+--enable trailingSpace
+--enable typeSugar
+--enable wrap
+--enable wrapArguments
+--enable wrapAttributes
+--enable yodaConditions
+
+# Formatting options
+--indent 4
+--tabwidth 4
+--maxwidth 120
+--wraparguments before-first
+--wrapparameters before-first
+--wrapcollections before-first
+--closingparen balanced
+--commas always
+--trimwhitespace always
+--insertlines true
+--removelines true
+--allman false
+--ifdef no-indent
+--redundanttype inferred
+--self remove
+--importgrouping testable-bottom
+--typeattributes prev-line
+--funcattributes prev-line
+--varattributes same-line
+
+# Excluded paths
+--exclude .build
+--exclude .swiftpm
+--exclude Package.swift
+
+# File extensions
+--swiftversion 6.1

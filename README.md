@@ -74,6 +74,18 @@ swift run RuneCLI
 swift test
 ```
 
+### Development Scripts
+
+```bash
+# Set up development environment and format code
+./scripts/format-code.sh
+
+# Validate CI pipeline locally before pushing
+./scripts/ci-test.sh
+```
+
+See `scripts/README.md` for detailed documentation.
+
 ## Usage Example
 
 ```swift

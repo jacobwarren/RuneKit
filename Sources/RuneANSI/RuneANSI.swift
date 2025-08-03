@@ -1,5 +1,5 @@
 /// RuneANSI module - ANSI escape code parsing and tokenization
-/// 
+///
 /// This module provides functionality for parsing ANSI escape sequences
 /// commonly found in terminal output. It converts raw strings containing
 /// ANSI codes into structured tokens that can be processed by higher-level

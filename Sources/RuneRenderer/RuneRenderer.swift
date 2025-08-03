@@ -1,5 +1,5 @@
 /// RuneRenderer module - Terminal frame rendering and ANSI output
-/// 
+///
 /// This module provides functionality for efficiently rendering content
 /// to terminal displays. It handles ANSI escape sequences, cursor management,
 /// and frame-based updates with diff optimization.

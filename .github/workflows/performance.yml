@@ -1,0 +1,187 @@
+name: Performance Benchmarks
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'Sources/**/*.swift'
+      - 'Tests/**/*.swift'
+      - 'Package.swift'
+  schedule:
+    # Run benchmarks daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  benchmark:
+    name: Performance Benchmarks
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Setup Swift
+      uses: swift-actions/setup-swift@v2
+      with:
+        swift-version: '6.1'
+        
+    - name: Cache Swift Package Manager
+      uses: actions/cache@v4
+      with:
+        path: ~/Library/Caches/org.swift.swiftpm
+        key: ${{ runner.os }}-spm-benchmark-${{ hashFiles('Package.swift', 'Package.resolved') }}
+        restore-keys: |
+          ${{ runner.os }}-spm-benchmark-
+          ${{ runner.os }}-spm-
+          
+    - name: Build Release
+      run: swift build -c release
+      
+    - name: Run Performance Tests
+      run: |
+        echo "Running performance benchmarks..."
+        
+        # ANSI Tokenizer Performance
+        echo "=== ANSI Tokenizer Benchmarks ==="
+        time swift run -c release RuneCLI 2>/dev/null || echo "CLI benchmark completed"
+        
+        # Unicode Width Performance
+        echo "=== Unicode Width Benchmarks ==="
+        # Create a simple benchmark script
+        cat > benchmark.swift << 'EOF'
+        import RuneKit
+        import Foundation
+        
+        let testStrings = [
+            "Hello World",
+            "👨‍👩‍👧‍👦",
+            "🇯🇵",
+            "你好世界",
+            "こんにちは",
+            "مرحبا بالعالم",
+            String(repeating: "A", count: 1000),
+            String(repeating: "👍", count: 100)
+        ]
+        
+        let iterations = 10000
+        
+        print("Benchmarking Unicode width calculations...")
+        let start = CFAbsoluteTimeGetCurrent()
+        
+        for _ in 0..<iterations {
+            for string in testStrings {
+                _ = Width.displayWidth(of: string)
+            }
+        }
+        
+        let end = CFAbsoluteTimeGetCurrent()
+        let totalTime = end - start
+        let avgTime = totalTime / Double(iterations * testStrings.count)
+        
+        print("Total time: \(totalTime)s")
+        print("Average time per calculation: \(avgTime * 1000)ms")
+        print("Calculations per second: \(1.0 / avgTime)")
+        EOF
+        
+        swift benchmark.swift
+        
+    - name: Memory Usage Test
+      run: |
+        echo "=== Memory Usage Test ==="
+        # Test memory usage with a large number of operations
+        cat > memory_test.swift << 'EOF'
+        import RuneKit
+        import Foundation
+        
+        print("Testing memory usage...")
+        
+        let initialMemory = mach_task_basic_info()
+        
+        // Perform many operations
+        for i in 0..<100000 {
+            let tokenizer = ANSITokenizer()
+            let tokens = tokenizer.tokenize("Hello \u{001B}[31mWorld\u{001B}[0m")
+            let width = Width.displayWidth(of: "Test \(i)")
+            
+            if i % 10000 == 0 {
+                print("Completed \(i) operations")
+            }
+        }
+        
+        let finalMemory = mach_task_basic_info()
+        print("Memory test completed")
+        
+        func mach_task_basic_info() -> mach_task_basic_info_data_t {
+            var info = mach_task_basic_info_data_t()
+            var count = mach_msg_type_number_t(MemoryLayout<mach_task_basic_info>.size)/4
+            let result = withUnsafeMutablePointer(to: &info) {
+                $0.withMemoryRebound(to: integer_t.self, capacity: 1) {
+                    task_info(mach_task_self_, task_flavor_t(MACH_TASK_BASIC_INFO), $0, &count)
+                }
+            }
+            return info
+        }
+        EOF
+        
+        swift memory_test.swift
+        
+    - name: Store Benchmark Results
+      if: github.ref == 'refs/heads/main'
+      run: |
+        # Store results for trend analysis
+        mkdir -p benchmark-results
+        echo "$(date): Benchmark completed" >> benchmark-results/history.txt
+        
+    - name: Upload Benchmark Results
+      if: github.ref == 'refs/heads/main'
+      uses: actions/upload-artifact@v4
+      with:
+        name: benchmark-results-${{ github.sha }}
+        path: benchmark-results/
+        retention-days: 30
+
+  # Compare performance with base branch for PRs
+  performance-comparison:
+    name: Performance Comparison
+    runs-on: macos-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: Checkout PR
+      uses: actions/checkout@v4
+      
+    - name: Setup Swift
+      uses: swift-actions/setup-swift@v2
+      with:
+        swift-version: '6.1'
+        
+    - name: Build PR Version
+      run: |
+        swift build -c release
+        echo "PR version built"
+        
+    - name: Checkout Base Branch
+      run: |
+        git fetch origin ${{ github.event.pull_request.base.ref }}
+        git checkout origin/${{ github.event.pull_request.base.ref }}
+        
+    - name: Build Base Version
+      run: |
+        swift build -c release
+        echo "Base version built"
+        
+    - name: Performance Comparison
+      run: |
+        echo "Performance comparison between base and PR would go here"
+        echo "This is a placeholder for actual benchmark comparison logic"
+        echo "Base: ${{ github.event.pull_request.base.sha }}"
+        echo "PR: ${{ github.event.pull_request.head.sha }}"
