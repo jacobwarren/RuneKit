@@ -12,7 +12,11 @@ RuneKit is built on four core subsystems:
 
 ### 1. Text Engine (`RuneANSI` + `RuneUnicode`)
 - **RuneANSI**: ANSI escape sequence parsing and tokenization
-- **RuneUnicode**: Accurate Unicode width calculations for emoji, CJK, and complex scripts
+- **RuneUnicode**: Accurate Unicode width calculations, character categorization, and text normalization
+  - Unicode category detection using utf8proc (Unicode 16.0.0)
+  - Combining mark identification for proper text rendering
+  - Emoji scalar detection using Extended_Pictographic property
+  - Unicode normalization (NFC, NFD, NFKC, NFKD)
 - Foundation for text wrapping and alignment
 
 ### 2. Layout Engine (`RuneLayout`)
@@ -55,6 +59,25 @@ RuneKit/
 - Individual modules available as separate products for advanced use cases
 
 ## Quick Start
+
+### Prerequisites
+
+RuneKit requires utf8proc for Unicode processing:
+
+**macOS:**
+```bash
+brew install utf8proc
+```
+
+**Linux (Ubuntu/Debian):**
+```bash
+sudo apt-get install libutf8proc-dev
+```
+
+**Linux (RHEL/CentOS):**
+```bash
+sudo yum install utf8proc-devel
+```
 
 ### Building
 
@@ -102,6 +125,22 @@ let tokens = tokenizer.tokenize("\u{001B}[31mRed Text\u{001B}[0m")
 
 // Unicode width calculation
 let width = Width.displayWidth(of: "👨‍👩‍👧‍👦") // Returns 2
+
+// Unicode category detection
+let category = UnicodeCategories.category(of: Unicode.Scalar("A")!)
+// Returns: .uppercaseLetter
+
+// Combining mark detection
+let isCombining = UnicodeCategories.isCombining(Unicode.Scalar(0x0301)!)
+// Returns: true (combining acute accent)
+
+// Emoji detection
+let isEmoji = UnicodeCategories.isEmojiScalar(Unicode.Scalar("👍")!)
+// Returns: true
+
+// Unicode normalization
+let normalized = UnicodeNormalization.normalize("é", form: .nfd)
+// Returns: "e\u{0301}" (decomposed form)
 ```
 
 ## Platform Support
@@ -113,9 +152,31 @@ let width = Width.displayWidth(of: "👨‍👩‍👧‍👦") // Returns 2
 - visionOS 1.0+
 - Linux (Swift 6.1+)
 
+## Features
+
+### Unicode Processing (NEW!)
+- **Character categorization** using Unicode 16.0.0 standard
+- **Combining mark detection** for proper text rendering
+- **Emoji identification** using Extended_Pictographic property
+- **Text normalization** (NFC, NFD, NFKC, NFKD) for consistent text processing
+- **High performance** with utf8proc C library backend
+
+### ANSI Processing
+- Complete ANSI escape sequence parsing and tokenization
+- Styled text spans for rich terminal output
+- Lossless round-trip encoding support
+
+### Layout Engine
+- Flexbox-inspired layout system optimized for terminals
+- Constraint-based sizing and positioning
+
+### Terminal Rendering
+- Efficient frame rendering with ANSI escape sequences
+- Actor-based thread-safe output management
+
 ## Development Status
 
-This is the initial package structure implementation. Core functionality is minimal and will be expanded following TDD principles.
+Core functionality is implemented following strict TDD principles. The library provides production-ready Unicode processing, ANSI handling, and foundational layout capabilities.
 
 ## License
 

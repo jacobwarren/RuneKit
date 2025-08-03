@@ -60,7 +60,6 @@ sanitizer-output/
 
 # Documentation Generation
 .docc-build/
-docs/
 documentation/
 
 # Temporary Files

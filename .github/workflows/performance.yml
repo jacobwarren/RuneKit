@@ -32,8 +32,11 @@ jobs:
     - name: Setup Swift
       uses: SwiftyLab/setup-swift@latest
       with:
-        swift-version: '6.2'
-        
+        swift-version: '6.1'
+
+    - name: Install utf8proc
+      run: brew install utf8proc
+
     - name: Cache Swift Package Manager
       uses: actions/cache@v4
       with:
@@ -42,7 +45,7 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-spm-benchmark-
           ${{ runner.os }}-spm-
-          
+
     - name: Build Release
       run: swift build -c release
       
@@ -91,7 +94,10 @@ jobs:
       uses: SwiftyLab/setup-swift@latest
       with:
         swift-version: '6.1'
-        
+
+    - name: Install utf8proc
+      run: brew install utf8proc
+
     - name: Build PR Version
       run: |
         swift build -c release

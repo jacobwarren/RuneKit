@@ -1,0 +1,40 @@
+# Dockerfile for testing RuneKit on Linux (similar to GitHub Actions)
+FROM swift:6.1
+
+# Set working directory
+WORKDIR /workspace
+
+# Install dependencies including utf8proc for Unicode processing
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libutf8proc-dev \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy source code
+COPY . .
+
+# Display Swift version (matches CI)
+RUN swift --version
+
+# Package resolution (matches CI)
+RUN swift package resolve
+
+# Package dump check (matches CI)
+RUN swift package dump-package
+
+# Build debug configuration (matches CI)
+RUN swift build -c debug
+
+# Build release configuration (matches CI)
+RUN swift build -c release
+
+# Run tests (matches CI)
+RUN swift test
+
+# Verify CLI executable (matches CI)
+RUN swift run RuneCLI
+
+# Default command
+CMD ["swift", "test"]

@@ -48,6 +48,16 @@ let package = Package(
         ),
     ],
     targets: [
+        // System library for utf8proc
+        .systemLibrary(
+            name: "Cutf8proc",
+            pkgConfig: "libutf8proc",
+            providers: [
+                .brew(["utf8proc"]),
+                .apt(["libutf8proc-dev"])
+            ]
+        ),
+
         // Core modules - foundational layers
         .target(
             name: "RuneANSI",
@@ -55,7 +65,7 @@ let package = Package(
         ),
         .target(
             name: "RuneUnicode",
-            dependencies: []
+            dependencies: ["Cutf8proc"]
         ),
         .target(
             name: "RuneLayout",

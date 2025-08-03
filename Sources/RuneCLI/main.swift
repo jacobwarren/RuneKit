@@ -28,6 +28,9 @@ struct RuneCLI {
 
         // Demonstrate styled text spans
         demonstrateStyledTextSpans()
+
+        // Demonstrate Unicode categories
+        demonstrateUnicodeCategories()
     }
 
     /// Demonstrate basic RuneKit functionality
@@ -140,5 +143,67 @@ struct RuneCLI {
         print("   Identical:     \(tokenizer.encode(originalTokens) == finalString)")
 
         print("\nStyled text spans working correctly! ✨")
+    }
+
+    /// Demonstrate Unicode categories and utf8proc integration
+    static func demonstrateUnicodeCategories() {
+        print("\n--- Unicode Categories Demo (utf8proc) ---")
+
+        // Show Unicode version
+        let version = UnicodeCategories.unicodeVersion()
+        print("Unicode version: \(version)")
+        print("")
+
+        // Test various character categories
+        let testCases: [(String, String)] = [
+            ("A", "Uppercase letter"),
+            ("a", "Lowercase letter"),
+            ("5", "Decimal number"),
+            ("Ⅴ", "Roman numeral"),
+            (".", "Punctuation"),
+            ("+", "Math symbol"),
+            ("$", "Currency symbol"),
+            ("👍", "Emoji"),
+            ("❤", "Heart emoji"),
+            ("世", "CJK character"),
+            ("é", "Precomposed accent"),
+            ("e\u{0301}", "Decomposed accent"),
+            ("\u{0301}", "Combining mark"),
+            ("\t", "Control character"),
+        ]
+
+        print("Character category analysis:")
+        for (char, description) in testCases {
+            if let scalar = char.unicodeScalars.first {
+                let category = UnicodeCategories.category(of: scalar)
+                let isCombining = UnicodeCategories.isCombining(scalar)
+                let isEmoji = UnicodeCategories.isEmojiScalar(scalar)
+
+                print("  '\(char)' (\(description))")
+                print("    Category: \(category)")
+                print("    Combining: \(isCombining)")
+                print("    Emoji: \(isEmoji)")
+                print("")
+            }
+        }
+
+        // Demonstrate normalization
+        print("Unicode normalization examples:")
+        let normalizationCases = [
+            ("é", "Precomposed"),
+            ("e\u{0301}", "Decomposed"),
+            ("ﬁ", "Ligature"),
+        ]
+
+        for (text, description) in normalizationCases {
+            print("  \(description): '\(text)'")
+            print("    NFC:  '\(UnicodeNormalization.normalize(text, form: .nfc))'")
+            print("    NFD:  '\(UnicodeNormalization.normalize(text, form: .nfd))'")
+            print("    NFKC: '\(UnicodeNormalization.normalize(text, form: .nfkc))'")
+            print("    NFKD: '\(UnicodeNormalization.normalize(text, form: .nfkd))'")
+            print("")
+        }
+
+        print("Unicode categories working correctly! 🎯")
     }
 }

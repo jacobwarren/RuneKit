@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  SWIFT_VERSION: '6.2'
+  SWIFT_VERSION: '6.1'
 
 jobs:
   # Main build and test matrix across platforms
@@ -37,7 +37,15 @@ jobs:
       uses: SwiftyLab/setup-swift@latest
       with:
         swift-version: ${{ env.SWIFT_VERSION }}
-        
+
+    - name: Install utf8proc (macOS)
+      if: matrix.os == 'macos-latest'
+      run: brew install utf8proc
+
+    - name: Install utf8proc (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      run: sudo apt-get update && sudo apt-get install -y libutf8proc-dev pkg-config
+
     - name: Cache Swift Package Manager
       uses: actions/cache@v4
       with:
@@ -45,7 +53,7 @@ jobs:
         key: ${{ runner.os }}-spm-${{ hashFiles('Package.swift', 'Package.resolved') }}
         restore-keys: |
           ${{ runner.os }}-spm-
-          
+
     - name: Swift Version
       run: swift --version
       
@@ -75,12 +83,12 @@ jobs:
       uses: SwiftyLab/setup-swift@latest
       with:
         swift-version: ${{ env.SWIFT_VERSION }}
-        
-    - name: Install SwiftFormat
-      run: brew install swiftformat
-      
-    - name: Install SwiftLint
-      run: brew install swiftlint
+
+    - name: Install dependencies
+      run: |
+        brew install utf8proc
+        brew install swiftformat
+        brew install swiftlint
       
     - name: Check SwiftFormat
       run: swiftformat --lint . || echo "SwiftFormat issues found"
@@ -103,6 +111,9 @@ jobs:
       uses: SwiftyLab/setup-swift@latest
       with:
         swift-version: ${{ env.SWIFT_VERSION }}
+
+    - name: Install utf8proc
+      run: sudo apt-get update && sudo apt-get install -y libutf8proc-dev pkg-config
 
     - name: Build with Address Sanitizer
       run: swift build -c debug -Xswiftc -sanitize=address
