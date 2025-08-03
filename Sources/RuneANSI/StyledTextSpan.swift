@@ -26,11 +26,11 @@ public enum ANSIColor: Equatable, Hashable {
     case brightMagenta
     case brightCyan
     case brightWhite
-    
+
     /// 256-color palette (0-255)
     /// - Parameter index: Color index in the 256-color palette
     case color256(Int)
-    
+
     /// RGB color with full 24-bit color support
     /// - Parameters:
     ///   - red: Red component (0-255)
@@ -46,28 +46,28 @@ public enum ANSIColor: Equatable, Hashable {
 public struct TextAttributes: Equatable, Hashable {
     /// Foreground text color
     public var color: ANSIColor?
-    
+
     /// Background color
     public var backgroundColor: ANSIColor?
-    
+
     /// Bold/bright text (SGR 1)
     public var bold: Bool
-    
+
     /// Italic text (SGR 3)
     public var italic: Bool
-    
+
     /// Underlined text (SGR 4)
     public var underline: Bool
-    
+
     /// Inverse/reverse video (SGR 7)
     public var inverse: Bool
-    
+
     /// Strikethrough text (SGR 9)
     public var strikethrough: Bool
-    
+
     /// Dim/faint text (SGR 2)
     public var dim: Bool
-    
+
     /// Initialize text attributes with optional styling
     ///
     /// - Parameters:
@@ -87,7 +87,7 @@ public struct TextAttributes: Equatable, Hashable {
         underline: Bool = false,
         inverse: Bool = false,
         strikethrough: Bool = false,
-        dim: Bool = false
+        dim: Bool = false,
     ) {
         self.color = color
         self.backgroundColor = backgroundColor
@@ -98,17 +98,17 @@ public struct TextAttributes: Equatable, Hashable {
         self.strikethrough = strikethrough
         self.dim = dim
     }
-    
+
     /// Check if attributes represent default (no styling)
     public var isDefault: Bool {
-        return color == nil &&
-               backgroundColor == nil &&
-               !bold &&
-               !italic &&
-               !underline &&
-               !inverse &&
-               !strikethrough &&
-               !dim
+        color == nil &&
+            backgroundColor == nil &&
+            !bold &&
+            !italic &&
+            !underline &&
+            !inverse &&
+            !strikethrough &&
+            !dim
     }
 }
 
@@ -120,10 +120,10 @@ public struct TextAttributes: Equatable, Hashable {
 public struct TextSpan: Equatable, Hashable {
     /// The text content of this span
     public let text: String
-    
+
     /// The styling attributes applied to this span
     public let attributes: TextAttributes
-    
+
     /// Initialize a text span
     ///
     /// - Parameters:
@@ -133,28 +133,28 @@ public struct TextSpan: Equatable, Hashable {
         self.text = text
         self.attributes = attributes
     }
-    
+
     /// Create a plain text span with no styling
     ///
     /// - Parameter text: The text content
     /// - Returns: A text span with default attributes
     public static func plain(_ text: String) -> TextSpan {
-        return TextSpan(text: text, attributes: TextAttributes())
+        TextSpan(text: text, attributes: TextAttributes())
     }
-    
+
     /// Check if this span has any styling applied
     public var isPlain: Bool {
-        return attributes.isDefault
+        attributes.isDefault
     }
-    
+
     /// The length of the text content
     public var length: Int {
-        return text.count
+        text.count
     }
-    
+
     /// Check if this span is empty
     public var isEmpty: Bool {
-        return text.isEmpty
+        text.isEmpty
     }
 
     /// Split this span at the specified character index
@@ -185,40 +185,40 @@ public struct TextSpan: Equatable, Hashable {
 public struct StyledText: Equatable {
     /// The text spans that make up this styled text
     public let spans: [TextSpan]
-    
+
     /// Initialize styled text with an array of spans
     ///
     /// - Parameter spans: The text spans to include
     public init(spans: [TextSpan]) {
         self.spans = spans
     }
-    
+
     /// Create styled text from plain text with no formatting
     ///
     /// - Parameter text: The plain text content
     /// - Returns: StyledText with a single plain span
     public static func plain(_ text: String) -> StyledText {
-        return StyledText(spans: [TextSpan.plain(text)])
+        StyledText(spans: [TextSpan.plain(text)])
     }
-    
+
     /// Extract the plain text content without any formatting
     public var plainText: String {
-        return spans.map { $0.text }.joined()
+        spans.map(\.text).joined()
     }
-    
+
     /// Check if this styled text is empty
     public var isEmpty: Bool {
-        return spans.isEmpty || spans.allSatisfy { $0.isEmpty }
+        spans.isEmpty || spans.allSatisfy(\.isEmpty)
     }
-    
+
     /// The total length of all text content
     public var length: Int {
-        return spans.reduce(0) { $0 + $1.length }
+        spans.reduce(0) { $0 + $1.length }
     }
-    
+
     /// Check if this styled text contains only plain text (no formatting)
     public var isPlain: Bool {
-        return spans.allSatisfy { $0.isPlain }
+        spans.allSatisfy(\.isPlain)
     }
 
     /// Merge adjacent spans with identical attributes
@@ -234,14 +234,14 @@ public struct StyledText: Equatable {
         var mergedSpans: [TextSpan] = []
         var currentSpan = spans[0]
 
-        for i in 1..<spans.count {
+        for i in 1 ..< spans.count {
             let nextSpan = spans[i]
 
             // If attributes match, merge the text
             if currentSpan.attributes == nextSpan.attributes {
                 currentSpan = TextSpan(
                     text: currentSpan.text + nextSpan.text,
-                    attributes: currentSpan.attributes
+                    attributes: currentSpan.attributes,
                 )
             } else {
                 // Attributes don't match, save current span and start new one
@@ -304,7 +304,7 @@ public struct StyledText: Equatable {
 
         return (
             left: StyledText(spans: leftSpans),
-            right: StyledText(spans: rightSpans)
+            right: StyledText(spans: rightSpans),
         )
     }
 }
@@ -315,7 +315,6 @@ public struct StyledText: Equatable {
 /// ANSI token representation and the higher-level styled text span model.
 /// It maintains state during conversion to properly handle SGR sequences.
 public struct ANSISpanConverter {
-
     public init() {}
 
     /// Convert ANSI tokens to styled text
@@ -332,10 +331,10 @@ public struct ANSISpanConverter {
 
         for token in tokens {
             switch token {
-            case .text(let text):
+            case let .text(text):
                 pendingText += text
 
-            case .sgr(let parameters):
+            case let .sgr(parameters):
                 // If we have pending text, create a span with current attributes
                 if !pendingText.isEmpty {
                     spans.append(TextSpan(text: pendingText, attributes: currentAttributes))
@@ -466,7 +465,7 @@ public struct ANSISpanConverter {
                 // Not strikethrough
                 newAttributes.strikethrough = false
 
-            case 30...37:
+            case 30 ... 37:
                 // Basic foreground colors
                 newAttributes.color = basicColor(from: param - 30)
 
@@ -481,7 +480,7 @@ public struct ANSISpanConverter {
                 // Default foreground color
                 newAttributes.color = nil
 
-            case 40...47:
+            case 40 ... 47:
                 // Basic background colors
                 newAttributes.backgroundColor = basicColor(from: param - 40)
 
@@ -496,11 +495,11 @@ public struct ANSISpanConverter {
                 // Default background color
                 newAttributes.backgroundColor = nil
 
-            case 90...97:
+            case 90 ... 97:
                 // Bright foreground colors
                 newAttributes.color = brightColor(from: param - 90)
 
-            case 100...107:
+            case 100 ... 107:
                 // Bright background colors
                 newAttributes.backgroundColor = brightColor(from: param - 100)
 
@@ -601,9 +600,9 @@ public struct ANSISpanConverter {
             return [brightOffset + 6]
         case .brightWhite:
             return [brightOffset + 7]
-        case .color256(let index):
+        case let .color256(index):
             return [isBackground ? 48 : 38, 5, index]
-        case .rgb(let red, let green, let blue):
+        case let .rgb(red, green, blue):
             return [isBackground ? 48 : 38, 2, red, green, blue]
         }
     }
@@ -614,7 +613,10 @@ public struct ANSISpanConverter {
     ///   - parameters: Full SGR parameter array
     ///   - startIndex: Index of the 38 or 48 parameter
     /// - Returns: Parsed color and next index, or nil if invalid
-    private func parseExtendedColor(_ parameters: [Int], startingAt startIndex: Int) -> (color: ANSIColor, nextIndex: Int)? {
+    private func parseExtendedColor(
+        _ parameters: [Int],
+        startingAt startIndex: Int,
+    ) -> (color: ANSIColor, nextIndex: Int)? {
         guard startIndex + 1 < parameters.count else { return nil }
 
         let colorType = parameters[startIndex + 1]
@@ -624,7 +626,7 @@ public struct ANSISpanConverter {
             // 256-color palette
             guard startIndex + 2 < parameters.count else { return nil }
             let colorIndex = parameters[startIndex + 2]
-            guard colorIndex >= 0 && colorIndex <= 255 else { return nil }
+            guard colorIndex >= 0, colorIndex <= 255 else { return nil }
             return (.color256(colorIndex), startIndex + 3)
 
         case 2:
@@ -633,9 +635,9 @@ public struct ANSISpanConverter {
             let red = parameters[startIndex + 2]
             let green = parameters[startIndex + 3]
             let blue = parameters[startIndex + 4]
-            guard red >= 0 && red <= 255 &&
-                  green >= 0 && green <= 255 &&
-                  blue >= 0 && blue <= 255 else { return nil }
+            guard red >= 0, red <= 255,
+                  green >= 0, green <= 255,
+                  blue >= 0, blue <= 255 else { return nil }
             return (.rgb(red, green, blue), startIndex + 5)
 
         default:
@@ -649,15 +651,15 @@ public struct ANSISpanConverter {
     /// - Returns: Corresponding ANSIColor
     private func basicColor(from index: Int) -> ANSIColor {
         switch index {
-        case 0: return .black
-        case 1: return .red
-        case 2: return .green
-        case 3: return .yellow
-        case 4: return .blue
-        case 5: return .magenta
-        case 6: return .cyan
-        case 7: return .white
-        default: return .white
+        case 0: .black
+        case 1: .red
+        case 2: .green
+        case 3: .yellow
+        case 4: .blue
+        case 5: .magenta
+        case 6: .cyan
+        case 7: .white
+        default: .white
         }
     }
 
@@ -667,15 +669,15 @@ public struct ANSISpanConverter {
     /// - Returns: Corresponding bright ANSIColor
     private func brightColor(from index: Int) -> ANSIColor {
         switch index {
-        case 0: return .brightBlack
-        case 1: return .brightRed
-        case 2: return .brightGreen
-        case 3: return .brightYellow
-        case 4: return .brightBlue
-        case 5: return .brightMagenta
-        case 6: return .brightCyan
-        case 7: return .brightWhite
-        default: return .brightWhite
+        case 0: .brightBlack
+        case 1: .brightRed
+        case 2: .brightGreen
+        case 3: .brightYellow
+        case 4: .brightBlue
+        case 5: .brightMagenta
+        case 6: .brightCyan
+        case 7: .brightWhite
+        default: .brightWhite
         }
     }
 }

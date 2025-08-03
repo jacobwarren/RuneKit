@@ -3,106 +3,105 @@ import Testing
 
 /// Tests for ANSI tokenizer functionality following TDD principles
 struct ANSITokenizerTests {
-    
     // MARK: - Basic Tokenization Tests
-    
+
     @Test("Empty string returns empty array")
-    func testTokenizeEmptyString() {
+    func tokenizeEmptyString() {
         // Arrange
         let tokenizer = ANSITokenizer()
         let input = ""
-        
+
         // Act
         let tokens = tokenizer.tokenize(input)
-        
+
         // Assert
         #expect(tokens.isEmpty, "Empty string should return empty token array")
     }
-    
+
     @Test("Plain text without ANSI codes")
-    func testTokenizePlainText() {
+    func tokenizePlainText() {
         // Arrange
         let tokenizer = ANSITokenizer()
         let input = "Hello World"
-        
+
         // Act
         let tokens = tokenizer.tokenize(input)
-        
+
         // Assert
         #expect(tokens == [.text("Hello World")], "Plain text should be tokenized as single text token")
     }
-    
+
     // MARK: - SGR (Styling) Tests - These will initially fail
-    
+
     @Test("Simple SGR color code")
-    func testTokenizeSimpleSGR() {
+    func tokenizeSimpleSGR() {
         // Arrange
         let tokenizer = ANSITokenizer()
         let input = "\u{001B}[31mRed Text\u{001B}[0m"
-        
+
         // Act
         let tokens = tokenizer.tokenize(input)
-        
+
         // Assert
         let expected: [ANSIToken] = [
             .sgr([31]),
             .text("Red Text"),
-            .sgr([0])
+            .sgr([0]),
         ]
         #expect(tokens == expected, "SGR codes should be properly tokenized")
     }
-    
+
     @Test("Multiple SGR parameters")
-    func testTokenizeMultipleSGRParameters() {
+    func tokenizeMultipleSGRParameters() {
         // Arrange
         let tokenizer = ANSITokenizer()
         let input = "\u{001B}[1;31mBold Red\u{001B}[0m"
-        
+
         // Act
         let tokens = tokenizer.tokenize(input)
-        
+
         // Assert
         let expected: [ANSIToken] = [
             .sgr([1, 31]),
             .text("Bold Red"),
-            .sgr([0])
+            .sgr([0]),
         ]
         #expect(tokens == expected, "Multiple SGR parameters should be parsed correctly")
     }
-    
+
     // MARK: - Cursor Movement Tests - These will initially fail
-    
+
     @Test("Cursor up movement")
-    func testTokenizeCursorUp() {
+    func tokenizeCursorUp() {
         // Arrange
         let tokenizer = ANSITokenizer()
         let input = "\u{001B}[3A"
-        
+
         // Act
         let tokens = tokenizer.tokenize(input)
-        
+
         // Assert
         #expect(tokens == [.cursor(3, "A")], "Cursor up should be tokenized correctly")
     }
-    
+
     // MARK: - Mixed Content Tests - These will initially fail
-    
+
     @Test("Mixed text and ANSI codes")
-    func testTokenizeMixedContent() {
+    func tokenizeMixedContent() {
         // Arrange
         let tokenizer = ANSITokenizer()
         let input = "Hello \u{001B}[31mRed\u{001B}[0m World"
-        
+
         // Act
         let tokens = tokenizer.tokenize(input)
-        
+
         // Assert
         let expected: [ANSIToken] = [
             .text("Hello "),
             .sgr([31]),
             .text("Red"),
             .sgr([0]),
-            .text(" World")
+            .text(" World"),
         ]
         #expect(tokens == expected, "Mixed content should be tokenized correctly")
     }
@@ -387,7 +386,7 @@ struct ANSITokenizerTests {
 
         // Verify specific patterns
         let hasGreenCheckmark = tokens.contains { token in
-            if case .sgr(let params) = token, params == [32] { return true }
+            if case let .sgr(params) = token, params == [32] { return true }
             return false
         }
         #expect(hasGreenCheckmark, "Should contain green color code for checkmark")
@@ -479,7 +478,7 @@ struct ANSITokenizerTests {
 
         // The invalid sequence should be handled somehow (either as control or text)
         let hasValidReset = tokens.contains { token in
-            if case .sgr(let params) = token, params == [0] { return true }
+            if case let .sgr(params) = token, params == [0] { return true }
             return false
         }
         #expect(hasValidReset, "Valid reset sequence should still be parsed")
@@ -497,7 +496,7 @@ struct ANSITokenizerTests {
         // Assert
         // Should handle empty parameters gracefully
         #expect(tokens.count == 1, "Empty parameters should produce one token")
-        if case .sgr(let params) = tokens[0] {
+        if case let .sgr(params) = tokens[0] {
             // Empty parameters should be treated as 0 or filtered out
             #expect(params.isEmpty || params == [0], "Empty parameters should be handled gracefully")
         } else {

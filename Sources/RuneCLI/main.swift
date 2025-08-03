@@ -39,9 +39,21 @@ struct RuneCLI {
         let tokens = tokenizer.tokenize("Hello World")
         print("ANSI Tokenizer: \(tokens.count) tokens from 'Hello World'")
 
-        // Test width calculation
-        let width = Width.displayWidth(of: "Hello")
-        print("Unicode Width: 'Hello' has display width \(width)")
+        // Test width calculation with wcwidth bridge
+        let testCases = [
+            ("Hello", "ASCII text"),
+            ("café", "Text with accents"),
+            ("A\u{0300}", "A + combining grave"),
+            ("\u{0007}", "Control character (BEL)"),
+            ("\t", "Tab character"),
+            ("世界", "CJK characters"),
+        ]
+
+        print("Unicode Width calculations (wcwidth bridge):")
+        for (text, description) in testCases {
+            let width = Width.displayWidth(of: text)
+            print("  '\(text)' (\(description)): width = \(width)")
+        }
 
         // Test layout calculation
         let children = [FlexLayout.Size(width: 5, height: 1)]
@@ -82,7 +94,9 @@ struct RuneCLI {
             var attrDesc = ""
             if attrs.bold { attrDesc += "bold " }
             if let color = attrs.color { attrDesc += "\(color) " }
-            print("     \(index): '\(span.text)' (\(attrDesc.isEmpty ? "plain" : attrDesc.trimmingCharacters(in: .whitespaces)))")
+            print(
+                "     \(index): '\(span.text)' (\(attrDesc.isEmpty ? "plain" : attrDesc.trimmingCharacters(in: .whitespaces)))",
+            )
         }
 
         // Example 2: Merging spans
@@ -91,7 +105,7 @@ struct RuneCLI {
         let spans = [
             TextSpan(text: "Hello ", attributes: redBold),
             TextSpan(text: "beautiful ", attributes: redBold),
-            TextSpan(text: "world", attributes: redBold)
+            TextSpan(text: "world", attributes: redBold),
         ]
         let multiSpanText = StyledText(spans: spans)
         let merged = multiSpanText.mergingAdjacentSpans()
@@ -105,7 +119,7 @@ struct RuneCLI {
         let mixedText = StyledText(spans: [
             TextSpan(text: "Hello ", attributes: TextAttributes(color: .red)),
             TextSpan(text: "beautiful ", attributes: TextAttributes(bold: true)),
-            TextSpan(text: "world!", attributes: TextAttributes(color: .blue))
+            TextSpan(text: "world!", attributes: TextAttributes(color: .blue)),
         ])
 
         let (left, right) = mixedText.split(at: 10)
