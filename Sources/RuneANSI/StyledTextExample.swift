@@ -34,7 +34,7 @@ public enum StyledTextExample {
 
     /// Demonstrates merging adjacent spans with identical attributes
     public static func mergingSpans() {
-        let converter = ANSISpanConverter()
+        _ = ANSISpanConverter()
 
         // Create styled text with adjacent spans that have the same attributes
         let redBold = TextAttributes(color: .red, bold: true)
@@ -61,7 +61,7 @@ public enum StyledTextExample {
 
     /// Demonstrates splitting styled text at column boundaries
     public static func splittingText() {
-        let converter = ANSISpanConverter()
+        _ = ANSISpanConverter()
 
         // Create styled text with multiple spans
         let styledText = StyledText(spans: [

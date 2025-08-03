@@ -15,6 +15,14 @@ import Glibc
 import Musl
 #endif
 
+// Platform-specific wcwidth availability
+#if canImport(Darwin)
+private let wcwidthAvailable = true
+#else
+// wcwidth may not be available on all Linux distributions
+private let wcwidthAvailable = false
+#endif
+
 public enum Width {
     /// Calculate the display width of a string in terminal columns
     /// - Parameter string: The string to measure
@@ -46,28 +54,35 @@ public enum Width {
             return 0 // Other control characters have zero width
         }
 
-        // Use wcwidth for baseline width calculation
-        let result = wcwidth(wchar_t(codePoint))
+        // Use wcwidth for baseline width calculation if available
+        if wcwidthAvailable {
+            #if canImport(Darwin)
+            let result = wcwidth(wchar_t(codePoint))
 
-        // wcwidth returns:
-        // -1 for non-printable characters
-        //  0 for zero-width characters
-        //  1 for normal width characters
-        //  2 for wide characters (CJK, etc.)
-        switch result {
-        case -1:
-            // wcwidth returned -1, but we need to handle some cases manually
-            return handleUnrecognizedCharacter(codePoint)
-        case 0:
-            return 0 // Zero-width characters (combining marks, etc.)
-        case 1:
-            return 1 // Normal width
-        case 2:
-            return 2 // Wide characters
-        default:
-            // Fallback for unexpected values
-            return max(0, Int(result))
+            // wcwidth returns:
+            // -1 for non-printable characters
+            //  0 for zero-width characters
+            //  1 for normal width characters
+            //  2 for wide characters (CJK, etc.)
+            switch result {
+            case -1:
+                // wcwidth returned -1, but we need to handle some cases manually
+                return handleUnrecognizedCharacter(codePoint)
+            case 0:
+                return 0 // Zero-width characters (combining marks, etc.)
+            case 1:
+                return 1 // Normal width
+            case 2:
+                return 2 // Wide characters
+            default:
+                // Fallback for unexpected values
+                return max(0, Int(result))
+            }
+            #endif
         }
+
+        // Fallback implementation when wcwidth is not available (e.g., Linux)
+        return fallbackWidthCalculation(codePoint)
     }
 
     /// Check if a Unicode scalar is a zero-width character
@@ -144,6 +159,97 @@ public enum Width {
         }
 
         // Default fallback for other unrecognized characters
+        return 1
+    }
+
+    /// Fallback width calculation when wcwidth is not available
+    /// - Parameter codePoint: The Unicode code point
+    /// - Returns: The display width (0, 1, or 2)
+    private static func fallbackWidthCalculation(_ codePoint: UInt32) -> Int {
+        // Basic ASCII printable characters
+        if codePoint >= 0x20 && codePoint <= 0x7E {
+            return 1
+        }
+
+        // Control characters
+        if codePoint < 0x20 || codePoint == 0x7F || (codePoint >= 0x80 && codePoint < 0xA0) {
+            // Special case: TAB should have width 1
+            if codePoint == 0x09 {
+                return 1
+            }
+            return 0
+        }
+
+        // Combining Diacritical Marks (U+0300-U+036F)
+        if codePoint >= 0x0300 && codePoint <= 0x036F {
+            return 0
+        }
+
+        // Combining Diacritical Marks Extended (U+1AB0-U+1AFF)
+        if codePoint >= 0x1AB0 && codePoint <= 0x1AFF {
+            return 0
+        }
+
+        // Combining Diacritical Marks Supplement (U+1DC0-U+1DFF)
+        if codePoint >= 0x1DC0 && codePoint <= 0x1DFF {
+            return 0
+        }
+
+        // Combining Half Marks (U+FE20-U+FE2F)
+        if codePoint >= 0xFE20 && codePoint <= 0xFE2F {
+            return 0
+        }
+
+        // CJK Unified Ideographs (U+4E00-U+9FFF) - Wide characters
+        if codePoint >= 0x4E00 && codePoint <= 0x9FFF {
+            return 2
+        }
+
+        // CJK Symbols and Punctuation (U+3000-U+303F)
+        if codePoint >= 0x3000 && codePoint <= 0x303F {
+            // U+3000 IDEOGRAPHIC SPACE is wide
+            if codePoint == 0x3000 {
+                return 2
+            }
+            return 1
+        }
+
+        // Hangul Syllables (U+AC00-U+D7AF) - Wide characters
+        if codePoint >= 0xAC00 && codePoint <= 0xD7AF {
+            return 2
+        }
+
+        // Hiragana (U+3040-U+309F) - Wide characters
+        if codePoint >= 0x3040 && codePoint <= 0x309F {
+            return 2
+        }
+
+        // Katakana (U+30A0-U+30FF) - Wide characters
+        if codePoint >= 0x30A0 && codePoint <= 0x30FF {
+            return 2
+        }
+
+        // Latin-1 Supplement (U+00A0-U+00FF)
+        if codePoint >= 0x00A0 && codePoint <= 0x00FF {
+            return 1
+        }
+
+        // General Punctuation (U+2000-U+206F)
+        if codePoint >= 0x2000 && codePoint <= 0x206F {
+            // Zero-width spaces and format characters
+            if codePoint >= 0x200B && codePoint <= 0x200F {
+                return 0  // Zero-width spaces
+            }
+            if codePoint >= 0x202A && codePoint <= 0x202E {
+                return 0  // Bidirectional format characters
+            }
+            if codePoint >= 0x2060 && codePoint <= 0x2064 {
+                return 0  // Invisible characters
+            }
+            return 1
+        }
+
+        // Default: assume width 1 for other characters
         return 1
     }
 }
