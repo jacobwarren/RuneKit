@@ -28,6 +28,7 @@ RuneKit is built on four core subsystems:
 - Efficient terminal frame rendering with ANSI escape sequences
 - Actor-based thread-safe output management
 - Cursor position management and screen clearing
+- **Alternate screen buffer support** for full-screen applications (like vim, less)
 
 ### 4. Components (`RuneComponents`)
 - Reusable UI building blocks (Text, Box, etc.)
@@ -108,6 +109,30 @@ swift test
 ```
 
 See `scripts/README.md` for detailed documentation.
+
+## Key Features
+
+### Alternate Screen Buffer Support
+RuneKit supports the alternate screen buffer for creating full-screen terminal applications:
+
+```swift
+// Enable alternate screen buffer (like vim, less, htop)
+let config = RenderConfiguration(useAlternateScreen: true)
+let frameBuffer = FrameBuffer(configuration: config)
+
+// Or use environment variable: RUNE_ALT_SCREEN=true
+let config = RenderConfiguration.fromEnvironment()
+```
+
+### Advanced Text Processing
+- **ANSI-aware text operations**: Wrap, slice, and measure text while preserving styling
+- **Unicode-compliant width calculation**: Accurate display width for emoji, CJK, and combining characters
+- **Comprehensive character categorization**: Using Unicode 16.0.0 properties via utf8proc
+
+### High-Performance Rendering
+- **Hybrid reconciler**: Automatically chooses optimal rendering strategy (full redraw vs. line diff)
+- **Actor-based concurrency**: Thread-safe terminal output with backpressure handling
+- **Adaptive optimization**: Performance tuning based on terminal characteristics
 
 ## Usage Example
 

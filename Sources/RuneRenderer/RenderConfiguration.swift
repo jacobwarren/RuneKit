@@ -203,10 +203,16 @@ public extension RenderConfiguration {
     /// Create a configuration from environment variables
     /// Useful for runtime configuration without code changes
     static func fromEnvironment() -> RenderConfiguration {
+        return fromEnvironment(ProcessInfo.processInfo.environment)
+    }
+
+    /// Create a configuration from provided environment dictionary
+    /// Internal method for testing with custom environment variables
+    static func fromEnvironment(_ environment: [String: String]) -> RenderConfiguration {
         var config = RenderConfiguration.default
 
         // Check for optimization mode override
-        if let modeString = ProcessInfo.processInfo.environment["RUNE_RENDER_MODE"],
+        if let modeString = environment["RUNE_RENDER_MODE"],
            let mode = OptimizationMode(rawValue: modeString) {
             config = RenderConfiguration(
                 optimizationMode: mode,
@@ -218,8 +224,21 @@ public extension RenderConfiguration {
             )
         }
 
+        // Check for alternate screen buffer override
+        if let altScreenString = environment["RUNE_ALT_SCREEN"] {
+            let useAltScreen = altScreenString.lowercased() == "true" || altScreenString == "1"
+            config = RenderConfiguration(
+                optimizationMode: config.optimizationMode,
+                performance: config.performance,
+                enableMetrics: config.enableMetrics,
+                enableDebugLogging: config.enableDebugLogging,
+                hideCursorDuringRender: config.hideCursorDuringRender,
+                useAlternateScreen: useAltScreen
+            )
+        }
+
         // Check for debug mode
-        if ProcessInfo.processInfo.environment["RUNE_DEBUG"] == "1" {
+        if environment["RUNE_DEBUG"] == "1" {
             config = RenderConfiguration.debug
         }
 
