@@ -45,8 +45,8 @@ struct SGRParameterProcessor {
         index: Int,
         to attributes: TextAttributes,
         ) -> (attributes: TextAttributes, nextIndex: Int) {
-        var newAttributes = attributes
-        var nextIndex = index + 1
+        let newAttributes = attributes
+        let nextIndex = index + 1
 
         // Handle style parameters
         if let styleResult = applyStyleParameter(param, to: newAttributes) {

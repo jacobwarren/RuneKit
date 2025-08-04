@@ -21,7 +21,7 @@ struct TerminalSize {
         }
         #elseif canImport(Glibc)
         var w = winsize()
-        if ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == 0 {
+        if ioctl(STDOUT_FILENO, UInt(TIOCGWINSZ), &w) == 0 {
             return TerminalSize(width: Int(w.ws_col), height: Int(w.ws_row))
         }
         #endif
@@ -347,7 +347,7 @@ struct RuneCLI {
         print("")
 
         // Create a frame buffer
-        let frameBuffer = FrameBuffer()
+        _ = FrameBuffer()
 
         print("Rendering animated frames...")
         print("(Note: In a real terminal, this would show smooth updates)")
