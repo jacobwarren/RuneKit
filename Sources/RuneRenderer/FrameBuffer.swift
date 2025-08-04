@@ -24,6 +24,12 @@ public actor FrameBuffer {
     /// Performance metrics tracker (legacy compatibility)
     private let metrics: PerformanceMetrics
 
+    /// Alternate screen buffer for full-screen applications (optional)
+    private let alternateScreenBuffer: AlternateScreenBuffer?
+
+    /// Whether alternate screen has been entered
+    private var alternateScreenActive: Bool = false
+
     /// Initialize frame buffer with output handle and configuration
     /// - Parameters:
     ///   - output: File handle for terminal output (defaults to stdout)
@@ -34,6 +40,15 @@ public actor FrameBuffer {
     ) {
         self.configuration = configuration
         self.metrics = PerformanceMetrics()
+
+        // Create alternate screen buffer if enabled in configuration
+        if configuration.useAlternateScreen {
+            self.alternateScreenBuffer = AlternateScreenBuffer(output: output)
+        } else {
+            self.alternateScreenBuffer = nil
+        }
+
+        self.alternateScreenActive = false
 
         // Create the terminal renderer and hybrid reconciler
         let renderer = TerminalRenderer(output: output)
@@ -49,6 +64,9 @@ public actor FrameBuffer {
     /// Render a frame to the terminal using the hybrid reconciler
     /// - Parameter frame: Frame to render
     public func renderFrame(_ frame: TerminalRenderer.Frame) async {
+        // Enter alternate screen on first render if configured
+        await enterAlternateScreenIfNeeded()
+
         // Use the hybrid reconciler for optimal rendering
         await reconciler.render(frame)
     }
@@ -56,11 +74,17 @@ public actor FrameBuffer {
     /// Render a grid to the terminal using the hybrid reconciler
     /// - Parameter grid: Grid to render
     public func renderGrid(_ grid: TerminalGrid) async {
+        // Enter alternate screen on first render if configured
+        await enterAlternateScreenIfNeeded()
+
         await reconciler.render(grid)
     }
 
     /// Clear the frame buffer and show cursor (for cleanup)
     public func clear() async {
+        // Leave alternate screen if active
+        await leaveAlternateScreenIfNeeded()
+
         await reconciler.clear()
     }
 
@@ -117,6 +141,34 @@ public actor FrameBuffer {
     /// Shutdown the frame buffer and clean up all resources
     /// This ensures all async tasks are properly cancelled and awaited
     public func shutdown() async {
+        // Leave alternate screen before shutdown
+        await leaveAlternateScreenIfNeeded()
+
         await reconciler.shutdown()
+    }
+
+    // MARK: - Alternate Screen Buffer Management
+
+    /// Enter alternate screen buffer if configured and not already active
+    private func enterAlternateScreenIfNeeded() async {
+        guard let altScreen = alternateScreenBuffer,
+              !alternateScreenActive else { return }
+
+        await altScreen.enter()
+        alternateScreenActive = true
+    }
+
+    /// Leave alternate screen buffer if active
+    private func leaveAlternateScreenIfNeeded() async {
+        guard let altScreen = alternateScreenBuffer,
+              alternateScreenActive else { return }
+
+        await altScreen.leave()
+        alternateScreenActive = false
+    }
+
+    /// Get alternate screen buffer status (for testing)
+    public func isAlternateScreenActive() async -> Bool {
+        return alternateScreenActive
     }
 }

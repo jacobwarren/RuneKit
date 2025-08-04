@@ -318,6 +318,12 @@ public actor TerminalRenderer {
         await writeSequence(output)
         stats.bytesWritten += output.utf8.count
 
+        // CRITICAL: Position cursor after the frame for proper subsequent rendering
+        // This ensures that subsequent frames start from the correct position
+        let cursorRestoreSequence = "\u{001B}[\(grid.height + 1);1H"  // Move to line after frame
+        await writeSequence(cursorRestoreSequence)
+        stats.bytesWritten += cursorRestoreSequence.utf8.count
+
         // Update tracking
         previousLineCount = grid.height
         stats.linesChanged = grid.height

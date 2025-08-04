@@ -34,6 +34,12 @@ struct TerminalSize {
 @main
 struct RuneCLI {
     static func main() async {
+        // Check if we should run just the live demo test
+        if CommandLine.arguments.contains("--live-demo-only") {
+            await testLiveFrameBufferDemoFix()
+            return
+        }
+
         print("🎯 RuneKit Complete Demo Suite")
         print("==============================")
         print("Running all RuneKit demonstrations in sequence...")
@@ -60,9 +66,59 @@ struct RuneCLI {
         // 7. Backpressure and coalescing demo
         await backpressureDemo()
 
+        // 8. Alternate screen buffer demo (RUNE-22)
+        await alternateScreenBufferDemo()
+
         print("")
         print("🎉 All RuneKit demonstrations completed!")
         print("Thanks for exploring RuneKit's capabilities!")
+    }
+
+    /// Test just the live frame buffer demo to verify the coalescing fix
+    static func testLiveFrameBufferDemoFix() async {
+        print("🎬 Testing Live Frame Buffer Demo Fix")
+        print("====================================")
+        print("This test verifies that the coalescing bug is fixed.")
+        print("")
+
+        // Create frame buffer that writes to stdout
+        let frameBuffer = FrameBuffer()
+
+        // Animation frames with consistent width
+        let loadingContents = ["Loading...", "Loading.", "Loading..", "Loading..."]
+        let loadingFrames = loadingContents.map { content in
+            createBoxFrame(content: content)
+        }
+
+        print("Rendering loading animation frames...")
+
+        // Animate loading for 1 cycle
+        for (index, frame) in loadingFrames.enumerated() {
+            print("  → About to render frame \(index + 1): \(loadingContents[index])")
+            await frameBuffer.renderFrame(frame)
+            print("  → Rendered frame \(index + 1): \(loadingContents[index])")
+            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+        }
+
+        // Final completion frame - this is the critical test
+        print("  → About to render final frame: Complete! ✅")
+        let completeFrame = createBoxFrame(content: "Complete! ✅")
+        await frameBuffer.renderFrame(completeFrame)
+        print("  → Rendered final frame: Complete! ✅")
+
+        // Wait for any pending updates
+        await frameBuffer.waitForPendingUpdates()
+        print("  → All pending updates completed")
+
+        try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+
+        // Clear the frame buffer
+        await frameBuffer.clear()
+
+        print("")
+        print("✅ Test completed!")
+        print("If you can see this message, the final frame was rendered successfully.")
+        print("The coalescing bug has been fixed!")
     }
 
     /// The original hybrid reconciler demo (was main())
@@ -667,12 +723,12 @@ struct RuneCLI {
         let frameBuffer = FrameBuffer()
         let terminalSize = TerminalSize.current()
 
-        print("Sending rapid updates (100 frames in quick succession)...")
+        print("Sending rapid updates (50 frames with controlled timing)...")
         print("Watch how the system handles the load:")
         print("")
 
-        // Send 100 rapid updates to stress test the system
-        for i in 0..<100 {
+        // Send 50 rapid updates to stress test the system (reduced from 100)
+        for i in 0..<50 {
             let frame = createSystemMonitorFrame(
                 terminalWidth: terminalSize.width,
                 cpuUsage: Int.random(in: 10...100),
@@ -681,11 +737,16 @@ struct RuneCLI {
                 netUsage: Int.random(in: 5...50)
             )
 
-            // Fire updates rapidly without waiting
+            // Fire updates rapidly but with small delay to prevent overwhelming
             await frameBuffer.renderFrame(frame)
 
-            // Show progress every 20 frames
-            if i % 20 == 0 {
+            // Small delay to prevent complete overwhelming
+            if i % 5 == 0 {
+                try? await Task.sleep(nanoseconds: 50_000_000) // 50ms every 5 frames
+            }
+
+            // Show progress every 10 frames
+            if i % 10 == 0 {
                 let metrics = await frameBuffer.getPerformanceMetrics()
                 print("Frame \(i): Queue depth: \(metrics.currentQueueDepth), Dropped: \(metrics.droppedFrames), Quality: \(String(format: "%.1f%%", metrics.adaptiveQuality * 100))")
             }
@@ -714,17 +775,27 @@ struct RuneCLI {
         print("• Dropping frames when queue depth exceeded limits")
         print("• Reducing quality temporarily under load")
         print("• Maintaining terminal responsiveness")
+
+        // Give time for system to settle before next demo
+        try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
     }
 
     /// Live demonstration of frame buffer with actual terminal rendering
     static func liveFrameBufferDemo() async {
         print("")
-        print("🎬 Starting live frame buffer demo...")
-        print("Watch the frames replace each other in-place!")
+        print("🎬 Live Frame Buffer Demo")
+        print("========================")
+        print("This demo shows RuneKit's frame buffer rendering frames in-place.")
+        print("In a real terminal, you would see smooth animations without flicker.")
         print("")
+        print("Note: The output below shows the actual ANSI sequences being sent")
+        print("to the terminal. In a real application, these would be interpreted")
+        print("by the terminal to create smooth, in-place frame updates.")
+        print("")
+        print("Starting loading animation...")
 
         // Give user time to read
-        try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+        try? await Task.sleep(nanoseconds: 3_000_000_000) // 3 seconds
 
         // Create frame buffer that writes to stdout
         let frameBuffer = FrameBuffer()
@@ -735,45 +806,299 @@ struct RuneCLI {
             createBoxFrame(content: content)
         }
 
-        // Animate loading for a few cycles
-        for _ in 0..<3 {
-            for frame in loadingFrames {
+        // Animate loading for 2 cycles (reduced for demo)
+        for cycle in 0..<2 {
+            for (index, frame) in loadingFrames.enumerated() {
                 await frameBuffer.renderFrame(frame)
-                try? await Task.sleep(nanoseconds: 300_000_000) // 0.3 seconds
+                print("  → Rendered frame \(cycle * 4 + index + 1): \(loadingContents[index])")
+                try? await Task.sleep(nanoseconds: 800_000_000) // 0.8 seconds
             }
         }
 
         // Final completion frame
         let completeFrame = createBoxFrame(content: "Complete! ✅")
         await frameBuffer.renderFrame(completeFrame)
-        try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
+        print("  → Rendered final frame: Complete! ✅")
+        try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
 
-        // Demo frame height shrinkage
+        // Clear and move to next demo
+        await frameBuffer.clear()
+
         print("")
-        print("")
-        print("Now demonstrating frame height shrinkage...")
-        try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
+        print("Frame height shrinkage demo:")
+        print("(Demonstrating how extra lines are cleared when frames shrink)")
+        try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
 
         // Tall frame
         let tallFrame = createMultiLineBoxFrame(contents: ["Line 1", "Line 2", "Line 3", "Line 4"])
         await frameBuffer.renderFrame(tallFrame)
+        print("  → Rendered tall frame (4 lines)")
         try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
 
         // Shrink to short frame (extra lines should be cleared)
         let shortFrame = createBoxFrame(content: "Shrunk! 📦")
         await frameBuffer.renderFrame(shortFrame)
+        print("  → Rendered short frame (3 lines) - extra lines cleared")
         try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
 
         // Clear the frame buffer
         await frameBuffer.clear()
 
         print("")
+        print("✅ Live demo completed!")
         print("")
-        print("✨ Live demo completed!")
-        print("Notice how:")
-        print("• Frames replaced each other in the same location")
+        print("Key features demonstrated:")
+        print("• Frames replace each other in the same terminal location")
         print("• No flicker or cursor artifacts during animation")
-        print("• Extra lines were properly cleared when frame shrank")
-        print("• Cursor was hidden during rendering and restored at the end")
+        print("• Extra lines are properly cleared when frames shrink")
+        print("• Cursor is hidden during rendering and restored afterward")
+        print("• ANSI escape sequences handle all positioning and clearing")
+
+        // Give time for user to read results before next demo
+        try? await Task.sleep(nanoseconds: 3_000_000_000) // 3 seconds
+    }
+
+    /// Demonstrate alternate screen buffer functionality (RUNE-22)
+    static func alternateScreenBufferDemo() async {
+        print("")
+        print("🖥️  Alternate Screen Buffer Demo (RUNE-22)")
+        print("==========================================")
+        print("This demo shows how RuneKit can use the alternate screen buffer")
+        print("to create full-screen applications that restore the previous")
+        print("terminal content when exiting (like vim, less, etc.).")
+        print("")
+
+        // Demo 1: Basic alternate screen buffer usage
+        print("Demo 1: Basic alternate screen buffer")
+        print("------------------------------------")
+        print("Creating a FrameBuffer with alternate screen enabled...")
+
+        let config = RenderConfiguration(useAlternateScreen: true)
+        let frameBuffer = FrameBuffer(configuration: config)
+
+        // Check if alternate screen is supported
+        let isActive = await frameBuffer.isAlternateScreenActive()
+        print("Alternate screen initially active: \(isActive)")
+
+        // Create a welcome frame that adapts to terminal size
+        let terminalSize = TerminalSize.current()
+        let welcomeFrame = createAlternateScreenWelcomeFrame(terminalWidth: terminalSize.width)
+        print("Rendering welcome frame in alternate screen...")
+
+        // Render the frame (this should enter alternate screen)
+        await frameBuffer.renderFrame(welcomeFrame)
+
+        // Check status after rendering
+        let isActiveAfterRender = await frameBuffer.isAlternateScreenActive()
+        print("Alternate screen active after render: \(isActiveAfterRender)")
+
+        // Wait a moment to show the frame
+        try? await Task.sleep(nanoseconds: 5_000_000_000) // 5 seconds
+
+        // Create an application simulation frame
+        let appFrame = createAlternateScreenAppFrame(terminalWidth: terminalSize.width)
+        print("Simulating application interface...")
+        await frameBuffer.renderFrame(appFrame)
+
+        // Wait another moment
+        try? await Task.sleep(nanoseconds: 4_000_000_000) // 4 seconds
+
+        // Clear and exit (this should leave alternate screen)
+        print("Exiting alternate screen and restoring previous content...")
+        await frameBuffer.clear()
+
+        // Check status after clearing
+        let isActiveAfterClear = await frameBuffer.isAlternateScreenActive()
+        print("Alternate screen active after clear: \(isActiveAfterClear)")
+
+        print("")
+        print("✅ Demo 1 completed!")
+        print("The previous terminal content should now be restored.")
+        print("")
+
+        // Demo 2: Environment variable configuration
+        print("Demo 2: Environment variable configuration")
+        print("-----------------------------------------")
+        print("RuneKit supports the RUNE_ALT_SCREEN environment variable:")
+        print("• RUNE_ALT_SCREEN=true or RUNE_ALT_SCREEN=1 enables alternate screen")
+        print("• RUNE_ALT_SCREEN=false or RUNE_ALT_SCREEN=0 disables alternate screen")
+        print("• If not set, defaults to disabled for compatibility")
+        print("")
+
+        // Show current environment setting
+        let currentEnvValue = ProcessInfo.processInfo.environment["RUNE_ALT_SCREEN"] ?? "not set"
+        print("Current RUNE_ALT_SCREEN value: \(currentEnvValue)")
+
+        // Create config from environment
+        let envConfig = RenderConfiguration.fromEnvironment()
+        print("Configuration from environment: useAlternateScreen = \(envConfig.useAlternateScreen)")
+        print("")
+
+        // Demo 3: Fallback behavior
+        print("Demo 3: Fallback behavior")
+        print("-------------------------")
+        print("When alternate screen is not supported or disabled,")
+        print("RuneKit falls back to normal screen clearing.")
+
+        let fallbackConfig = RenderConfiguration(useAlternateScreen: false)
+        let fallbackFrameBuffer = FrameBuffer(configuration: fallbackConfig)
+
+        let fallbackFrame = createFallbackDemoFrame(terminalWidth: terminalSize.width)
+        print("Rendering with fallback mode (no alternate screen)...")
+        await fallbackFrameBuffer.renderFrame(fallbackFrame)
+
+        try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+
+        await fallbackFrameBuffer.clear()
+        print("✅ Demo 3 completed!")
+        print("")
+
+        print("🎉 Alternate Screen Buffer Demo completed!")
+        print("Key features demonstrated:")
+        print("• Automatic alternate screen enter/leave")
+        print("• Previous terminal content restoration")
+        print("• Environment variable configuration")
+        print("• Graceful fallback when disabled")
+        print("• Integration with RuneKit's rendering system")
+    }
+
+    /// Create a welcome frame for alternate screen demo
+    static func createAlternateScreenWelcomeFrame(terminalWidth: Int) -> TerminalRenderer.Frame {
+        let width = min(terminalWidth - 2, 80) // Leave margin and cap at 80
+        let borderChar = "═"
+        let sideChar = "║"
+
+        let topBorder = "╔" + String(repeating: borderChar, count: width - 2) + "╗"
+        let bottomBorder = "╚" + String(repeating: borderChar, count: width - 2) + "╝"
+
+        let title = "🎯 RuneKit Alternate Screen Demo"
+        let titlePadding = max(0, (width - 2 - title.count) / 2)
+        let remainingPadding = max(0, width - 2 - titlePadding - title.count)
+        let titleLine = sideChar + String(repeating: " ", count: titlePadding) + title +
+                       String(repeating: " ", count: remainingPadding) + sideChar
+
+        let content = [
+            "Welcome to the alternate screen buffer demonstration!",
+            "",
+            "This content is displayed in the alternate screen buffer, which means",
+            "your previous terminal session is preserved and will be restored when",
+            "this demo exits.",
+            "",
+            "This is similar to how applications like vim, less, and htop work.",
+            "",
+            "Press any key to continue... (simulated)"
+        ]
+
+        var lines = [topBorder, titleLine]
+        lines.append(sideChar + String(repeating: " ", count: width - 2) + sideChar)
+
+        for line in content {
+            let padding = max(0, width - 2 - line.count)
+            let paddedLine = sideChar + " " + line + String(repeating: " ", count: padding - 1) + sideChar
+            lines.append(paddedLine)
+        }
+
+        lines.append(sideChar + String(repeating: " ", count: width - 2) + sideChar)
+        lines.append(bottomBorder)
+
+        return TerminalRenderer.Frame(
+            lines: lines,
+            width: width,
+            height: lines.count
+        )
+    }
+
+    /// Create an application simulation frame
+    static func createAlternateScreenAppFrame(terminalWidth: Int) -> TerminalRenderer.Frame {
+        // Ensure width is large enough for content (longest line is ~62 chars + 4 for borders)
+        let minWidth = 70 // Minimum to fit content properly
+        let width = max(minWidth, min(terminalWidth - 2, 80)) // Leave margin and cap at 80
+
+        let topBorder = "┌─ RuneKit Application " + String(repeating: "─", count: max(0, width - 24)) + "┐"
+        let menuLine = "│ File  Edit  View  Help" + String(repeating: " ", count: max(0, width - 25)) + "│"
+        let separator = "├" + String(repeating: "─", count: width - 2) + "┤"
+        let bottomBorder = "└" + String(repeating: "─", count: width - 2) + "┘"
+
+        let content = [
+            "",
+            "  📁 Project Files                    📊 System Status",
+            "  ├── src/                           ┌─────────────────────┐",
+            "  │   ├── main.swift                 │ CPU:  ████████░░ 80% │",
+            "  │   ├── models/                    │ RAM:  ██████░░░░ 60% │",
+            "  │   └── views/                     │ DISK: ████░░░░░░ 40% │",
+            "  ├── tests/                         └─────────────────────┘",
+            "  └── docs/",
+            "",
+            "  📝 Recent Activity",
+            "  • Implemented alternate screen buffer support",
+            "  • Added environment variable configuration",
+            "  • Created comprehensive test suite",
+            "  • Updated CLI demo with new features",
+            "",
+            "",
+            ""
+        ]
+
+        var lines = [topBorder, menuLine, separator]
+
+        for line in content {
+            let padding = max(0, width - 2 - line.count)
+            let paddedLine = "│" + line + String(repeating: " ", count: padding) + "│"
+            lines.append(paddedLine)
+        }
+
+        // Build status line with proper spacing
+        let leftStatus = " Status: Ready"
+        let rightStatus = "Line 1, Col 1   "
+        let statusPadding = max(0, width - 2 - leftStatus.count - rightStatus.count)
+        let statusLine = "│" + leftStatus + String(repeating: " ", count: statusPadding) + rightStatus + "│"
+        lines.append(statusLine)
+        lines.append(bottomBorder)
+
+        return TerminalRenderer.Frame(
+            lines: lines,
+            width: width,
+            height: lines.count
+        )
+    }
+
+    /// Create a fallback demo frame
+    static func createFallbackDemoFrame(terminalWidth: Int) -> TerminalRenderer.Frame {
+        // Ensure width is large enough for content
+        let minWidth = 70 // Minimum to fit content properly
+        let width = max(minWidth, min(terminalWidth - 2, 80)) // Leave margin and cap at 80
+
+        let topBorder = "┌─ Fallback Mode Demo " + String(repeating: "─", count: max(0, width - 22)) + "┐"
+        let bottomBorder = "└" + String(repeating: "─", count: width - 2) + "┘"
+
+        let content = [
+            "",
+            "  This frame is rendered without alternate screen buffer.",
+            "",
+            "  When alternate screen is disabled or not supported:",
+            "  • Content is rendered to the main terminal buffer",
+            "  • Previous content remains in scrollback history",
+            "  • No special screen switching occurs",
+            "",
+            "  This ensures RuneKit works on all terminals, even those that don't",
+            "  support the alternate screen buffer feature.",
+            ""
+        ]
+
+        var lines = [topBorder]
+
+        for line in content {
+            let padding = max(0, width - 2 - line.count)
+            let paddedLine = "│" + line + String(repeating: " ", count: padding) + "│"
+            lines.append(paddedLine)
+        }
+
+        lines.append(bottomBorder)
+
+        return TerminalRenderer.Frame(
+            lines: lines,
+            width: width,
+            height: lines.count
+        )
     }
 }

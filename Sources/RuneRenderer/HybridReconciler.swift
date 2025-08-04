@@ -31,6 +31,7 @@ public actor HybridReconciler {
     private var lastUpdateTime = Date.distantPast
     private var coalescingWindow: TimeInterval = 0.016  // 16ms batching window
     private var lastCoalescingTime = Date.distantPast
+    private var updateTask: Task<Void, Never>?
 
     /// Backpressure handling
     private var queueDepth = 0
@@ -48,6 +49,9 @@ public actor HybridReconciler {
     }
 
     deinit {
+        // Cancel any pending update task
+        updateTask?.cancel()
+
         // Clear any pending update
         pendingUpdate = nil
 
@@ -58,6 +62,10 @@ public actor HybridReconciler {
     /// Shutdown the reconciler and wait for all tasks to complete
     /// This must be called before the actor is deallocated to prevent hanging
     public func shutdown() async {
+        // Cancel any pending update task
+        updateTask?.cancel()
+        updateTask = nil
+
         // Clear any pending update
         pendingUpdate = nil
 
@@ -93,15 +101,25 @@ public actor HybridReconciler {
             return
         }
 
-        // Simple coalescing: if no pending update, render immediately
-        // If there's already a pending update, replace it (coalescing effect)
+        // Coalescing logic: if no pending update, render immediately
+        // If there's already a pending update, replace it and schedule a flush
         if pendingUpdate == nil {
             // No pending update, render immediately
             await performRender(grid)
             lastUpdateTime = Date()
         } else {
-            // Replace the pending update (coalescing)
+            // Replace the pending update (coalescing effect)
             pendingUpdate = grid
+
+            // Cancel any existing update task
+            updateTask?.cancel()
+
+            // Schedule a new update task with coalescing window
+            let window = coalescingWindow  // Capture the value
+            updateTask = Task { [weak self] in
+                try? await Task.sleep(nanoseconds: UInt64(window * 1_000_000_000))
+                await self?.performCoalescedUpdate()
+            }
         }
     }
 
@@ -116,6 +134,10 @@ public actor HybridReconciler {
 
     /// Clear the screen
     public func clear() async {
+        // Cancel any pending update task
+        updateTask?.cancel()
+        updateTask = nil
+
         // Clear any pending update
         pendingUpdate = nil
 
@@ -164,6 +186,15 @@ public actor HybridReconciler {
         lastUpdateTime = Date()
     }
 
+    /// Perform a coalesced update (called by the background task)
+    private func performCoalescedUpdate() async {
+        guard let grid = pendingUpdate else { return }
+        pendingUpdate = nil
+        updateTask = nil  // Clear the task reference
+        await performRender(grid)
+        lastUpdateTime = Date()
+    }
+
     /// Process any pending updates if coalescing window has elapsed
     public func processPendingUpdates() async {
         guard pendingUpdate != nil else { return }
@@ -183,6 +214,10 @@ public actor HybridReconciler {
 
     /// Render immediately without coalescing (for testing)
     public func renderImmediate(_ grid: TerminalGrid) async {
+        // Cancel any pending update task
+        updateTask?.cancel()
+        updateTask = nil
+
         // Clear any pending updates
         pendingUpdate = nil
 
@@ -263,6 +298,9 @@ public actor HybridReconciler {
         // Record performance and adapt thresholds
         await recordPerformance(stats)
         await adaptThresholds(stats)
+
+        // Decrement queue depth after successful render
+        queueDepth = max(0, queueDepth - 1)
     }
 
     /// Determine the optimal rendering strategy using hybrid logic

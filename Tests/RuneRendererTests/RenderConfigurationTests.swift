@@ -295,4 +295,90 @@ struct RenderConfigurationTests {
         #expect(RenderConfiguration.OptimizationMode.lineDiff.rawValue == "line_diff", "Line diff raw value should match")
         #expect(RenderConfiguration.OptimizationMode.automatic.rawValue == "automatic", "Automatic raw value should match")
     }
+
+    // MARK: - Environment Variable Tests
+
+    @Test("Environment variable RUNE_ALT_SCREEN=true enables alternate screen")
+    func environmentVariableAltScreenTrueEnablesAlternateScreen() {
+        // Arrange
+        let environment = ["RUNE_ALT_SCREEN": "true"]
+
+        // Act
+        let config = RenderConfiguration.fromEnvironment(environment)
+
+        // Assert
+        #expect(config.useAlternateScreen == true, "Should enable alternate screen when RUNE_ALT_SCREEN=true")
+    }
+
+    @Test("Environment variable RUNE_ALT_SCREEN=1 enables alternate screen")
+    func environmentVariableAltScreen1EnablesAlternateScreen() {
+        // Arrange
+        let environment = ["RUNE_ALT_SCREEN": "1"]
+
+        // Act
+        let config = RenderConfiguration.fromEnvironment(environment)
+
+        // Assert
+        #expect(config.useAlternateScreen == true, "Should enable alternate screen when RUNE_ALT_SCREEN=1")
+    }
+
+    @Test("Environment variable RUNE_ALT_SCREEN=TRUE enables alternate screen")
+    func environmentVariableAltScreenTRUEEnablesAlternateScreen() {
+        // Arrange
+        let environment = ["RUNE_ALT_SCREEN": "TRUE"]
+
+        // Act
+        let config = RenderConfiguration.fromEnvironment(environment)
+
+        // Assert
+        #expect(config.useAlternateScreen == true, "Should enable alternate screen when RUNE_ALT_SCREEN=TRUE (case insensitive)")
+    }
+
+    @Test("Environment variable RUNE_ALT_SCREEN=false disables alternate screen")
+    func environmentVariableAltScreenFalseDisablesAlternateScreen() {
+        // Arrange
+        let environment = ["RUNE_ALT_SCREEN": "false"]
+
+        // Act
+        let config = RenderConfiguration.fromEnvironment(environment)
+
+        // Assert
+        #expect(config.useAlternateScreen == false, "Should disable alternate screen when RUNE_ALT_SCREEN=false")
+    }
+
+    @Test("Environment variable RUNE_ALT_SCREEN=0 disables alternate screen")
+    func environmentVariableAltScreen0DisablesAlternateScreen() {
+        // Arrange
+        let environment = ["RUNE_ALT_SCREEN": "0"]
+
+        // Act
+        let config = RenderConfiguration.fromEnvironment(environment)
+
+        // Assert
+        #expect(config.useAlternateScreen == false, "Should disable alternate screen when RUNE_ALT_SCREEN=0")
+    }
+
+    @Test("Environment variable RUNE_ALT_SCREEN=invalid disables alternate screen")
+    func environmentVariableAltScreenInvalidDisablesAlternateScreen() {
+        // Arrange
+        let environment = ["RUNE_ALT_SCREEN": "invalid"]
+
+        // Act
+        let config = RenderConfiguration.fromEnvironment(environment)
+
+        // Assert
+        #expect(config.useAlternateScreen == false, "Should disable alternate screen when RUNE_ALT_SCREEN=invalid")
+    }
+
+    @Test("Environment variable RUNE_ALT_SCREEN not set uses default")
+    func environmentVariableAltScreenNotSetUsesDefault() {
+        // Arrange
+        let environment: [String: String] = [:]
+
+        // Act
+        let config = RenderConfiguration.fromEnvironment(environment)
+
+        // Assert
+        #expect(config.useAlternateScreen == false, "Should use default (false) when RUNE_ALT_SCREEN not set")
+    }
 }

@@ -204,6 +204,155 @@ struct TerminalRendererTests {
         output.closeFile()
     }
 
+    // MARK: - Alternate Screen Buffer Tests (RUNE-22)
+
+    @Test("AlternateScreenBuffer initialization")
+    func alternateScreenBufferInitialization() async {
+        // Arrange
+        let pipe = Pipe()
+        let output = pipe.fileHandleForWriting
+
+        // Act
+        let altScreen = AlternateScreenBuffer(output: output)
+
+        // Assert
+        let isActive = await altScreen.isActive
+        #expect(isActive == false, "New alternate screen buffer should not be active")
+
+        // Cleanup
+        output.closeFile()
+    }
+
+    @Test("AlternateScreenBuffer enter sequence")
+    func alternateScreenBufferEnterSequence() async {
+        // Arrange
+        let pipe = Pipe()
+        let output = pipe.fileHandleForWriting
+        let input = pipe.fileHandleForReading
+        let altScreen = AlternateScreenBuffer(output: output)
+
+        // Act
+        await altScreen.enter()
+        output.closeFile()
+
+        // Assert
+        let data = input.readDataToEndOfFile()
+        let result = String(data: data, encoding: .utf8) ?? ""
+        #expect(result == "\u{001B}[?1049h", "Should output alternate screen enter sequence")
+
+        let isActive = await altScreen.isActive
+        #expect(isActive == true, "Should be active after entering")
+
+        // Cleanup
+        input.closeFile()
+    }
+
+    @Test("AlternateScreenBuffer leave sequence")
+    func alternateScreenBufferLeaveSequence() async {
+        // Arrange
+        let pipe = Pipe()
+        let output = pipe.fileHandleForWriting
+        let input = pipe.fileHandleForReading
+        let altScreen = AlternateScreenBuffer(output: output)
+
+        // Enter first, then leave
+        await altScreen.enter()
+
+        // Act
+        await altScreen.leave()
+        output.closeFile()
+
+        // Assert
+        let data = input.readDataToEndOfFile()
+        let result = String(data: data, encoding: .utf8) ?? ""
+        #expect(result.contains("\u{001B}[?1049h"), "Should contain enter sequence")
+        #expect(result.contains("\u{001B}[?1049l"), "Should contain leave sequence")
+
+        let isActive = await altScreen.isActive
+        #expect(isActive == false, "Should not be active after leaving")
+
+        // Cleanup
+        input.closeFile()
+    }
+
+    @Test("AlternateScreenBuffer double enter is safe")
+    func alternateScreenBufferDoubleEnterIsSafe() async {
+        // Arrange
+        let pipe = Pipe()
+        let output = pipe.fileHandleForWriting
+        let input = pipe.fileHandleForReading
+        let altScreen = AlternateScreenBuffer(output: output)
+
+        // Act - Enter twice
+        await altScreen.enter()
+        await altScreen.enter()
+        output.closeFile()
+
+        // Assert - Should only have one enter sequence
+        let data = input.readDataToEndOfFile()
+        let result = String(data: data, encoding: .utf8) ?? ""
+        let enterCount = result.components(separatedBy: "\u{001B}[?1049h").count - 1
+        #expect(enterCount == 1, "Should only enter alternate screen once")
+
+        let isActive = await altScreen.isActive
+        #expect(isActive == true, "Should still be active")
+
+        // Cleanup
+        input.closeFile()
+    }
+
+    @Test("AlternateScreenBuffer double leave is safe")
+    func alternateScreenBufferDoubleLeaveIsSafe() async {
+        // Arrange
+        let pipe = Pipe()
+        let output = pipe.fileHandleForWriting
+        let input = pipe.fileHandleForReading
+        let altScreen = AlternateScreenBuffer(output: output)
+
+        // Enter first, then leave twice
+        await altScreen.enter()
+        await altScreen.leave()
+
+        // Act - Leave again
+        await altScreen.leave()
+        output.closeFile()
+
+        // Assert - Should only have one leave sequence
+        let data = input.readDataToEndOfFile()
+        let result = String(data: data, encoding: .utf8) ?? ""
+        let leaveCount = result.components(separatedBy: "\u{001B}[?1049l").count - 1
+        #expect(leaveCount == 1, "Should only leave alternate screen once")
+
+        let isActive = await altScreen.isActive
+        #expect(isActive == false, "Should not be active")
+
+        // Cleanup
+        input.closeFile()
+    }
+
+    @Test("AlternateScreenBuffer explicit cleanup")
+    func alternateScreenBufferExplicitCleanup() async {
+        // Arrange
+        let pipe = Pipe()
+        let output = pipe.fileHandleForWriting
+        let input = pipe.fileHandleForReading
+
+        // Act - Create, enter, and explicitly leave alternate screen
+        let altScreen = AlternateScreenBuffer(output: output)
+        await altScreen.enter()
+        await altScreen.leave()
+        output.closeFile()
+
+        // Assert - Should contain both enter and leave sequences
+        let data = input.readDataToEndOfFile()
+        let result = String(data: data, encoding: .utf8) ?? ""
+        #expect(result.contains("\u{001B}[?1049h"), "Should contain enter sequence")
+        #expect(result.contains("\u{001B}[?1049l"), "Should contain leave sequence")
+
+        // Cleanup
+        input.closeFile()
+    }
+
     @Test("Region repaint with cursor management")
     func regionRepaintWithCursorManagement() async {
         // Test that cursor is properly managed during frame rendering
@@ -336,6 +485,362 @@ struct TerminalRendererTests {
         // Should contain both frame contents
         #expect(result.contains("Frame 1 Content"), "Should contain first frame content")
         #expect(result.contains("Frame 2 Content"), "Should contain second frame content")
+
+        // Cleanup
+        input.closeFile()
+    }
+
+    @Test("FrameBuffer with alternate screen buffer enabled")
+    func frameBufferWithAlternateScreenBufferEnabled() async {
+        // Arrange
+        let pipe = Pipe()
+        let output = pipe.fileHandleForWriting
+        let input = pipe.fileHandleForReading
+
+        let config = RenderConfiguration(useAlternateScreen: true)
+        let frameBuffer = FrameBuffer(output: output, configuration: config)
+
+        let frame = TerminalRenderer.Frame(
+            lines: ["Hello Alt Screen"],
+            width: 16,
+            height: 1
+        )
+
+        // Act
+        await frameBuffer.renderFrame(frame)
+        await frameBuffer.clear()
+        output.closeFile()
+
+        // Assert
+        let data = input.readDataToEndOfFile()
+        let result = String(data: data, encoding: .utf8) ?? ""
+
+        // Should enter alternate screen at start and leave at end
+        #expect(result.contains("\u{001B}[?1049h"), "Should enter alternate screen")
+        #expect(result.contains("\u{001B}[?1049l"), "Should leave alternate screen")
+        #expect(result.contains("Hello Alt Screen"), "Should contain frame content")
+
+        // Cleanup
+        input.closeFile()
+    }
+
+    @Test("FrameBuffer with alternate screen buffer disabled")
+    func frameBufferWithAlternateScreenBufferDisabled() async {
+        // Arrange
+        let pipe = Pipe()
+        let output = pipe.fileHandleForWriting
+        let input = pipe.fileHandleForReading
+
+        let config = RenderConfiguration(useAlternateScreen: false)
+        let frameBuffer = FrameBuffer(output: output, configuration: config)
+
+        let frame = TerminalRenderer.Frame(
+            lines: ["Hello Main Screen"],
+            width: 17,
+            height: 1
+        )
+
+        // Act
+        await frameBuffer.renderFrame(frame)
+        await frameBuffer.clear()
+        output.closeFile()
+
+        // Assert
+        let data = input.readDataToEndOfFile()
+        let result = String(data: data, encoding: .utf8) ?? ""
+
+        // Should NOT use alternate screen sequences
+        #expect(!result.contains("\u{001B}[?1049h"), "Should not enter alternate screen")
+        #expect(!result.contains("\u{001B}[?1049l"), "Should not leave alternate screen")
+        #expect(result.contains("Hello Main Screen"), "Should contain frame content")
+
+        // Cleanup
+        input.closeFile()
+    }
+
+    @Test("AlternateScreenBuffer fallback behavior")
+    func alternateScreenBufferFallbackBehavior() async {
+        // Arrange
+        let pipe = Pipe()
+        let output = pipe.fileHandleForWriting
+        let input = pipe.fileHandleForReading
+
+        // Create alternate screen buffer with fallback disabled
+        let altScreen = AlternateScreenBuffer(output: output, enableFallback: false)
+
+        // Act
+        await altScreen.enterWithFallback()
+        await altScreen.leaveWithFallback()
+        output.closeFile()
+
+        // Assert
+        let data = input.readDataToEndOfFile()
+        let result = String(data: data, encoding: .utf8) ?? ""
+
+        // With fallback disabled, should still try alternate screen sequences
+        #expect(result.contains("\u{001B}[?1049h"), "Should attempt alternate screen enter")
+        #expect(result.contains("\u{001B}[?1049l"), "Should attempt alternate screen leave")
+
+        // Cleanup
+        input.closeFile()
+    }
+
+    @Test("AlternateScreenBuffer with fallback enabled")
+    func alternateScreenBufferWithFallbackEnabled() async {
+        // Arrange
+        let pipe = Pipe()
+        let output = pipe.fileHandleForWriting
+        let input = pipe.fileHandleForReading
+
+        // Create alternate screen buffer with fallback enabled
+        let altScreen = AlternateScreenBuffer(output: output, enableFallback: true)
+
+        // Act
+        await altScreen.enterWithFallback()
+        await altScreen.leaveWithFallback()
+        output.closeFile()
+
+        // Assert
+        let data = input.readDataToEndOfFile()
+        let result = String(data: data, encoding: .utf8) ?? ""
+
+        // Should contain either alternate screen sequences or fallback clear
+        let hasAltScreen = result.contains("\u{001B}[?1049h") && result.contains("\u{001B}[?1049l")
+        let hasFallback = result.contains("\u{001B}[2J\u{001B}[H")
+        #expect(hasAltScreen || hasFallback, "Should use either alternate screen or fallback")
+
+        // Cleanup
+        input.closeFile()
+    }
+
+    @Test("Debug: FrameBuffer default behavior without alternate screen")
+    func debugFrameBufferDefaultBehavior() async {
+        // Arrange
+        let pipe = Pipe()
+        let output = pipe.fileHandleForWriting
+        let input = pipe.fileHandleForReading
+
+        // Use default configuration (should not use alternate screen)
+        let config = RenderConfiguration.default
+        let frameBuffer = FrameBuffer(output: output, configuration: config)
+
+        let frame1 = TerminalRenderer.Frame(lines: ["Frame 1"], width: 7, height: 1)
+        let frame2 = TerminalRenderer.Frame(lines: ["Frame 2"], width: 7, height: 1)
+
+        // Act
+        let initialState = await frameBuffer.isAlternateScreenActive()
+        await frameBuffer.renderFrame(frame1)
+        let stateAfterFrame1 = await frameBuffer.isAlternateScreenActive()
+        await frameBuffer.renderFrame(frame2)
+        let stateAfterFrame2 = await frameBuffer.isAlternateScreenActive()
+        await frameBuffer.clear()
+        let stateAfterClear = await frameBuffer.isAlternateScreenActive()
+
+        output.closeFile()
+
+        // Assert
+        #expect(initialState == false, "Should not be active initially with default config")
+        #expect(stateAfterFrame1 == false, "Should not be active after first frame with default config")
+        #expect(stateAfterFrame2 == false, "Should not be active after second frame with default config")
+        #expect(stateAfterClear == false, "Should not be active after clear with default config")
+
+        let data = input.readDataToEndOfFile()
+        let result = String(data: data, encoding: .utf8) ?? ""
+
+        // Should NOT contain alternate screen sequences
+        #expect(!result.contains("\u{001B}[?1049h"), "Should not contain alternate screen enter sequence")
+        #expect(!result.contains("\u{001B}[?1049l"), "Should not contain alternate screen leave sequence")
+
+        // Should contain both frame contents
+        #expect(result.contains("Frame 1"), "Should contain first frame content")
+        #expect(result.contains("Frame 2"), "Should contain second frame content")
+
+        // Debug output
+        print("Debug: Raw output length: \(result.count)")
+        print("Debug: Contains Frame 1: \(result.contains("Frame 1"))")
+        print("Debug: Contains Frame 2: \(result.contains("Frame 2"))")
+        print("Debug: Raw output (first 200 chars): \(String(result.prefix(200)))")
+
+        // Show ANSI sequences
+        let escapedOutput = result.replacingOccurrences(of: "\u{001B}", with: "\\e")
+        print("Debug: Escaped output: \(String(escapedOutput.prefix(200)))")
+
+        // Check for cursor positioning sequences
+        let hasCursorPositioning = result.contains("\u{001B}[")
+        print("Debug: Contains cursor positioning: \(hasCursorPositioning)")
+
+        // Cleanup
+        input.closeFile()
+    }
+
+    @Test("Frame buffer renders frames in sequence correctly")
+    func frameBufferRendersFramesInSequenceCorrectly() async {
+        // Arrange
+        let pipe = Pipe()
+        let output = pipe.fileHandleForWriting
+        let input = pipe.fileHandleForReading
+
+        let frameBuffer = FrameBuffer(output: output)
+
+        // Create frames with different heights to test shrinkage
+        let tallFrame = TerminalRenderer.Frame(
+            lines: ["Line 1", "Line 2", "Line 3"],
+            width: 6,
+            height: 3
+        )
+
+        let shortFrame = TerminalRenderer.Frame(
+            lines: ["Short"],
+            width: 5,
+            height: 1
+        )
+
+        // Act
+        await frameBuffer.renderFrame(tallFrame)
+        await frameBuffer.renderFrame(shortFrame)
+        await frameBuffer.clear()
+
+        output.closeFile()
+
+        // Assert
+        let data = input.readDataToEndOfFile()
+        let result = String(data: data, encoding: .utf8) ?? ""
+
+        // Should contain both frame contents
+        #expect(result.contains("Line 1"), "Should contain tall frame content")
+        #expect(result.contains("Line 2"), "Should contain tall frame content")
+        #expect(result.contains("Line 3"), "Should contain tall frame content")
+        #expect(result.contains("Short"), "Should contain short frame content")
+
+        // Should contain proper ANSI sequences for frame transitions
+        #expect(result.contains("\u{001B}[2J\u{001B}[H"), "Should contain screen clear sequence")
+        #expect(result.contains("\u{001B}[1;1H"), "Should contain cursor positioning")
+        #expect(result.contains("\u{001B}[2K"), "Should contain line clear sequence")
+
+        // The key test: should contain sequences that clear lines beyond the short frame
+        // When shrinking from 3 lines to 1 line, lines 2 and 3 should be cleared
+        let hasLineClearingForShrinkage = result.contains("\u{001B}[2;1H") && result.contains("\u{001B}[3;1H")
+        #expect(hasLineClearingForShrinkage, "Should clear lines when frame shrinks")
+
+        print("Debug: Frame sequence test - Raw output length: \(result.count)")
+        let escapedOutput = result.replacingOccurrences(of: "\u{001B}", with: "\\e")
+        print("Debug: Frame sequence test - Escaped output: \(String(escapedOutput.prefix(300)))")
+
+        // Cleanup
+        input.closeFile()
+    }
+
+    @Test("Live frame buffer demo simulation")
+    func liveFrameBufferDemoSimulation() async {
+        // Arrange
+        let pipe = Pipe()
+        let output = pipe.fileHandleForWriting
+        let input = pipe.fileHandleForReading
+
+        let frameBuffer = FrameBuffer(output: output)
+
+        // Create simple loading frames like in the demo
+        let loadingContents = ["Loading...", "Loading.", "Loading..", "Loading..."]
+        let loadingFrames = loadingContents.map { content in
+            TerminalRenderer.Frame(
+                lines: [
+                    "┌────────────┐",
+                    "│ \(content) │",
+                    "└────────────┘"
+                ],
+                width: 14,
+                height: 3
+            )
+        }
+
+        // Act - simulate the loading animation
+        for frame in loadingFrames {
+            await frameBuffer.renderFrame(frame)
+        }
+
+        // Final completion frame
+        let completeFrame = TerminalRenderer.Frame(
+            lines: [
+                "┌──────────────┐",
+                "│ Complete! ✅ │",
+                "└──────────────┘"
+            ],
+            width: 16,
+            height: 3
+        )
+        await frameBuffer.renderFrame(completeFrame)
+
+        await frameBuffer.clear()
+        output.closeFile()
+
+        // Assert
+        let data = input.readDataToEndOfFile()
+        let result = String(data: data, encoding: .utf8) ?? ""
+
+        // Should contain all frame contents
+        #expect(result.contains("Loading..."), "Should contain Loading...")
+        #expect(result.contains("Loading."), "Should contain Loading.")
+        #expect(result.contains("Loading.."), "Should contain Loading..")
+        #expect(result.contains("Complete! ✅"), "Should contain Complete!")
+
+        // Should contain proper cursor positioning sequences
+        #expect(result.contains("\u{001B}["), "Should contain ANSI escape sequences")
+
+        // Debug output to understand the sequence
+        let escapedOutput = result.replacingOccurrences(of: "\u{001B}", with: "\\e")
+        print("Debug: Live demo simulation output: \(String(escapedOutput.prefix(500)))")
+
+        // Cleanup
+        input.closeFile()
+    }
+
+    @Test("Coalescing fix verification")
+    func coalescingFixVerification() async {
+        // Arrange
+        let pipe = Pipe()
+        let output = pipe.fileHandleForWriting
+        let input = pipe.fileHandleForReading
+
+        let frameBuffer = FrameBuffer(output: output)
+
+        // Create frames like in the live demo
+        let frame1 = TerminalRenderer.Frame(
+            lines: ["┌────────────┐", "│ Loading... │", "└────────────┘"],
+            width: 14, height: 3
+        )
+
+        let frame2 = TerminalRenderer.Frame(
+            lines: ["┌──────────┐", "│ Loading. │", "└──────────┘"],
+            width: 12, height: 3
+        )
+
+        let finalFrame = TerminalRenderer.Frame(
+            lines: ["┌──────────────┐", "│ Complete! ✅ │", "└──────────────┘"],
+            width: 16, height: 3
+        )
+
+        // Act - render frames rapidly to test coalescing
+        await frameBuffer.renderFrame(frame1)
+        await frameBuffer.renderFrame(frame2)
+        await frameBuffer.renderFrame(finalFrame)
+
+        // Wait for any coalesced updates to complete
+        await frameBuffer.waitForPendingUpdates()
+
+        await frameBuffer.clear()
+        output.closeFile()
+
+        // Assert
+        let data = input.readDataToEndOfFile()
+        let result = String(data: data, encoding: .utf8) ?? ""
+
+        // The final frame should definitely be present
+        #expect(result.contains("Complete! ✅"), "Final frame should be rendered")
+
+        // Should contain proper ANSI sequences
+        #expect(result.contains("\u{001B}["), "Should contain ANSI escape sequences")
+
+        print("Coalescing test output contains Complete frame: \(result.contains("Complete! ✅"))")
 
         // Cleanup
         input.closeFile()
