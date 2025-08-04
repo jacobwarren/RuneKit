@@ -1,5 +1,4 @@
 import Foundation
-import CryptoKit
 
 /// Line-based diffing system for efficient terminal rendering
 ///
@@ -58,10 +57,10 @@ public struct LineDiff {
         let hash: String
 
         init(_ line: String) {
-            // Use SHA256 for reliable hashing of line content
-            let data = Data(line.utf8)
-            let digest = SHA256.hash(data: data)
-            self.hash = digest.compactMap { String(format: "%02x", $0) }.joined()
+            // Use built-in Hasher for cross-platform compatibility
+            var hasher = Hasher()
+            hasher.combine(line)
+            self.hash = String(hasher.finalize())
         }
 
         /// Fast hash for simple ASCII content (optimization)
