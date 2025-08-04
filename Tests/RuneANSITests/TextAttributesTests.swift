@@ -105,7 +105,7 @@ struct TextAttributesTests {
             inverse: true,
             strikethrough: true,
             dim: true,
-        )
+            )
         let span = TextSpan(text: "Complex", attributes: attributes)
         let styledText = StyledText(spans: [span])
         let converter = ANSISpanConverter()

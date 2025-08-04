@@ -78,7 +78,7 @@ public struct StyledText: Equatable, Hashable {
                 currentSpan = TextSpan(
                     text: currentSpan.text + nextSpan.text,
                     attributes: currentSpan.attributes,
-                )
+                    )
             } else {
                 // Attributes don't match, save current span and start new one
                 mergedSpans.append(currentSpan)
@@ -141,7 +141,7 @@ public struct StyledText: Equatable, Hashable {
         return (
             left: StyledText(spans: leftSpans),
             right: StyledText(spans: rightSpans),
-        )
+            )
     }
 
     /// Split styled text at the specified display width position
@@ -157,7 +157,7 @@ public struct StyledText: Equatable, Hashable {
     public func splitByDisplayWidth(
         at displayWidth: Int,
         lastColumnGuard: Bool = false,
-    ) -> (left: StyledText, right: StyledText) {
+        ) -> (left: StyledText, right: StyledText) {
         guard displayWidth > 0 else {
             return (left: StyledText(spans: []), right: self)
         }
@@ -181,7 +181,7 @@ public struct StyledText: Equatable, Hashable {
                 let (leftPart, rightPart) = span.splitByDisplayWidth(
                     at: displayWidth - currentDisplayWidth,
                     lastColumnGuard: lastColumnGuard,
-                )
+                    )
 
                 if !leftPart.text.isEmpty {
                     leftSpans.append(leftPart)
@@ -197,7 +197,7 @@ public struct StyledText: Equatable, Hashable {
         return (
             left: StyledText(spans: leftSpans),
             right: StyledText(spans: rightSpans),
-        )
+            )
     }
 
     /// Wrap styled text by display width into multiple lines

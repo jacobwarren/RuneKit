@@ -103,6 +103,6 @@ struct WidthPerformanceTests {
 
         print(
             "Performance benchmark: \(testStrings.count * 1_000) width calculations in \(String(format: "%.3f", duration)) seconds",
-        )
+            )
     }
 }

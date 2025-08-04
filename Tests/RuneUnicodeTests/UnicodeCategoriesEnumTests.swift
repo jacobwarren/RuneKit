@@ -16,11 +16,11 @@ struct UnicodeCategoriesEnumTests {
         #expect(
             UnicodeCategories.category(of: digit0) == .decimalNumber,
             "Digit '0' should be categorized as decimal number",
-        )
+            )
         #expect(
             UnicodeCategories.category(of: romanOne) == .letterNumber,
             "Roman numeral Ⅰ should be categorized as letter number",
-        )
+            )
     }
 
     @Test("Punctuation category detection")
@@ -34,15 +34,15 @@ struct UnicodeCategoriesEnumTests {
         #expect(
             UnicodeCategories.category(of: period) == .otherPunctuation,
             "Period '.' should be categorized as other punctuation",
-        )
+            )
         #expect(
             UnicodeCategories.category(of: openParen) == .openPunctuation,
             "Open parenthesis '(' should be categorized as open punctuation",
-        )
+            )
         #expect(
             UnicodeCategories.category(of: closeParen) == .closePunctuation,
             "Close parenthesis ')' should be categorized as close punctuation",
-        )
+            )
     }
 
     @Test("Symbol category detection")
@@ -55,10 +55,10 @@ struct UnicodeCategoriesEnumTests {
         #expect(
             UnicodeCategories.category(of: plusSign) == .mathSymbol,
             "Plus sign '+' should be categorized as math symbol",
-        )
+            )
         #expect(
             UnicodeCategories.category(of: dollarSign) == .currencySymbol,
             "Dollar sign '$' should be categorized as currency symbol",
-        )
+            )
     }
 }

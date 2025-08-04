@@ -141,7 +141,7 @@ struct WidthGoldenTests {
             #expect(
                 width == testCase.expectedWidth,
                 "\(testCase.description): '\(testCase.string)' should have width \(testCase.expectedWidth), got \(width)",
-            )
+                )
         }
     }
 

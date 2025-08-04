@@ -44,7 +44,7 @@ struct SGRParameterProcessor {
         parameters: [Int],
         index: Int,
         to attributes: TextAttributes,
-    ) -> (attributes: TextAttributes, nextIndex: Int) {
+        ) -> (attributes: TextAttributes, nextIndex: Int) {
         var newAttributes = attributes
         var nextIndex = index + 1
 
@@ -155,7 +155,7 @@ struct SGRParameterProcessor {
         parameters: [Int],
         index: Int,
         to attributes: TextAttributes,
-    ) -> (attributes: TextAttributes, nextIndex: Int)? {
+        ) -> (attributes: TextAttributes, nextIndex: Int)? {
         // Handle foreground colors
         if let result = applyForegroundColor(param, parameters: parameters, index: index, to: attributes) {
             return result
@@ -181,7 +181,7 @@ struct SGRParameterProcessor {
         parameters: [Int],
         index: Int,
         to attributes: TextAttributes,
-    ) -> (attributes: TextAttributes, nextIndex: Int)? {
+        ) -> (attributes: TextAttributes, nextIndex: Int)? {
         var newAttributes = attributes
         var nextIndex = index + 1
 
@@ -216,7 +216,7 @@ struct SGRParameterProcessor {
         parameters: [Int],
         index: Int,
         to attributes: TextAttributes,
-    ) -> (attributes: TextAttributes, nextIndex: Int)? {
+        ) -> (attributes: TextAttributes, nextIndex: Int)? {
         var newAttributes = attributes
         var nextIndex = index + 1
 
@@ -248,7 +248,7 @@ struct SGRParameterProcessor {
     private func parseExtendedColor(
         _ parameters: [Int],
         startingAt startIndex: Int,
-    ) -> (color: ANSIColor, nextIndex: Int)? {
+        ) -> (color: ANSIColor, nextIndex: Int)? {
         guard startIndex + 1 < parameters.count else { return nil }
 
         let colorType = parameters[startIndex + 1]
