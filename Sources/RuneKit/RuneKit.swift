@@ -1,12 +1,12 @@
-/// RuneKit - A Swift library for terminal user interfaces
-///
-/// RuneKit is inspired by Ink (React for CLIs) and provides a declarative
-/// way to build terminal-based user interfaces using Swift. It combines
-/// the power of Swift's type system with efficient terminal rendering.
-///
-/// ## Architecture
-///
-/// RuneKit is built on four core subsystems:
+// RuneKit - A Swift library for terminal user interfaces
+//
+// RuneKit is inspired by Ink (React for CLIs) and provides a declarative
+// way to build terminal-based user interfaces using Swift. It combines
+// the power of Swift's type system with efficient terminal rendering.
+//
+// ## Architecture
+//
+// RuneKit is built on four core subsystems:
 ///
 /// 1. **Text Engine** (`RuneANSI` + `RuneUnicode`)
 ///    - ANSI escape sequence parsing and tokenization
@@ -45,6 +45,13 @@
 /// // Unicode width calculation
 /// let width = Width.displayWidth(of: "👨‍👩‍👧‍👦") // Returns 2
 /// ```
+
+/// RuneKit - A Swift library for terminal user interfaces
+///
+/// RuneKit is inspired by Ink (React for CLIs) and provides a declarative
+/// way to build terminal-based user interfaces using Swift. It combines
+/// the power of Swift's type system with efficient terminal rendering.
+public enum RuneKit {}
 
 // Re-export all modules for convenient access
 @_exported import RuneANSI

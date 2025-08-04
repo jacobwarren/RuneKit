@@ -18,8 +18,8 @@ struct ComponentTests {
         // Assert
         #expect(lines.count == 3, "Should return correct number of lines")
         #expect(lines[0] == "Hello", "First line should contain the text")
-        #expect(lines[1] == "", "Remaining lines should be empty")
-        #expect(lines[2] == "", "Remaining lines should be empty")
+        #expect(lines[1].isEmpty, "Remaining lines should be empty")
+        #expect(lines[2].isEmpty, "Remaining lines should be empty")
     }
 
     @Test("Text component with content longer than width")
@@ -88,6 +88,7 @@ struct ComponentTests {
 
         // Assert
         #expect(lines.count == 3, "Should return correct number of lines")
+        // swiftlint:disable:next prefer_key_path
         #expect(lines.allSatisfy { $0.isEmpty }, "All lines should be empty")
     }
 
@@ -104,7 +105,7 @@ struct ComponentTests {
         // Assert
         #expect(lines.count == 2, "Should return correct number of lines")
         #expect(lines[0] == "Hello", "Should render child content")
-        #expect(lines[1] == "", "Remaining lines should be empty")
+        #expect(lines[1].isEmpty, "Remaining lines should be empty")
     }
 
     @Test("Box with border style none")
@@ -118,7 +119,11 @@ struct ComponentTests {
 
         // Assert
         #expect(lines.count == 3, "Should return correct number of lines")
-        #expect(lines.allSatisfy { $0.isEmpty }, "All lines should be empty for no border")
+        // swiftlint:disable:next prefer_key_path
+        #expect(
+            lines.allSatisfy { $0.isEmpty },
+            "All lines should be empty for no border",
+        )
     }
 
     @Test("Box with zero dimensions")
