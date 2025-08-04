@@ -179,4 +179,145 @@ struct TerminalRendererTests {
         // Cleanup
         input.closeFile()
     }
+
+    // MARK: - Frame Buffer Tests (RUNE-20)
+
+    @Test("Frame buffer initialization")
+    func frameBufferInitialization() async {
+        // This test will fail until we implement FrameBuffer
+        // Arrange & Act
+        let pipe = Pipe()
+        let output = pipe.fileHandleForWriting
+        let frameBuffer = FrameBuffer(output: output)
+
+        // Assert
+        let currentFrame = await frameBuffer.getCurrentFrame()
+        #expect(currentFrame == nil, "New frame buffer should have no current frame")
+
+        // Cleanup
+        output.closeFile()
+    }
+
+    @Test("Region repaint with cursor management")
+    func regionRepaintWithCursorManagement() async {
+        // Test that cursor is properly managed during frame rendering
+        // Arrange
+        let pipe = Pipe()
+        let output = pipe.fileHandleForWriting
+        let input = pipe.fileHandleForReading
+        let frameBuffer = FrameBuffer(output: output)
+
+        let frame1 = TerminalRenderer.Frame(
+            lines: ["Line 1", "Line 2"],
+            width: 10,
+            height: 2
+        )
+
+        // Act
+        await frameBuffer.renderFrame(frame1)
+        await frameBuffer.clear()
+        output.closeFile()
+
+        // Assert
+        let data = input.readDataToEndOfFile()
+        let result = String(data: data, encoding: .utf8) ?? ""
+
+        // Should hide cursor during rendering and restore on clear
+        #expect(result.contains("\u{001B}[?25l"), "Should hide cursor during rendering")
+        #expect(result.contains("\u{001B}[?25h"), "Should restore cursor on clear")
+        #expect(result.contains("Line 1"), "Should contain frame content")
+        #expect(result.contains("Line 2"), "Should contain frame content")
+
+        // Cleanup
+        input.closeFile()
+    }
+
+    @Test("Frame height shrinkage cleanup")
+    func frameHeightShrinkageCleanup() async {
+        // Test that extra lines are properly erased when frame height shrinks (RUNE-20)
+        // Arrange
+        let pipe = Pipe()
+        let output = pipe.fileHandleForWriting
+        let input = pipe.fileHandleForReading
+        let frameBuffer = FrameBuffer(output: output)
+
+        // First render a tall frame
+        let tallFrame = TerminalRenderer.Frame(
+            lines: ["Line 1", "Line 2", "Line 3", "Line 4"],
+            width: 10,
+            height: 4
+        )
+        await frameBuffer.renderFrame(tallFrame)
+
+        // Then render a shorter frame
+        let shortFrame = TerminalRenderer.Frame(
+            lines: ["New Line 1", "New Line 2"],
+            width: 10,
+            height: 2
+        )
+
+        // Act
+        await frameBuffer.renderFrame(shortFrame)
+        await frameBuffer.clear()
+        output.closeFile()
+
+        // Assert
+        let data = input.readDataToEndOfFile()
+        let result = String(data: data, encoding: .utf8) ?? ""
+
+        // Should use Ink.js-style line erasure for frame height shrinkage
+        #expect(result.contains("\u{001B}[2K"), "Should contain line clear sequences")
+        #expect(result.contains("\u{001B}[A"), "Should contain cursor up sequences")
+        #expect(result.contains("\u{001B}[G"), "Should contain cursor to column 1 sequence")
+
+        // Should contain both frame contents
+        #expect(result.contains("Line 1"), "Should contain tall frame content")
+        #expect(result.contains("New Line 1"), "Should contain short frame content")
+
+        // Cleanup
+        input.closeFile()
+    }
+
+    @Test("In-place repaint without flicker")
+    func inPlaceRepaintWithoutFlicker() async {
+        // Test that frames are rendered in-place using line erasure (Ink.js style)
+        // Arrange
+        let pipe = Pipe()
+        let output = pipe.fileHandleForWriting
+        let input = pipe.fileHandleForReading
+        let frameBuffer = FrameBuffer(output: output)
+
+        let frame1 = TerminalRenderer.Frame(
+            lines: ["Frame 1 Content"],
+            width: 15,
+            height: 1
+        )
+
+        let frame2 = TerminalRenderer.Frame(
+            lines: ["Frame 2 Content"],
+            width: 15,
+            height: 1
+        )
+
+        // Act - Render two frames in sequence
+        await frameBuffer.renderFrame(frame1)
+        await frameBuffer.renderFrame(frame2)
+        await frameBuffer.clear()
+        output.closeFile()
+
+        // Assert
+        let data = input.readDataToEndOfFile()
+        let result = String(data: data, encoding: .utf8) ?? ""
+
+        // Should use line erasure (Ink.js style), not full screen clear
+        #expect(result.contains("\u{001B}[2K"), "Should use line clear sequences")
+        #expect(!result.contains("\u{001B}[2J"), "Should not use full screen clear for frame updates")
+
+        // Should contain both frame contents
+        #expect(result.contains("Frame 1 Content"), "Should contain first frame content")
+        #expect(result.contains("Frame 2 Content"), "Should contain second frame content")
+
+        // Cleanup
+        input.closeFile()
+    }
 }

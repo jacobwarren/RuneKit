@@ -9,7 +9,7 @@ import RuneUnicode
 /// ANSI escape sequence generation.
 public actor TerminalRenderer {
     /// Represents a frame of terminal content
-    public struct Frame {
+    public struct Frame: Sendable {
         public let lines: [String]
         public let width: Int
         public let height: Int
