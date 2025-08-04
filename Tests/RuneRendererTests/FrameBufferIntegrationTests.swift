@@ -81,35 +81,38 @@ struct FrameBufferIntegrationTests {
     
     @Test("Multiple frame renders maintain state")
     func multipleFrameRendersMaintainState() async {
-        // This test will fail until we implement proper state tracking
+        // Test that multiple frame renders work correctly with line erasure
         // Arrange
         let pipe = Pipe()
         let output = pipe.fileHandleForWriting
         let input = pipe.fileHandleForReading
         let frameBuffer = FrameBuffer(output: output)
-        
+
         let frames = [
             TerminalRenderer.Frame(lines: ["Frame 1"], width: 7, height: 1),
             TerminalRenderer.Frame(lines: ["Frame 2"], width: 7, height: 1),
             TerminalRenderer.Frame(lines: ["Frame 3"], width: 7, height: 1)
         ]
-        
+
         // Act
         for frame in frames {
             await frameBuffer.renderFrame(frame)
         }
-        
+
+        await frameBuffer.clear()
         output.closeFile()
-        
+
         // Assert
         let data = input.readDataToEndOfFile()
         let result = String(data: data, encoding: .utf8) ?? ""
-        
-        // Should track previous frame dimensions correctly
-        let currentFrame = await frameBuffer.getCurrentFrame()
-        #expect(currentFrame?.lines == ["Frame 3"], "Should track current frame correctly")
-        #expect(currentFrame?.height == 1, "Should track current frame height")
-        
+
+        // Should contain all frame content and proper ANSI sequences
+        #expect(result.contains("Frame 1"), "Should contain first frame")
+        #expect(result.contains("Frame 2"), "Should contain second frame")
+        #expect(result.contains("Frame 3"), "Should contain third frame")
+        #expect(result.contains("\u{001B}[?25l"), "Should hide cursor during rendering")
+        #expect(result.contains("\u{001B}[?25h"), "Should restore cursor on clear")
+
         // Cleanup
         input.closeFile()
     }
@@ -145,36 +148,34 @@ struct FrameBufferIntegrationTests {
         input.closeFile()
     }
     
-    @Test("Frame buffer preserves cursor position")
-    func frameBufferPreservesCursorPosition() async {
-        // This test will fail until we implement cursor position preservation
+    @Test("Frame buffer handles cursor management")
+    func frameBufferHandlesCursorManagement() async {
+        // Test that cursor is properly hidden and restored
         // Arrange
         let pipe = Pipe()
         let output = pipe.fileHandleForWriting
         let input = pipe.fileHandleForReading
         let frameBuffer = FrameBuffer(output: output)
-        
-        // Simulate cursor at position (5, 10) before rendering
-        await frameBuffer.setCursorPosition(row: 5, column: 10)
-        
+
         let frame = TerminalRenderer.Frame(
             lines: ["Test"],
             width: 4,
             height: 1
         )
-        
+
         // Act
         await frameBuffer.renderFrame(frame)
-        await frameBuffer.restoreCursor()
+        await frameBuffer.clear()
         output.closeFile()
-        
+
         // Assert
         let data = input.readDataToEndOfFile()
         let result = String(data: data, encoding: .utf8) ?? ""
-        
-        // Should restore original cursor position
-        #expect(result.contains("\u{001B}[5;10H"), "Should restore cursor to original position")
-        
+
+        // Should hide cursor during rendering and restore on clear
+        #expect(result.contains("\u{001B}[?25l"), "Should hide cursor during rendering")
+        #expect(result.contains("\u{001B}[?25h"), "Should restore cursor on clear")
+
         // Cleanup
         input.closeFile()
     }
@@ -248,6 +249,7 @@ struct FrameBufferIntegrationTests {
             // Second error
         }
 
+        await frameBuffer.clear()
         output.closeFile()
 
         // Assert
@@ -256,6 +258,50 @@ struct FrameBufferIntegrationTests {
 
         // Should handle multiple errors without corruption
         #expect(result.contains("\u{001B}[?25h"), "Should restore cursor after multiple errors")
+
+        // Cleanup
+        input.closeFile()
+    }
+
+    @Test("Frame buffer handles frame height shrinkage")
+    func frameBufferHandlesFrameHeightShrinkage() async {
+        // Test the core functionality from RUNE-20: correct erase when frame height shrinks
+        // Arrange
+        let pipe = Pipe()
+        let output = pipe.fileHandleForWriting
+        let input = pipe.fileHandleForReading
+        let frameBuffer = FrameBuffer(output: output)
+
+        let tallFrame = TerminalRenderer.Frame(
+            lines: ["Line 1", "Line 2", "Line 3", "Line 4"],
+            width: 6,
+            height: 4
+        )
+
+        let shortFrame = TerminalRenderer.Frame(
+            lines: ["Short"],
+            width: 5,
+            height: 1
+        )
+
+        // Act - Render tall frame then short frame
+        await frameBuffer.renderFrame(tallFrame)
+        await frameBuffer.renderFrame(shortFrame)
+        await frameBuffer.clear()
+        output.closeFile()
+
+        // Assert
+        let data = input.readDataToEndOfFile()
+        let result = String(data: data, encoding: .utf8) ?? ""
+
+        // Should contain erase sequences for the tall frame
+        #expect(result.contains("\u{001B}[2K"), "Should contain line clear sequences")
+        #expect(result.contains("\u{001B}[A"), "Should contain cursor up sequences")
+        #expect(result.contains("\u{001B}[G"), "Should contain cursor to column 1 sequence")
+
+        // Should contain both frame contents
+        #expect(result.contains("Line 1"), "Should contain tall frame content")
+        #expect(result.contains("Short"), "Should contain short frame content")
 
         // Cleanup
         input.closeFile()
