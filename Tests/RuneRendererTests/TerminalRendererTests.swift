@@ -179,4 +179,135 @@ struct TerminalRendererTests {
         // Cleanup
         input.closeFile()
     }
+
+    // MARK: - Frame Buffer Tests (RUNE-20)
+
+    @Test("Frame buffer initialization")
+    func frameBufferInitialization() async {
+        // This test will fail until we implement FrameBuffer
+        // Arrange & Act
+        let pipe = Pipe()
+        let output = pipe.fileHandleForWriting
+        let frameBuffer = FrameBuffer(output: output)
+
+        // Assert
+        let currentFrame = await frameBuffer.getCurrentFrame()
+        #expect(currentFrame == nil, "New frame buffer should have no current frame")
+
+        // Cleanup
+        output.closeFile()
+    }
+
+    @Test("Region repaint with cursor management")
+    func regionRepaintWithCursorManagement() async {
+        // This test will fail until we implement region repaint
+        // Arrange
+        let pipe = Pipe()
+        let output = pipe.fileHandleForWriting
+        let input = pipe.fileHandleForReading
+        let frameBuffer = FrameBuffer(output: output)
+
+        let frame1 = TerminalRenderer.Frame(
+            lines: ["Line 1", "Line 2"],
+            width: 10,
+            height: 2
+        )
+
+        // Act
+        await frameBuffer.renderFrame(frame1)
+        output.closeFile()
+
+        // Assert
+        let data = input.readDataToEndOfFile()
+        let result = String(data: data, encoding: .utf8) ?? ""
+
+        // Should hide cursor, move to origin, clear region, write content, show cursor
+        let expectedSequence = "\u{001B}[?25l\u{001B}[H\u{001B}[2JLine 1\nLine 2\u{001B}[?25h"
+        #expect(result == expectedSequence, "Should perform complete region repaint with cursor management")
+
+        // Cleanup
+        input.closeFile()
+    }
+
+    @Test("Frame height shrinkage cleanup")
+    func frameHeightShrinkageCleanup() async {
+        // This test will fail until we implement proper frame height tracking
+        // Arrange
+        let pipe = Pipe()
+        let output = pipe.fileHandleForWriting
+        let input = pipe.fileHandleForReading
+        let frameBuffer = FrameBuffer(output: output)
+
+        // First render a tall frame
+        let tallFrame = TerminalRenderer.Frame(
+            lines: ["Line 1", "Line 2", "Line 3", "Line 4"],
+            width: 10,
+            height: 4
+        )
+        await frameBuffer.renderFrame(tallFrame)
+
+        // Then render a shorter frame
+        let shortFrame = TerminalRenderer.Frame(
+            lines: ["New Line 1", "New Line 2"],
+            width: 10,
+            height: 2
+        )
+
+        // Act
+        await frameBuffer.renderFrame(shortFrame)
+        output.closeFile()
+
+        // Assert
+        let data = input.readDataToEndOfFile()
+        let result = String(data: data, encoding: .utf8) ?? ""
+
+        // Should clear the extra lines from the previous frame
+        #expect(result.contains("\u{001B}[3;1H\u{001B}[K"), "Should clear line 3 from previous frame")
+        #expect(result.contains("\u{001B}[4;1H\u{001B}[K"), "Should clear line 4 from previous frame")
+
+        // Cleanup
+        input.closeFile()
+    }
+
+    @Test("In-place repaint without flicker")
+    func inPlaceRepaintWithoutFlicker() async {
+        // This test will fail until we implement proper in-place rendering
+        // Arrange
+        let pipe = Pipe()
+        let output = pipe.fileHandleForWriting
+        let input = pipe.fileHandleForReading
+        let frameBuffer = FrameBuffer(output: output)
+
+        let frame1 = TerminalRenderer.Frame(
+            lines: ["Frame 1 Content"],
+            width: 15,
+            height: 1
+        )
+
+        let frame2 = TerminalRenderer.Frame(
+            lines: ["Frame 2 Content"],
+            width: 15,
+            height: 1
+        )
+
+        // Act - Render two frames in sequence
+        await frameBuffer.renderFrame(frame1)
+        await frameBuffer.renderFrame(frame2)
+        output.closeFile()
+
+        // Assert
+        let data = input.readDataToEndOfFile()
+        let result = String(data: data, encoding: .utf8) ?? ""
+
+        // Should not contain full screen clear for second frame
+        let clearCount = result.components(separatedBy: "\u{001B}[2J").count - 1
+        #expect(clearCount == 1, "Should only clear screen once for initial frame")
+
+        // Should contain both frame contents
+        #expect(result.contains("Frame 1 Content"), "Should contain first frame content")
+        #expect(result.contains("Frame 2 Content"), "Should contain second frame content")
+
+        // Cleanup
+        input.closeFile()
+    }
 }
