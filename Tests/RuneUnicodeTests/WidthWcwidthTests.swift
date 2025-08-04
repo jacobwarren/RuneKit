@@ -57,7 +57,7 @@ struct WidthWcwidthTests {
                 #expect(
                     width == 0,
                     "Control character U+\(String(scalar.value, radix: 16, uppercase: true)) should have width 0, got \(width)",
-                )
+                    )
             }
         }
     }
@@ -81,7 +81,7 @@ struct WidthWcwidthTests {
             #expect(
                 width == 0,
                 "Combining mark U+\(String(scalar.value, radix: 16, uppercase: true)) should have width 0, got \(width)",
-            )
+                )
         }
     }
 
@@ -105,7 +105,7 @@ struct WidthWcwidthTests {
             #expect(
                 width == testCase.expectedWidth,
                 "\(testCase.description): '\(testCase.string)' should have width \(testCase.expectedWidth), got \(width)",
-            )
+                )
         }
     }
 
@@ -140,7 +140,7 @@ struct WidthWcwidthTests {
             #expect(
                 width == testCase.expectedWidth,
                 "\(testCase.description) U+\(String(testCase.scalar.value, radix: 16, uppercase: true)) should have width \(testCase.expectedWidth), got \(width)",
-            )
+                )
         }
     }
 
@@ -158,7 +158,7 @@ struct WidthWcwidthTests {
             #expect(
                 width == 1,
                 "Basic Latin character U+\(String(codePoint, radix: 16, uppercase: true)) should have width 1, got \(width)",
-            )
+                )
         }
     }
 }

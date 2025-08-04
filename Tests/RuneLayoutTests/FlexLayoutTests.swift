@@ -15,7 +15,7 @@ struct FlexLayoutTests {
         let rects = FlexLayout.calculateLayout(
             children: children,
             containerSize: containerSize,
-        )
+            )
 
         // Assert
         #expect(rects.isEmpty, "Empty children should return empty rects array")
@@ -31,7 +31,7 @@ struct FlexLayoutTests {
         let rects = FlexLayout.calculateLayout(
             children: children,
             containerSize: containerSize,
-        )
+            )
 
         // Assert
         let expected = [FlexLayout.Rect(x: 0, y: 0, width: 5, height: 3)]
@@ -53,7 +53,7 @@ struct FlexLayoutTests {
             children: children,
             containerSize: containerSize,
             direction: .row,
-        )
+            )
 
         // Assert
         let expected = [
@@ -79,7 +79,7 @@ struct FlexLayoutTests {
             children: children,
             containerSize: containerSize,
             direction: .column,
-        )
+            )
 
         // Assert
         let expected = [

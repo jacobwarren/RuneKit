@@ -93,7 +93,7 @@ public struct ANSITokenizer: ANSITokenizing, ANSIEncoding {
     private func parseEscapeSequence(
         from input: String,
         startingAt startIndex: String.Index,
-    ) -> (ANSIToken, String.Index)? {
+        ) -> (ANSIToken, String.Index)? {
         guard startIndex < input.endIndex else { return nil }
 
         let escapeIndex = input.index(after: startIndex)
@@ -124,7 +124,7 @@ public struct ANSITokenizer: ANSITokenizing, ANSIEncoding {
     private func parseCSISequence(
         from input: String,
         startingAt startIndex: String.Index,
-    ) -> (ANSIToken, String.Index)? {
+        ) -> (ANSIToken, String.Index)? {
         var currentIndex = input.index(after: startIndex) // Skip the '['
         var parameters: [String] = []
         var currentParam = ""
@@ -198,7 +198,7 @@ public struct ANSITokenizer: ANSITokenizing, ANSIEncoding {
     private func parseOSCSequence(
         from input: String,
         startingAt startIndex: String.Index,
-    ) -> (ANSIToken, String.Index)? {
+        ) -> (ANSIToken, String.Index)? {
         var currentIndex = input.index(after: startIndex) // Skip the ']'
         var command = ""
         var data = ""
@@ -209,8 +209,8 @@ public struct ANSITokenizer: ANSITokenizing, ANSIEncoding {
             let char = input[currentIndex]
 
             if char == "\u{0007}" || (char == "\u{001B}" &&
-                input.index(after: currentIndex) < input.endIndex &&
-                input[input.index(after: currentIndex)] == "\\"
+                                        input.index(after: currentIndex) < input.endIndex &&
+                                        input[input.index(after: currentIndex)] == "\\"
             ) {
                 // Found terminator (BEL or ESC\)
                 let nextIndex: String.Index = if char == "\u{0007}" {

@@ -112,7 +112,7 @@ struct ANSIConversionTests {
         #expect(
             styledText.spans[1].attributes.backgroundColor == .color256(21),
             "Second span should have blue background",
-        )
+            )
     }
 
     @Test("Convert RGB color tokens to spans")

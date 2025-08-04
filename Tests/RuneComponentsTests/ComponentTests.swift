@@ -123,7 +123,7 @@ struct ComponentTests {
         #expect(
             lines.allSatisfy { $0.isEmpty },
             "All lines should be empty for no border",
-        )
+            )
     }
 
     @Test("Box with zero dimensions")

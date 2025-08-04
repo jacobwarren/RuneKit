@@ -57,7 +57,7 @@ public enum FlexLayout {
         children: [Size],
         containerSize _: Size,
         direction: FlexDirection = .row,
-    ) -> [Rect] {
+        ) -> [Rect] {
         // TODO: Implement proper flexbox layout
         // For now, return simple linear layout
         var rects: [Rect] = []

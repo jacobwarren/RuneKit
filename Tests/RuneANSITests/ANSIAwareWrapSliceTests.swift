@@ -220,7 +220,7 @@ struct ANSIAwareWrapSliceTests {
             bold: true,
             italic: true,
             underline: true,
-        )
+            )
         let text = "This is a very long line with complex formatting that will be split"
         let span = TextSpan(text: text, attributes: complexAttrs)
         let styledText = StyledText(spans: [span])
@@ -238,7 +238,7 @@ struct ANSIAwareWrapSliceTests {
             #expect(
                 firstSpan.attributes.backgroundColor == complexAttrs.backgroundColor,
                 "Background should be preserved",
-            )
+                )
             #expect(firstSpan.attributes.bold == complexAttrs.bold, "Bold should be preserved")
             #expect(firstSpan.attributes.italic == complexAttrs.italic, "Italic should be preserved")
             #expect(firstSpan.attributes.underline == complexAttrs.underline, "Underline should be preserved")
