@@ -98,72 +98,32 @@ public enum EastAsianWidth {
 
     /// Check if a code point is in Wide category
     private static func isWide(_ codePoint: UInt32) -> Bool {
-        // CJK Unified Ideographs (U+4E00-U+9FFF)
-        if codePoint >= 0x4E00, codePoint <= 0x9FFF {
-            return true
-        }
+        isWideRange1(codePoint) || isWideRange2(codePoint) || isWideRange3(codePoint)
+    }
 
-        // CJK Unified Ideographs Extension A (U+3400-U+4DBF)
-        if codePoint >= 0x3400, codePoint <= 0x4DBF {
-            return true
-        }
+    /// Check Wide ranges 1-4 (most common)
+    private static func isWideRange1(_ codePoint: UInt32) -> Bool {
+        (codePoint >= 0x3000 && codePoint <= 0x303F) || // CJK Symbols and Punctuation
+            (codePoint >= 0x3040 && codePoint <= 0x309F) || // Hiragana
+            (codePoint >= 0x30A0 && codePoint <= 0x30FF) || // Katakana
+            (codePoint >= 0x3200 && codePoint <= 0x32FF) // Enclosed CJK Letters and Months
+    }
 
-        // Hangul Syllables (U+AC00-U+D7AF)
-        if codePoint >= 0xAC00, codePoint <= 0xD7AF {
-            return true
-        }
+    /// Check Wide ranges 5-8
+    private static func isWideRange2(_ codePoint: UInt32) -> Bool {
+        (codePoint >= 0x3300 && codePoint <= 0x33FF) || // CJK Compatibility
+            (codePoint >= 0x3400 && codePoint <= 0x4DBF) || // CJK Unified Ideographs Extension A
+            (codePoint >= 0x4E00 && codePoint <= 0x9FFF) || // CJK Unified Ideographs
+            (codePoint >= 0xAC00 && codePoint <= 0xD7AF) // Hangul Syllables
+    }
 
-        // Hiragana (U+3040-U+309F)
-        if codePoint >= 0x3040, codePoint <= 0x309F {
-            return true
-        }
-
-        // Katakana (U+30A0-U+30FF)
-        if codePoint >= 0x30A0, codePoint <= 0x30FF {
-            return true
-        }
-
-        // CJK Symbols and Punctuation (U+3000-U+303F)
-        if codePoint >= 0x3000, codePoint <= 0x303F {
-            return true
-        }
-
-        // Enclosed CJK Letters and Months (U+3200-U+32FF)
-        if codePoint >= 0x3200, codePoint <= 0x32FF {
-            return true
-        }
-
-        // CJK Compatibility (U+3300-U+33FF)
-        if codePoint >= 0x3300, codePoint <= 0x33FF {
-            return true
-        }
-
-        // CJK Unified Ideographs Extension B (U+20000-U+2A6DF)
-        if codePoint >= 0x20000, codePoint <= 0x2A6DF {
-            return true
-        }
-
-        // CJK Unified Ideographs Extension C (U+2A700-U+2B73F)
-        if codePoint >= 0x2A700, codePoint <= 0x2B73F {
-            return true
-        }
-
-        // CJK Unified Ideographs Extension D (U+2B740-U+2B81F)
-        if codePoint >= 0x2B740, codePoint <= 0x2B81F {
-            return true
-        }
-
-        // CJK Unified Ideographs Extension E (U+2B820-U+2CEAF)
-        if codePoint >= 0x2B820, codePoint <= 0x2CEAF {
-            return true
-        }
-
-        // CJK Unified Ideographs Extension F (U+2CEB0-U+2EBEF)
-        if codePoint >= 0x2CEB0, codePoint <= 0x2EBEF {
-            return true
-        }
-
-        return false
+    /// Check Wide ranges 9-13 (extensions)
+    private static func isWideRange3(_ codePoint: UInt32) -> Bool {
+        (codePoint >= 0x20000 && codePoint <= 0x2A6DF) || // CJK Unified Ideographs Extension B
+            (codePoint >= 0x2A700 && codePoint <= 0x2B73F) || // CJK Unified Ideographs Extension C
+            (codePoint >= 0x2B740 && codePoint <= 0x2B81F) || // CJK Unified Ideographs Extension D
+            (codePoint >= 0x2B820 && codePoint <= 0x2CEAF) || // CJK Unified Ideographs Extension E
+            (codePoint >= 0x2CEB0 && codePoint <= 0x2EBEF) // CJK Unified Ideographs Extension F
     }
 
     /// Check if a code point is Fullwidth or Wide

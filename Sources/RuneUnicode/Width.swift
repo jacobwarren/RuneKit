@@ -17,10 +17,10 @@ import Musl
 
 // Platform-specific wcwidth availability
 #if canImport(Darwin)
-private let wcwidthAvailable = true
+private let kWcwidthAvailable = true
 #else
 // wcwidth may not be available on all Linux distributions
-private let wcwidthAvailable = false
+private let kWcwidthAvailable = false
 #endif
 
 public enum Width {
@@ -114,7 +114,7 @@ public enum Width {
         }
 
         // Use wcwidth for baseline width calculation if available
-        if wcwidthAvailable {
+        if kWcwidthAvailable {
             #if canImport(Darwin)
             let result = wcwidth(wchar_t(codePoint))
 
@@ -162,33 +162,31 @@ public enum Width {
     /// - Parameter codePoint: The Unicode code point
     /// - Returns: The display width (0, 1, or 2)
     private static func handleUnrecognizedCharacter(_ codePoint: UInt32) -> Int {
-        // Combining Diacritical Marks (U+0300-U+036F)
-        if codePoint >= 0x0300, codePoint <= 0x036F {
-            return 0
+        // Check zero-width combining marks first
+        if let width = checkCombiningMarks(codePoint) {
+            return width
         }
 
-        // Combining Diacritical Marks Extended (U+1AB0-U+1AFF)
-        if codePoint >= 0x1AB0, codePoint <= 0x1AFF {
+        // Check other character ranges
+        return checkOtherRanges(codePoint)
+    }
+
+    /// Check combining marks that have zero width
+    private static func checkCombiningMarks(_ codePoint: UInt32) -> Int? {
+        if (codePoint >= 0x0300 && codePoint <= 0x036F) || // Combining Diacritical Marks
+            (codePoint >= 0x1AB0 && codePoint <= 0x1AFF) || // Combining Diacritical Marks Extended
+            (codePoint >= 0x1DC0 && codePoint <= 0x1DFF) || // Combining Diacritical Marks Supplement
+            (codePoint >= 0xFE20 && codePoint <= 0xFE2F) { // Combining Half Marks
             return 0
         }
+        return nil
+    }
 
-        // Combining Diacritical Marks Supplement (U+1DC0-U+1DFF)
-        if codePoint >= 0x1DC0, codePoint <= 0x1DFF {
-            return 0
-        }
-
-        // Combining Half Marks (U+FE20-U+FE2F)
-        if codePoint >= 0xFE20, codePoint <= 0xFE2F {
-            return 0
-        }
-
+    /// Check other character ranges for width
+    private static func checkOtherRanges(_ codePoint: UInt32) -> Int {
         // CJK Symbols and Punctuation (U+3000-U+303F)
         if codePoint >= 0x3000, codePoint <= 0x303F {
-            // U+3000 IDEOGRAPHIC SPACE is wide
-            if codePoint == 0x3000 {
-                return 2
-            }
-            return 1
+            return codePoint == 0x3000 ? 2 : 1 // U+3000 IDEOGRAPHIC SPACE is wide
         }
 
         // Latin-1 Supplement (U+00A0-U+00FF)
@@ -198,26 +196,25 @@ public enum Width {
 
         // General Punctuation (U+2000-U+206F)
         if codePoint >= 0x2000, codePoint <= 0x206F {
-            // Zero-width spaces and format characters
-            if codePoint >= 0x200B, codePoint <= 0x200F {
-                return 0 // Zero-width spaces
-            }
-            if codePoint >= 0x202A, codePoint <= 0x202E {
-                return 0 // Bidirectional format characters
-            }
-            if codePoint >= 0x2060, codePoint <= 0x2064 {
-                return 0 // Invisible characters
-            }
-            return 1
+            return checkGeneralPunctuation(codePoint)
         }
 
-        // For other unrecognized characters, check if they're in the Basic Latin range
-        // that should be control characters
+        // DEL character
         if codePoint == 0x7F {
-            return 0 // DEL character
+            return 0
         }
 
-        // Default fallback for other unrecognized characters
+        // Default fallback
+        return 1
+    }
+
+    /// Check General Punctuation range for zero-width characters
+    private static func checkGeneralPunctuation(_ codePoint: UInt32) -> Int {
+        if (codePoint >= 0x200B && codePoint <= 0x200F) || // Zero-width spaces
+            (codePoint >= 0x202A && codePoint <= 0x202E) || // Bidirectional format characters
+            (codePoint >= 0x2060 && codePoint <= 0x2064) { // Invisible characters
+            return 0
+        }
         return 1
     }
 
@@ -225,90 +222,75 @@ public enum Width {
     /// - Parameter codePoint: The Unicode code point
     /// - Returns: The display width (0, 1, or 2)
     private static func fallbackWidthCalculation(_ codePoint: UInt32) -> Int {
+        // Check basic ASCII and control characters first
+        if let width = checkBasicCharacters(codePoint) {
+            return width
+        }
+
+        // Check combining marks (zero width)
+        if checkCombiningMarks(codePoint) != nil {
+            return 0
+        }
+
+        // Check wide characters (CJK, etc.)
+        if let width = checkWideCharacters(codePoint) {
+            return width
+        }
+
+        // Check other character ranges
+        return checkOtherCharacterRanges(codePoint)
+    }
+
+    /// Check basic ASCII and control characters
+    private static func checkBasicCharacters(_ codePoint: UInt32) -> Int? {
         // Basic ASCII printable characters
-        if codePoint >= 0x20 && codePoint <= 0x7E {
+        if codePoint >= 0x20, codePoint <= 0x7E {
             return 1
         }
 
         // Control characters
         if codePoint < 0x20 || codePoint == 0x7F || (codePoint >= 0x80 && codePoint < 0xA0) {
-            // Special case: TAB should have width 1
-            if codePoint == 0x09 {
-                return 1
-            }
-            return 0
+            return codePoint == 0x09 ? 1 : 0 // TAB has width 1, others are 0
         }
 
-        // Combining Diacritical Marks (U+0300-U+036F)
-        if codePoint >= 0x0300, codePoint <= 0x036F {
-            return 0
-        }
+        return nil
+    }
 
-        // Combining Diacritical Marks Extended (U+1AB0-U+1AFF)
-        if codePoint >= 0x1AB0, codePoint <= 0x1AFF {
-            return 0
-        }
-
-        // Combining Diacritical Marks Supplement (U+1DC0-U+1DFF)
-        if codePoint >= 0x1DC0, codePoint <= 0x1DFF {
-            return 0
-        }
-
-        // Combining Half Marks (U+FE20-U+FE2F)
-        if codePoint >= 0xFE20, codePoint <= 0xFE2F {
-            return 0
-        }
-
-        // CJK Unified Ideographs (U+4E00-U+9FFF) - Wide characters
+    /// Check wide characters (CJK scripts)
+    private static func checkWideCharacters(_ codePoint: UInt32) -> Int? {
+        // CJK Unified Ideographs
         if codePoint >= 0x4E00, codePoint <= 0x9FFF {
             return 2
         }
 
-        // CJK Symbols and Punctuation (U+3000-U+303F)
+        // CJK Symbols and Punctuation
         if codePoint >= 0x3000, codePoint <= 0x303F {
-            // U+3000 IDEOGRAPHIC SPACE is wide
-            if codePoint == 0x3000 {
-                return 2
-            }
-            return 1
+            return codePoint == 0x3000 ? 2 : 1 // IDEOGRAPHIC SPACE is wide
         }
 
-        // Hangul Syllables (U+AC00-U+D7AF) - Wide characters
-        if codePoint >= 0xAC00, codePoint <= 0xD7AF {
+        // Hangul, Hiragana, Katakana
+        if (codePoint >= 0xAC00 && codePoint <= 0xD7AF) || // Hangul Syllables
+            (codePoint >= 0x3040 && codePoint <= 0x309F) || // Hiragana
+            (codePoint >= 0x30A0 && codePoint <= 0x30FF) { // Katakana
             return 2
         }
 
-        // Hiragana (U+3040-U+309F) - Wide characters
-        if codePoint >= 0x3040, codePoint <= 0x309F {
-            return 2
-        }
+        return nil
+    }
 
-        // Katakana (U+30A0-U+30FF) - Wide characters
-        if codePoint >= 0x30A0, codePoint <= 0x30FF {
-            return 2
-        }
-
-        // Latin-1 Supplement (U+00A0-U+00FF)
+    /// Check other character ranges
+    private static func checkOtherCharacterRanges(_ codePoint: UInt32) -> Int {
+        // Latin-1 Supplement
         if codePoint >= 0x00A0, codePoint <= 0x00FF {
             return 1
         }
 
-        // General Punctuation (U+2000-U+206F)
+        // General Punctuation
         if codePoint >= 0x2000, codePoint <= 0x206F {
-            // Zero-width spaces and format characters
-            if codePoint >= 0x200B, codePoint <= 0x200F {
-                return 0 // Zero-width spaces
-            }
-            if codePoint >= 0x202A, codePoint <= 0x202E {
-                return 0 // Bidirectional format characters
-            }
-            if codePoint >= 0x2060, codePoint <= 0x2064 {
-                return 0 // Invisible characters
-            }
-            return 1
+            return checkGeneralPunctuation(codePoint)
         }
 
-        // Default: assume width 1 for other characters
+        // Default: assume width 1
         return 1
     }
 }

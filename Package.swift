@@ -61,7 +61,7 @@ let package = Package(
         // Core modules - foundational layers
         .target(
             name: "RuneANSI",
-            dependencies: []
+            dependencies: ["RuneUnicode"]
         ),
         .target(
             name: "RuneUnicode",

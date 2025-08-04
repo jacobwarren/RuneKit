@@ -1,3 +1,7 @@
+// Re-export main types for convenience
+// Note: Swift doesn't support @_exported import for individual types
+// Types are automatically available when importing the module
+
 /// RuneUnicode module - Unicode width calculations and text processing
 ///
 /// This module provides functionality for accurately calculating the display
@@ -11,7 +15,4 @@
 /// - Zero-width character detection
 /// - Unicode category detection and combining mark identification
 /// - Foundation for text wrapping and alignment
-
-// Re-export main types for convenience
-// Note: Swift doesn't support @_exported import for individual types
-// Types are automatically available when importing the module
+public enum RuneUnicode {}

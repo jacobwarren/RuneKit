@@ -108,18 +108,70 @@ public enum UnicodeCategories {
     /// - Parameter utf8procCategory: The utf8proc category constant
     /// - Returns: Corresponding Swift UnicodeCategory
     private static func convertCategory(_ utf8procCategory: utf8proc_category_t) -> UnicodeCategory {
-        switch utf8procCategory {
+        // Check letter categories first (most common)
+        if let letterCategory = convertLetterCategory(utf8procCategory) {
+            return letterCategory
+        }
+
+        // Check mark categories
+        if let markCategory = convertMarkCategory(utf8procCategory) {
+            return markCategory
+        }
+
+        // Check number categories
+        if let numberCategory = convertNumberCategory(utf8procCategory) {
+            return numberCategory
+        }
+
+        // Check punctuation categories
+        if let punctuationCategory = convertPunctuationCategory(utf8procCategory) {
+            return punctuationCategory
+        }
+
+        // Check symbol categories
+        if let symbolCategory = convertSymbolCategory(utf8procCategory) {
+            return symbolCategory
+        }
+
+        // Check separator and other categories
+        return convertOtherCategory(utf8procCategory)
+    }
+
+    /// Convert letter categories (L*)
+    private static func convertLetterCategory(_ category: utf8proc_category_t) -> UnicodeCategory? {
+        switch category {
         case UTF8PROC_CATEGORY_LU: .uppercaseLetter
         case UTF8PROC_CATEGORY_LL: .lowercaseLetter
         case UTF8PROC_CATEGORY_LT: .titlecaseLetter
         case UTF8PROC_CATEGORY_LM: .modifierLetter
         case UTF8PROC_CATEGORY_LO: .otherLetter
+        default: nil
+        }
+    }
+
+    /// Convert mark categories (M*)
+    private static func convertMarkCategory(_ category: utf8proc_category_t) -> UnicodeCategory? {
+        switch category {
         case UTF8PROC_CATEGORY_MN: .nonspacingMark
         case UTF8PROC_CATEGORY_MC: .spacingMark
         case UTF8PROC_CATEGORY_ME: .enclosingMark
+        default: nil
+        }
+    }
+
+    /// Convert number categories (N*)
+    private static func convertNumberCategory(_ category: utf8proc_category_t) -> UnicodeCategory? {
+        switch category {
         case UTF8PROC_CATEGORY_ND: .decimalNumber
         case UTF8PROC_CATEGORY_NL: .letterNumber
         case UTF8PROC_CATEGORY_NO: .otherNumber
+        default: nil
+        }
+    }
+
+    /// Convert punctuation categories (P*)
+    private static func convertPunctuationCategory(_ category: utf8proc_category_t) -> UnicodeCategory? {
+        switch category {
         case UTF8PROC_CATEGORY_PC: .connectorPunctuation
         case UTF8PROC_CATEGORY_PD: .dashPunctuation
         case UTF8PROC_CATEGORY_PS: .openPunctuation
@@ -127,10 +179,24 @@ public enum UnicodeCategories {
         case UTF8PROC_CATEGORY_PI: .initialPunctuation
         case UTF8PROC_CATEGORY_PF: .finalPunctuation
         case UTF8PROC_CATEGORY_PO: .otherPunctuation
+        default: nil
+        }
+    }
+
+    /// Convert symbol categories (S*)
+    private static func convertSymbolCategory(_ category: utf8proc_category_t) -> UnicodeCategory? {
+        switch category {
         case UTF8PROC_CATEGORY_SM: .mathSymbol
         case UTF8PROC_CATEGORY_SC: .currencySymbol
         case UTF8PROC_CATEGORY_SK: .modifierSymbol
         case UTF8PROC_CATEGORY_SO: .otherSymbol
+        default: nil
+        }
+    }
+
+    /// Convert separator and other categories (Z*, C*)
+    private static func convertOtherCategory(_ category: utf8proc_category_t) -> UnicodeCategory {
+        switch category {
         case UTF8PROC_CATEGORY_ZS: .spaceSeparator
         case UTF8PROC_CATEGORY_ZL: .lineSeparator
         case UTF8PROC_CATEGORY_ZP: .paragraphSeparator
