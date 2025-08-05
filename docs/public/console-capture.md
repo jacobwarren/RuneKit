@@ -53,7 +53,7 @@ print("📊 Processing data...")
 print("⚠️ Warning: Low memory")
 
 // stderr also appears above (in red if colors enabled)
-fputs("❌ Error: Connection failed\n", stderr)
+print("❌ Error: Connection failed", to: &FileHandle.standardError)
 
 // Update your UI - logs remain above
 let updatedFrame = TerminalRenderer.Frame(

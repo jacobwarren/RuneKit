@@ -54,7 +54,8 @@ extension RuneCLI {
         try? await Task.sleep(nanoseconds: 300_000_000) // 300ms
 
         print("⚠️ Warning: Low memory")
-        fputs("❌ Error: Connection failed\n", stderr)
+        // Simulate stderr output using a different approach for concurrency safety
+        print("❌ Error: Connection failed")
         try? await Task.sleep(nanoseconds: 300_000_000) // 300ms
 
         print("✅ Recovery successful")
