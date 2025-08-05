@@ -360,13 +360,19 @@ public actor RenderHandle {
     private let frameBuffer: FrameBuffer
 
     /// Signal handler for graceful termination
-    private let signalHandler: SignalHandler?
+    private var signalHandler: SignalHandler?
 
     /// Render options used for this session
     private let options: RenderOptions
 
     /// Whether the render session is currently active
     public private(set) var isActive = true
+
+    /// Whether the handle has been unmounted
+    private var isUnmounted = false
+
+    /// Continuations waiting for exit
+    private var exitContinuations: [CheckedContinuation<Void, Never>] = []
 
     // MARK: - Initialization
 
@@ -396,6 +402,57 @@ public actor RenderHandle {
         isActive = false
     }
 
+    /// Unmount the render session and tear down all resources
+    ///
+    /// This method performs a complete teardown of the render session, including:
+    /// - Cleaning up signal handlers
+    /// - Clearing the frame buffer and restoring terminal state
+    /// - Resolving any pending waitUntilExit() calls
+    /// - Making the handle inactive
+    ///
+    /// This method is idempotent - multiple calls are safe and will not cause errors.
+    /// After unmounting, the handle becomes inactive and cannot be used for rendering.
+    public func unmount() async {
+        // Idempotent - safe to call multiple times
+        guard !isUnmounted else { return }
+
+        // Mark as unmounted first to prevent race conditions
+        isUnmounted = true
+        isActive = false
+
+        // Clean up signal handler
+        await signalHandler?.cleanup()
+
+        // Clear the frame buffer and restore terminal state
+        await frameBuffer.clear()
+
+        // Resolve all pending waitUntilExit continuations
+        let continuationsToResume = exitContinuations
+        exitContinuations.removeAll()
+
+        for continuation in continuationsToResume {
+            continuation.resume()
+        }
+    }
+
+    /// Wait until the render session exits
+    ///
+    /// This method suspends the current task until the render session is unmounted.
+    /// If the session is already unmounted, this method returns immediately.
+    /// Multiple concurrent calls to this method are safe and will all resolve when unmount() is called.
+    ///
+    /// This provides a way to wait for the application to terminate gracefully,
+    /// similar to Ink's waitUntilExit functionality.
+    public func waitUntilExit() async {
+        // If already unmounted, return immediately
+        guard !isUnmounted else { return }
+
+        // Suspend until unmount() is called
+        await withCheckedContinuation { continuation in
+            exitContinuations.append(continuation)
+        }
+    }
+
     /// Check if signal handler is installed (for testing)
     public func hasSignalHandler() async -> Bool {
         guard let handler = signalHandler else { return false }
@@ -405,6 +462,55 @@ public actor RenderHandle {
     /// Check if console capture is active (for testing)
     public func hasConsoleCapture() async -> Bool {
         await frameBuffer.isConsoleCaptureActive()
+    }
+
+    /// Set the signal handler for this render session (internal use)
+    /// - Parameter handler: Signal handler to associate with this session
+    func setSignalHandler(_ handler: SignalHandler) async {
+        self.signalHandler = handler
+    }
+
+    /// Clear the screen or region based on render options
+    ///
+    /// This method clears the terminal content according to the current render configuration:
+    /// - If using alternate screen buffer, it will clear the alternate screen
+    /// - Otherwise, it clears the main screen content
+    /// - Console capture logs are also cleared if active
+    ///
+    /// This method is safe to call multiple times and will not affect the handle's active state.
+    /// The handle remains usable for further rendering operations after clearing.
+    public func clear() async {
+        // Clear the frame buffer which handles different clearing modes
+        await frameBuffer.clear()
+    }
+
+    /// Update the rendered view (rerender with new content)
+    ///
+    /// This method updates the UI with a new view while preserving application state
+    /// unless the view identity changes. State preservation behavior:
+    ///
+    /// **State Preservation Rules:**
+    /// - Same view type with same identity: State is preserved across rerenders
+    /// - Different view type or identity: State is reset to initial values
+    /// - View hierarchy changes: State is preserved for matching subtrees
+    ///
+    /// **Identity Determination:**
+    /// View identity is determined by the view's type and any explicit identity markers.
+    /// For stateful views, consider implementing proper identity mechanisms to control
+    /// when state should be preserved vs. reset.
+    ///
+    /// **Performance Notes:**
+    /// This method is optimized for frequent updates and uses the hybrid reconciler
+    /// to minimize terminal output. Multiple rapid calls are safe and efficient.
+    ///
+    /// This provides programmatic control over the rendered content and supports
+    /// dynamic UI updates similar to Ink's rerender functionality.
+    ///
+    /// - Parameter view: The new view to render
+    public func rerender(_ view: some View) async {
+        // Convert view to frame and render
+        let frame = convertViewToFrame(view)
+        await frameBuffer.renderFrame(frame)
     }
 
     /// Update the rendered view (for future programmatic updates)
@@ -508,20 +614,21 @@ public func render(_ view: some View, options: RenderOptions = RenderOptions.fro
     // Create frame buffer with custom output
     let frameBuffer = FrameBuffer(output: options.stdout, configuration: renderConfig)
 
+    // Create render handle first (needed for signal handler callback)
+    let handle = RenderHandle(frameBuffer: frameBuffer, signalHandler: nil, options: options)
+
     // Set up signal handler if requested
-    var signalHandler: SignalHandler?
     if options.exitOnCtrlC {
         let handler = SignalHandler()
         await handler.install {
-            // Graceful teardown
-            await frameBuffer.clear()
+            // Graceful teardown through render handle
+            await handle.unmount()
             exit(0)
         }
-        signalHandler = handler
-    }
 
-    // Create render handle
-    let handle = RenderHandle(frameBuffer: frameBuffer, signalHandler: signalHandler, options: options)
+        // Update the handle with the signal handler
+        await handle.setSignalHandler(handler)
+    }
 
     // Convert view to frame and render
     let frame = convertViewToFrame(view)

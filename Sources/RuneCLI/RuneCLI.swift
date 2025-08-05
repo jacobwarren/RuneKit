@@ -75,6 +75,9 @@ struct RuneCLI {
         // 10. RUNE-24 render(_:options) API demo
         await rune24Demo()
 
+        // 11. RUNE-25 render handle control methods demo
+        await rune25Demo()
+
         print("")
         print("🎉 All RuneKit demonstrations completed!")
         print("Thanks for exploring RuneKit's capabilities!")
@@ -375,5 +378,10 @@ struct RuneCLI {
     /// RUNE-24 render(_:options) API demo
     static func rune24Demo() async {
         await RUNE24Demo.run()
+    }
+
+    /// RUNE-25 render handle control methods demo
+    static func rune25Demo() async {
+        await RUNE25Demo.run()
     }
 }
