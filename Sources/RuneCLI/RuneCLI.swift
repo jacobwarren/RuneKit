@@ -78,6 +78,9 @@ struct RuneCLI {
         // 11. RUNE-25 render handle control methods demo
         await rune25Demo()
 
+        // 12. RUNE-26 Yoga layout engine demo
+        await yogaLayoutDemo()
+
         print("")
         print("🎉 All RuneKit demonstrations completed!")
         print("Thanks for exploring RuneKit's capabilities!")
@@ -383,5 +386,10 @@ struct RuneCLI {
     /// RUNE-25 render handle control methods demo
     static func rune25Demo() async {
         await RUNE25Demo.run()
+    }
+
+    /// RUNE-26 Yoga layout engine demo
+    static func yogaLayoutDemo() async {
+        await YogaLayoutDemo.run()
     }
 }
