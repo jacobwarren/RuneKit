@@ -61,7 +61,7 @@ struct TextAttributesTests {
         // Arrange & Act
         let red = ANSIColor.red
         let green = ANSIColor.green
-        let _ = ANSIColor.blue
+        let blue = ANSIColor.blue
 
         // Assert
         #expect(red != green, "Different colors should not be equal")
@@ -105,7 +105,7 @@ struct TextAttributesTests {
             inverse: true,
             strikethrough: true,
             dim: true,
-            )
+        )
         let span = TextSpan(text: "Complex", attributes: attributes)
         let styledText = StyledText(spans: [span])
         let converter = ANSISpanConverter()

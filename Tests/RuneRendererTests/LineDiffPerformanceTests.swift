@@ -1,5 +1,5 @@
-import Testing
 import Foundation
+import Testing
 @testable import RuneRenderer
 
 /// Performance metrics tests for the enhanced FrameBuffer with line-diff support
@@ -18,14 +18,14 @@ struct LineDiffPerformanceTests {
 
         let config = RenderConfiguration(
             optimizationMode: .lineDiff,
-            enableMetrics: true
+            enableMetrics: true,
         )
         let frameBuffer = FrameBuffer(output: output, configuration: config)
 
         let frame = TerminalRenderer.Frame(
             lines: ["Test line"],
             width: 10,
-            height: 1
+            height: 1,
         )
 
         // Act
@@ -59,9 +59,9 @@ struct LineDiffPerformanceTests {
         let config = RenderConfiguration(
             optimizationMode: .lineDiff,
             performance: RenderConfiguration.PerformanceTuning(
-                minEfficiencyThreshold: 0.3,  // Require at least 30% efficiency
-                maxFrameRate: 1000.0  // Very high frame rate to avoid dropping frames
-            )
+                minEfficiencyThreshold: 0.3, // Require at least 30% efficiency
+                maxFrameRate: 1000.0, // Very high frame rate to avoid dropping frames
+            ),
         )
         let frameBuffer = FrameBuffer(output: output, configuration: config)
 
@@ -69,7 +69,7 @@ struct LineDiffPerformanceTests {
         let frames = [
             TerminalRenderer.Frame(lines: ["Line 1", "Line 2"], width: 10, height: 2),
             TerminalRenderer.Frame(lines: ["Line 1", "Modified"], width: 10, height: 2),
-            TerminalRenderer.Frame(lines: ["Line 1", "Final"], width: 10, height: 2)
+            TerminalRenderer.Frame(lines: ["Line 1", "Final"], width: 10, height: 2),
         ]
 
         for frame in frames {
@@ -103,8 +103,8 @@ struct LineDiffPerformanceTests {
         let config = RenderConfiguration(
             optimizationMode: .lineDiff,
             performance: RenderConfiguration.PerformanceTuning(
-                maxFrameRate: 10.0  // Very low frame rate to trigger dropping
-            )
+                maxFrameRate: 10.0, // Very low frame rate to trigger dropping
+            ),
         )
         let frameBuffer = FrameBuffer(output: output, configuration: config)
 
@@ -114,12 +114,12 @@ struct LineDiffPerformanceTests {
             TerminalRenderer.Frame(lines: ["Frame 2"], width: 10, height: 1),
             TerminalRenderer.Frame(lines: ["Frame 3"], width: 10, height: 1),
             TerminalRenderer.Frame(lines: ["Frame 4"], width: 10, height: 1),
-            TerminalRenderer.Frame(lines: ["Frame 5"], width: 10, height: 1)
+            TerminalRenderer.Frame(lines: ["Frame 5"], width: 10, height: 1),
         ]
 
         // Send frames as fast as possible
         for frame in frames {
-            await frameBuffer.renderFrame(frame)  // Non-immediate to allow dropping
+            await frameBuffer.renderFrame(frame) // Non-immediate to allow dropping
         }
 
         // Wait for any pending renders
@@ -148,15 +148,15 @@ struct LineDiffPerformanceTests {
         let config = RenderConfiguration(
             optimizationMode: .lineDiff,
             performance: RenderConfiguration.PerformanceTuning(
-                maxFrameRate: 1000.0  // Very high frame rate
-            )
+                maxFrameRate: 1000.0, // Very high frame rate
+            ),
         )
         let frameBuffer = FrameBuffer(output: output, configuration: config)
 
         // Act - Send frames slowly
         let frames = [
             TerminalRenderer.Frame(lines: ["Frame 1"], width: 10, height: 1),
-            TerminalRenderer.Frame(lines: ["Frame 2"], width: 10, height: 1)
+            TerminalRenderer.Frame(lines: ["Frame 2"], width: 10, height: 1),
         ]
 
         for frame in frames {
@@ -188,10 +188,10 @@ struct LineDiffPerformanceTests {
             performance: RenderConfiguration.PerformanceTuning(
                 maxLinesForDiff: 500,
                 minEfficiencyThreshold: 0.4,
-                maxFrameRate: 60.0
+                maxFrameRate: 60.0,
             ),
             enableMetrics: true,
-            enableDebugLogging: false
+            enableDebugLogging: false,
         )
 
         let frameBuffer = FrameBuffer(output: output, configuration: customConfig)
@@ -246,7 +246,7 @@ struct LineDiffPerformanceTests {
 
         let config = RenderConfiguration(
             optimizationMode: .lineDiff,
-            performance: RenderConfiguration.PerformanceTuning(maxFrameRate: 30.0)
+            performance: RenderConfiguration.PerformanceTuning(maxFrameRate: 30.0),
         )
         let frameBuffer = FrameBuffer(output: output, configuration: config)
 

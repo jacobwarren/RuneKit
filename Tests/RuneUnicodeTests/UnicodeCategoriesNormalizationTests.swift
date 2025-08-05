@@ -19,7 +19,7 @@ struct UnicodeCategoriesNormalizationTests {
         #expect(
             normalized == expectedComposed,
             "NFC normalization should compose decomposed characters",
-            )
+        )
     }
 
     @Test("Unicode normalization NFD")
@@ -35,7 +35,7 @@ struct UnicodeCategoriesNormalizationTests {
         #expect(
             normalized == expectedDecomposed,
             "NFD normalization should decompose precomposed characters",
-            )
+        )
     }
 
     @Test("Unicode normalization NFKC")
@@ -51,7 +51,7 @@ struct UnicodeCategoriesNormalizationTests {
         #expect(
             normalized == expectedCanonical,
             "NFKC normalization should decompose compatibility characters",
-            )
+        )
     }
 
     @Test("Unicode normalization NFKD")
@@ -67,11 +67,11 @@ struct UnicodeCategoriesNormalizationTests {
         #expect(
             normalized.contains("f") && normalized.contains("i"),
             "NFKD normalization should decompose compatibility characters",
-            )
+        )
         #expect(
             normalized == "fi",
             "NFKD should decompose ligature ﬁ to 'fi'",
-            )
+        )
     }
 
     // MARK: - Version and Metadata Tests

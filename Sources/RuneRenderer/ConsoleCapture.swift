@@ -281,14 +281,22 @@ public actor ConsoleCapture {
         debugLog("Starting reader for \(source)")
 
         var buffer = Data()
+        let fd = fileHandle.fileDescriptor
 
         while !Task.isCancelled {
             do {
-                // Use availableData to check if data is ready without blocking
-                let availableData = fileHandle.availableData
+                // Use non-blocking read with poll to avoid hanging
+                if !isDataAvailable(fd: fd) {
+                    // No data available, wait a bit and check again
+                    try await Task.sleep(nanoseconds: 10_000_000) // 10ms
+                    continue
+                }
+
+                // Try to read available data with a timeout
+                let availableData = try readNonBlocking(fileHandle: fileHandle)
 
                 if availableData.isEmpty {
-                    // No data available, wait a bit and check again
+                    // No data available, continue polling
                     try await Task.sleep(nanoseconds: 10_000_000) // 10ms
                     continue
                 }
@@ -313,6 +321,57 @@ public actor ConsoleCapture {
         }
 
         debugLog("Reader for \(source) stopped")
+    }
+
+    /// Check if data is available on a file descriptor without blocking
+    /// - Parameter fd: File descriptor to check
+    /// - Returns: True if data is available to read
+    private func isDataAvailable(fd: Int32) -> Bool {
+        var pollfd = pollfd(fd: fd, events: Int16(POLLIN), revents: 0)
+        let result = poll(&pollfd, 1, 0) // 0 timeout = non-blocking
+        return result > 0 && (pollfd.revents & Int16(POLLIN)) != 0
+    }
+
+    /// Read data from file handle without blocking
+    /// - Parameter fileHandle: File handle to read from
+    /// - Returns: Available data (may be empty)
+    /// - Throws: IO errors
+    private func readNonBlocking(fileHandle: FileHandle) throws -> Data {
+        let fd = fileHandle.fileDescriptor
+
+        // Set non-blocking mode
+        let flags = fcntl(fd, F_GETFL)
+        _ = fcntl(fd, F_SETFL, flags | O_NONBLOCK)
+
+        defer {
+            // Restore blocking mode
+            _ = fcntl(fd, F_SETFL, flags)
+        }
+
+        // Try to read up to 4KB at a time
+        let bufferSize = 4096
+        var buffer = [UInt8](repeating: 0, count: bufferSize)
+
+        let bytesRead = read(fd, &buffer, bufferSize)
+
+        if bytesRead < 0 {
+            #if os(Linux)
+            let errno = Glibc.errno
+            #else
+            let errno = Darwin.errno
+            #endif
+            if errno == EAGAIN || errno == EWOULDBLOCK {
+                // No data available right now, return empty
+                return Data()
+            } else {
+                throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+            }
+        } else if bytesRead == 0 {
+            // EOF
+            return Data()
+        } else {
+            return Data(buffer.prefix(bytesRead))
+        }
     }
 
     /// Process buffered data and extract complete lines

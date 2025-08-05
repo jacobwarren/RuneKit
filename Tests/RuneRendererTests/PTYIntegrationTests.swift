@@ -1,5 +1,5 @@
-import Testing
 import Foundation
+import Testing
 @testable import RuneRenderer
 
 /// PTY integration tests for console capture ordering validation
@@ -12,7 +12,6 @@ import Foundation
 /// interfere with the test runner's own stdout/stderr handling, causing
 /// SIGPIPE errors. They work fine in local development environments.
 struct PTYIntegrationTests {
-
     @Test("PTY integration validates ordering", .disabled("Interferes with test runner stdout/stderr"))
     func ptyIntegrationValidatesOrdering() async throws {
         // This test validates the core requirement: that console capture
@@ -33,7 +32,7 @@ struct PTYIntegrationTests {
         let frame = TerminalRenderer.Frame(
             lines: ["PTY Test Application"],
             width: 20,
-            height: 1
+            height: 1,
         )
 
         // Render frame
@@ -53,7 +52,7 @@ struct PTYIntegrationTests {
         // Validate ANSI sequences are present (indicating proper terminal handling)
         #expect(outputString.contains("\u{001B}["), "Should contain ANSI escape sequences")
     }
-    
+
     @Test("Console capture ordering validation", .disabled("Interferes with test runner stdout/stderr"))
     func consoleCaptureOrderingValidation() async throws {
         // This test validates the core PTY integration requirement:
@@ -61,14 +60,26 @@ struct PTYIntegrationTests {
         // when interleaved with UI operations.
 
         // Create ConsoleCapture directly to test ordering
-        let _ = ConsoleCapture()
+        let consoleCapture = ConsoleCapture()
 
         // Manually add log lines in sequence to simulate captured output
         let logs = [
             ConsoleCapture.LogLine(content: "PTY_LOG_1: Application started", timestamp: Date(), source: .stdout),
-            ConsoleCapture.LogLine(content: "PTY_LOG_2: Processing data", timestamp: Date().addingTimeInterval(0.1), source: .stdout),
-            ConsoleCapture.LogLine(content: "PTY_LOG_3: Warning from stderr", timestamp: Date().addingTimeInterval(0.2), source: .stderr),
-            ConsoleCapture.LogLine(content: "PTY_LOG_4: Operation complete", timestamp: Date().addingTimeInterval(0.3), source: .stdout)
+            ConsoleCapture.LogLine(
+                content: "PTY_LOG_2: Processing data",
+                timestamp: Date().addingTimeInterval(0.1),
+                source: .stdout,
+            ),
+            ConsoleCapture.LogLine(
+                content: "PTY_LOG_3: Warning from stderr",
+                timestamp: Date().addingTimeInterval(0.2),
+                source: .stderr,
+            ),
+            ConsoleCapture.LogLine(
+                content: "PTY_LOG_4: Operation complete",
+                timestamp: Date().addingTimeInterval(0.3),
+                source: .stdout,
+            ),
         ]
 
         // Use LogLane to format the logs (simulating the rendering process)
@@ -105,7 +116,7 @@ struct PTYIntegrationTests {
         let logs = [
             ConsoleCapture.LogLine(content: "First log", timestamp: Date(), source: .stdout),
             ConsoleCapture.LogLine(content: "Second log", timestamp: Date().addingTimeInterval(0.1), source: .stdout),
-            ConsoleCapture.LogLine(content: "Third log", timestamp: Date().addingTimeInterval(0.2), source: .stderr)
+            ConsoleCapture.LogLine(content: "Third log", timestamp: Date().addingTimeInterval(0.2), source: .stderr),
         ]
 
         let formattedLogs = logLane.formatLogs(logs, terminalWidth: 80)
@@ -123,7 +134,7 @@ struct PTYIntegrationTests {
         let frame = TerminalRenderer.Frame(
             lines: ["Test Application"],
             width: 16,
-            height: 1
+            height: 1,
         )
         #expect(frame.lines.count == 1, "Frame should have one line")
         #expect(frame.lines[0] == "Test Application", "Frame should contain test content")

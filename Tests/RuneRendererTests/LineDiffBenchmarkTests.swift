@@ -1,5 +1,5 @@
-import Testing
 import Foundation
+import Testing
 @testable import RuneRenderer
 
 /// Performance benchmarks for line-diff vs full redraw rendering
@@ -19,7 +19,7 @@ struct LineDiffBenchmarkTests {
     /// Measure rendering performance for a given configuration and frame sequence
     private func measureRenderingPerformance(
         config: RenderConfiguration,
-        frames: [TerminalRenderer.Frame]
+        frames: [TerminalRenderer.Frame],
     ) async -> PerformanceResult {
         let pipe = Pipe()
         let output = pipe.fileHandleForWriting
@@ -56,7 +56,7 @@ struct LineDiffBenchmarkTests {
         return PerformanceResult(
             totalBytes: totalBytes,
             totalDuration: totalDuration,
-            averageEfficiency: averageEfficiency
+            averageEfficiency: averageEfficiency,
         )
     }
 
@@ -64,12 +64,12 @@ struct LineDiffBenchmarkTests {
     private func generateFrameSequence(
         baseLines: [String],
         changePattern: ChangePattern,
-        frameCount: Int
+        frameCount: Int,
     ) -> [TerminalRenderer.Frame] {
         var frames: [TerminalRenderer.Frame] = []
         var currentLines = baseLines
 
-        for i in 0..<frameCount {
+        for i in 0 ..< frameCount {
             switch changePattern {
             case .singleLineChange:
                 // Change one line per frame
@@ -78,7 +78,7 @@ struct LineDiffBenchmarkTests {
 
             case .multipleLineChanges:
                 // Change multiple lines per frame
-                for j in 0..<min(3, currentLines.count) {
+                for j in 0 ..< min(3, currentLines.count) {
                     let lineIndex = (i + j) % currentLines.count
                     currentLines[lineIndex] = "Frame \(i) Line \(lineIndex)"
                 }
@@ -91,7 +91,7 @@ struct LineDiffBenchmarkTests {
                     currentLines[lineIndex] = "Small change \(i)"
                 } else {
                     // Large change
-                    for j in 0..<currentLines.count {
+                    for j in 0 ..< currentLines.count {
                         currentLines[j] = "Large change \(i) Line \(j)"
                     }
                 }
@@ -102,7 +102,7 @@ struct LineDiffBenchmarkTests {
 
             case .allChanges:
                 // All lines change every frame
-                for j in 0..<currentLines.count {
+                for j in 0 ..< currentLines.count {
                     currentLines[j] = "Frame \(i) Line \(j)"
                 }
             }
@@ -110,7 +110,7 @@ struct LineDiffBenchmarkTests {
             frames.append(TerminalRenderer.Frame(
                 lines: currentLines,
                 width: 80,
-                height: currentLines.count
+                height: currentLines.count,
             ))
         }
 
@@ -127,45 +127,52 @@ struct LineDiffBenchmarkTests {
 
     // MARK: - Benchmark Tests
 
-    @Test("Benchmark: Single line changes favor line-diff", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test(
+        "Benchmark: Single line changes favor line-diff",
+        .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil),
+    )
     func benchmarkSingleLineChangesFavorLineDiff() async {
         // Arrange
-        let baseLines = Array(1...20).map { "Base line \($0)" }
+        let baseLines = Array(1 ... 20).map { "Base line \($0)" }
         let frames = generateFrameSequence(
             baseLines: baseLines,
             changePattern: .singleLineChange,
-            frameCount: 10
+            frameCount: 10,
         )
 
         let lineDiffConfig = RenderConfiguration(
             optimizationMode: .lineDiff,
             performance: RenderConfiguration.PerformanceTuning(
                 minEfficiencyThreshold: 0.5,
-                maxFrameRate: 1000.0
+                maxFrameRate: 1000.0,
             ),
-            enableMetrics: true
+            enableMetrics: true,
         )
 
         let fullRedrawConfig = RenderConfiguration(
             optimizationMode: .fullRedraw,
-            enableMetrics: true
+            enableMetrics: true,
         )
 
         // Act
         let lineDiffResults = await measureRenderingPerformance(
             config: lineDiffConfig,
-            frames: frames
+            frames: frames,
         )
 
         let fullRedrawResults = await measureRenderingPerformance(
             config: fullRedrawConfig,
-            frames: frames
+            frames: frames,
         )
 
         // Assert
         print("Single line changes benchmark:")
-        print("  Line-diff: \(lineDiffResults.totalBytes) bytes, \(String(format: "%.2f", lineDiffResults.totalDuration * 1000))ms")
-        print("  Full redraw: \(fullRedrawResults.totalBytes) bytes, \(String(format: "%.2f", fullRedrawResults.totalDuration * 1000))ms")
+        print(
+            "  Line-diff: \(lineDiffResults.totalBytes) bytes, \(String(format: "%.2f", lineDiffResults.totalDuration * 1000))ms",
+        )
+        print(
+            "  Full redraw: \(fullRedrawResults.totalBytes) bytes, \(String(format: "%.2f", fullRedrawResults.totalDuration * 1000))ms",
+        )
         print("  Bytes saved: \(fullRedrawResults.totalBytes - lineDiffResults.totalBytes)")
         print("  Efficiency: \(String(format: "%.1f%%", lineDiffResults.averageEfficiency * 100))")
 
@@ -175,49 +182,58 @@ struct LineDiffBenchmarkTests {
         #expect(bytesRatio < 3.0, "Line-diff overhead should not be excessive (< 3x full redraw)")
 
         // Efficiency should show that most lines are unchanged
-        #expect(lineDiffResults.averageEfficiency > 0.7,
-                "Line-diff should detect that most lines are unchanged")
+        #expect(
+            lineDiffResults.averageEfficiency > 0.7,
+            "Line-diff should detect that most lines are unchanged",
+        )
     }
 
-    @Test("Benchmark: All lines changing favors full redraw", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test(
+        "Benchmark: All lines changing favors full redraw",
+        .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil),
+    )
     func benchmarkAllLinesChangingFavorsFullRedraw() async {
         // Arrange
-        let baseLines = Array(1...20).map { "Base line \($0)" }
+        let baseLines = Array(1 ... 20).map { "Base line \($0)" }
         let frames = generateFrameSequence(
             baseLines: baseLines,
             changePattern: .allChanges,
-            frameCount: 5
+            frameCount: 5,
         )
 
         let lineDiffConfig = RenderConfiguration(
             optimizationMode: .lineDiff,
             performance: RenderConfiguration.PerformanceTuning(
-                minEfficiencyThreshold: 0.1,  // Very permissive to force line-diff
-                maxFrameRate: 1000.0
+                minEfficiencyThreshold: 0.1, // Very permissive to force line-diff
+                maxFrameRate: 1000.0,
             ),
-            enableMetrics: true
+            enableMetrics: true,
         )
 
         let fullRedrawConfig = RenderConfiguration(
             optimizationMode: .fullRedraw,
-            enableMetrics: true
+            enableMetrics: true,
         )
 
         // Act
         let lineDiffResults = await measureRenderingPerformance(
             config: lineDiffConfig,
-            frames: frames
+            frames: frames,
         )
 
         let fullRedrawResults = await measureRenderingPerformance(
             config: fullRedrawConfig,
-            frames: frames
+            frames: frames,
         )
 
         // Assert
         print("All lines changing benchmark:")
-        print("  Line-diff: \(lineDiffResults.totalBytes) bytes, \(String(format: "%.2f", lineDiffResults.totalDuration * 1000))ms")
-        print("  Full redraw: \(fullRedrawResults.totalBytes) bytes, \(String(format: "%.2f", fullRedrawResults.totalDuration * 1000))ms")
+        print(
+            "  Line-diff: \(lineDiffResults.totalBytes) bytes, \(String(format: "%.2f", lineDiffResults.totalDuration * 1000))ms",
+        )
+        print(
+            "  Full redraw: \(fullRedrawResults.totalBytes) bytes, \(String(format: "%.2f", fullRedrawResults.totalDuration * 1000))ms",
+        )
         print("  Efficiency: \(String(format: "%.1f%%", lineDiffResults.averageEfficiency * 100))")
 
         // When all lines change, line-diff should not be significantly better
@@ -226,101 +242,116 @@ struct LineDiffBenchmarkTests {
         #expect(bytesRatio > 0.8, "Line-diff overhead should not be excessive even when all lines change")
 
         // Efficiency should be low when all lines change
-        #expect(lineDiffResults.averageEfficiency < 0.2,
-                "Line-diff efficiency should be low when all lines change")
+        #expect(
+            lineDiffResults.averageEfficiency < 0.2,
+            "Line-diff efficiency should be low when all lines change",
+        )
     }
 
     @Test("Benchmark: No changes favor line-diff", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
     func benchmarkNoChangesFavorLineDiff() async {
         // Arrange
-        let baseLines = Array(1...20).map { "Base line \($0)" }
+        let baseLines = Array(1 ... 20).map { "Base line \($0)" }
         let frames = generateFrameSequence(
             baseLines: baseLines,
             changePattern: .noChanges,
-            frameCount: 10
+            frameCount: 10,
         )
 
         let lineDiffConfig = RenderConfiguration(
             optimizationMode: .lineDiff,
             performance: RenderConfiguration.PerformanceTuning(
                 minEfficiencyThreshold: 0.5,
-                maxFrameRate: 1000.0
+                maxFrameRate: 1000.0,
             ),
-            enableMetrics: true
+            enableMetrics: true,
         )
 
         let fullRedrawConfig = RenderConfiguration(
             optimizationMode: .fullRedraw,
-            enableMetrics: true
+            enableMetrics: true,
         )
 
         // Act
         let lineDiffResults = await measureRenderingPerformance(
             config: lineDiffConfig,
-            frames: frames
+            frames: frames,
         )
 
         let fullRedrawResults = await measureRenderingPerformance(
             config: fullRedrawConfig,
-            frames: frames
+            frames: frames,
         )
 
         // Assert
         print("No changes benchmark:")
-        print("  Line-diff: \(lineDiffResults.totalBytes) bytes, \(String(format: "%.2f", lineDiffResults.totalDuration * 1000))ms")
-        print("  Full redraw: \(fullRedrawResults.totalBytes) bytes, \(String(format: "%.2f", fullRedrawResults.totalDuration * 1000))ms")
+        print(
+            "  Line-diff: \(lineDiffResults.totalBytes) bytes, \(String(format: "%.2f", lineDiffResults.totalDuration * 1000))ms",
+        )
+        print(
+            "  Full redraw: \(fullRedrawResults.totalBytes) bytes, \(String(format: "%.2f", fullRedrawResults.totalDuration * 1000))ms",
+        )
         print("  Bytes saved: \(fullRedrawResults.totalBytes - lineDiffResults.totalBytes)")
         print("  Efficiency: \(String(format: "%.1f%%", lineDiffResults.averageEfficiency * 100))")
 
         // Even with no changes, line-diff has overhead from the first full redraw
         // The efficiency should be high though, showing no changes detected
-        #expect(lineDiffResults.averageEfficiency > 0.8,
-                "Line-diff should detect that no lines changed")
+        #expect(
+            lineDiffResults.averageEfficiency > 0.8,
+            "Line-diff should detect that no lines changed",
+        )
 
         // The overhead should not be excessive
         let bytesRatio = Double(lineDiffResults.totalBytes) / Double(fullRedrawResults.totalBytes)
         #expect(bytesRatio < 2.0, "Line-diff overhead should be reasonable even with no changes")
     }
 
-    @Test("Benchmark: Automatic mode makes good decisions", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test(
+        "Benchmark: Automatic mode makes good decisions",
+        .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil),
+    )
     func benchmarkAutomaticModeMakesGoodDecisions() async {
         // Arrange
-        let baseLines = Array(1...20).map { "Base line \($0)" }
+        let baseLines = Array(1 ... 20).map { "Base line \($0)" }
         let frames = generateFrameSequence(
             baseLines: baseLines,
             changePattern: .alternatingPattern,
-            frameCount: 10
+            frameCount: 10,
         )
 
         let automaticConfig = RenderConfiguration(
             optimizationMode: .automatic,
             performance: RenderConfiguration.PerformanceTuning(
                 minEfficiencyThreshold: 0.5,
-                maxFrameRate: 1000.0
+                maxFrameRate: 1000.0,
             ),
-            enableMetrics: true
+            enableMetrics: true,
         )
 
         let fullRedrawConfig = RenderConfiguration(
             optimizationMode: .fullRedraw,
-            enableMetrics: true
+            enableMetrics: true,
         )
 
         // Act
         let automaticResults = await measureRenderingPerformance(
             config: automaticConfig,
-            frames: frames
+            frames: frames,
         )
 
         let fullRedrawResults = await measureRenderingPerformance(
             config: fullRedrawConfig,
-            frames: frames
+            frames: frames,
         )
 
         // Assert
         print("Automatic mode benchmark:")
-        print("  Automatic: \(automaticResults.totalBytes) bytes, \(String(format: "%.2f", automaticResults.totalDuration * 1000))ms")
-        print("  Full redraw: \(fullRedrawResults.totalBytes) bytes, \(String(format: "%.2f", fullRedrawResults.totalDuration * 1000))ms")
+        print(
+            "  Automatic: \(automaticResults.totalBytes) bytes, \(String(format: "%.2f", automaticResults.totalDuration * 1000))ms",
+        )
+        print(
+            "  Full redraw: \(fullRedrawResults.totalBytes) bytes, \(String(format: "%.2f", fullRedrawResults.totalDuration * 1000))ms",
+        )
         print("  Bytes saved: \(fullRedrawResults.totalBytes - automaticResults.totalBytes)")
         print("  Efficiency: \(String(format: "%.1f%%", automaticResults.averageEfficiency * 100))")
 

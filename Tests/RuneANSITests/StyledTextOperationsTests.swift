@@ -255,7 +255,7 @@ struct StyledTextOperationsTests {
     @Test("Large text performance")
     func largeTextPerformance() {
         // Arrange
-        let largeText = String(repeating: "A", count: 10_000)
+        let largeText = String(repeating: "A", count: 10000)
         let attributes = TextAttributes(color: .red)
         let span = TextSpan(text: largeText, attributes: attributes)
         let styledText = StyledText(spans: [span])

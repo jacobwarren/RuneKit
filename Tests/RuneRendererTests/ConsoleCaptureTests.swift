@@ -1,5 +1,5 @@
-import Testing
 import Foundation
+import Testing
 @testable import RuneRenderer
 
 /// Tests for console capture functionality (RUNE-23)
@@ -103,7 +103,7 @@ struct ConsoleCaptureTests {
         #expect(logs.count >= 2, "Should capture at least 2 log lines")
 
         // Check that our test content is captured
-        let logContents = logs.map { $0.content }
+        let logContents = logs.map(\.content)
         #expect(logContents.contains("Test log line 1"), "Should capture first test line")
         #expect(logContents.contains("Test log line 2"), "Should capture second test line")
 
@@ -166,7 +166,7 @@ struct ConsoleCaptureTests {
         #expect(testMessages.count >= 3, "Should capture all test messages")
 
         // Check order (timestamps should be increasing)
-        for i in 1..<testMessages.count {
+        for i in 1 ..< testMessages.count {
             let previousTime = testMessages[i - 1].timestamp
             let currentTime = testMessages[i].timestamp
             #expect(currentTime >= previousTime, "Log timestamps should be in order")
@@ -186,7 +186,7 @@ struct ConsoleCaptureTests {
         try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
 
         // Act - Print more messages than buffer size
-        for i in 1...10 {
+        for i in 1 ... 10 {
             print("Buffer test message \(i)")
         }
 
@@ -243,7 +243,7 @@ struct ConsoleCaptureTests {
         try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
 
         // Act - Add several messages
-        for i in 1...5 {
+        for i in 1 ... 5 {
             print("Recent test message \(i)")
         }
 
@@ -257,7 +257,7 @@ struct ConsoleCaptureTests {
         #expect(recentLogs.count <= 3, "Should return at most 3 recent logs")
 
         // Check that we get the most recent messages
-        let recentContents = recentLogs.map { $0.content }
+        let recentContents = recentLogs.map(\.content)
         let hasRecentMessage = recentContents.contains { $0.contains("Recent test message") }
         #expect(hasRecentMessage, "Should contain recent test messages")
 
@@ -281,7 +281,7 @@ struct ConsoleCaptureTests {
         let frame = TerminalRenderer.Frame(
             lines: ["Test frame content"],
             width: 18,
-            height: 1
+            height: 1,
         )
 
         await frameBuffer.renderFrame(frame)
@@ -310,7 +310,7 @@ struct ConsoleCaptureTests {
         let frame = TerminalRenderer.Frame(
             lines: ["Test frame content"],
             width: 18,
-            height: 1
+            height: 1,
         )
 
         await frameBuffer.renderFrame(frame)
@@ -339,7 +339,7 @@ struct ConsoleCaptureTests {
         let frame = TerminalRenderer.Frame(
             lines: ["Test frame content"],
             width: 18,
-            height: 1
+            height: 1,
         )
 
         await frameBuffer.renderFrame(frame)

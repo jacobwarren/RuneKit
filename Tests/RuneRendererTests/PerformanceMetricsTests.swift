@@ -1,5 +1,5 @@
-import Testing
 import Foundation
+import Testing
 @testable import RuneRenderer
 
 /// Tests for the PerformanceMetrics system
@@ -139,7 +139,7 @@ struct PerformanceMetricsTests {
         let metrics = PerformanceMetrics()
 
         // Act - Perform multiple renders
-        for i in 1...3 {
+        for i in 1 ... 3 {
             await metrics.startRender(mode: .lineDiff)
             await metrics.recordBytesWritten(i * 100)
             await metrics.recordLinesChanged(i * 5)
@@ -226,7 +226,7 @@ struct PerformanceMetricsTests {
         let metrics = PerformanceMetrics()
 
         // Add some history
-        for i in 1...5 {
+        for i in 1 ... 5 {
             await metrics.startRender(mode: .lineDiff)
             await metrics.recordBytesWritten(i * 100)
             await metrics.recordLinesChanged(i * 2)
@@ -295,7 +295,7 @@ struct PerformanceMetricsTests {
         let metrics = PerformanceMetrics()
 
         // Act - Add more than the maximum history size (100)
-        for i in 1...105 {
+        for i in 1 ... 105 {
             await metrics.startRender(mode: .lineDiff)
             await metrics.recordBytesWritten(i)
             _ = await metrics.finishRender()
@@ -318,7 +318,7 @@ struct PerformanceMetricsTests {
 
         // Act - Perform sequential operations to avoid interference
         // (Concurrent operations on the same metrics instance would interfere)
-        for i in 1...10 {
+        for i in 1 ... 10 {
             await metrics.startRender(mode: .lineDiff)
             await metrics.recordBytesWritten(i * 10)
             await metrics.recordLinesChanged(i)
@@ -333,7 +333,7 @@ struct PerformanceMetricsTests {
 
         // Verify total bytes across all operations
         let totalBytes = history.reduce(0) { $0 + $1.bytesWritten }
-        let expectedTotal = (1...10).reduce(0) { $0 + $1 * 10 } // 10+20+30+...+100 = 550
+        let expectedTotal = (1 ... 10).reduce(0) { $0 + $1 * 10 } // 10+20+30+...+100 = 550
         #expect(totalBytes == expectedTotal, "Total bytes should match expected sum")
     }
 }

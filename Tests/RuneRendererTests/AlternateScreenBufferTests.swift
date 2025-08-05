@@ -1,5 +1,5 @@
-import Testing
 import Foundation
+import Testing
 @testable import RuneRenderer
 
 /// Tests for alternate screen buffer functionality (RUNE-22)
@@ -168,12 +168,12 @@ struct AlternateScreenBufferTests {
         let frame1 = TerminalRenderer.Frame(
             lines: ["Line 1", "Line 2"],
             width: 10,
-            height: 2
+            height: 2,
         )
 
         // Act
         await frameBuffer.renderFrame(frame1)
-        await frameBuffer.waitForPendingUpdates()  // Wait for coalesced updates to complete
+        await frameBuffer.waitForPendingUpdates() // Wait for coalesced updates to complete
         await frameBuffer.clear()
         output.closeFile()
 
@@ -204,23 +204,23 @@ struct AlternateScreenBufferTests {
         let tallFrame = TerminalRenderer.Frame(
             lines: ["Line 1", "Line 2", "Line 3", "Line 4"],
             width: 10,
-            height: 4
+            height: 4,
         )
         await frameBuffer.renderFrame(tallFrame)
-        await frameBuffer.waitForPendingUpdates()  // Wait for first frame to complete
+        await frameBuffer.waitForPendingUpdates() // Wait for first frame to complete
 
         // Then render a shorter frame
         let shortFrame = TerminalRenderer.Frame(
             lines: ["New Line 1", "New Line 2"],
             width: 10,
-            height: 2
+            height: 2,
         )
 
         // Act
         // Add delay to avoid rate limiting
         try? await Task.sleep(nanoseconds: 20_000_000) // 20ms
 
-        await frameBuffer.renderFrameImmediate(shortFrame)  // Use immediate rendering to bypass coalescing
+        await frameBuffer.renderFrameImmediate(shortFrame) // Use immediate rendering to bypass coalescing
         await frameBuffer.clear()
         output.closeFile()
 
@@ -232,7 +232,8 @@ struct AlternateScreenBufferTests {
         #expect(result.contains("\u{001B}[2K"), "Should contain line clear sequences")
         #expect(result.contains("\u{001B}[G"), "Should contain cursor to column 1 sequence")
         // Delta rendering uses absolute positioning, not cursor up sequences
-        let hasAbsolutePositioning = result.contains("\u{001B}[1;1H") || result.contains("\u{001B}[2;1H") || result.contains("\u{001B}[3;1H")
+        let hasAbsolutePositioning = result.contains("\u{001B}[1;1H") || result.contains("\u{001B}[2;1H") || result
+            .contains("\u{001B}[3;1H")
         #expect(hasAbsolutePositioning, "Should contain absolute cursor positioning sequences")
 
         // Should contain both frame contents
@@ -255,23 +256,23 @@ struct AlternateScreenBufferTests {
         let frame1 = TerminalRenderer.Frame(
             lines: ["Frame 1 Content"],
             width: 15,
-            height: 1
+            height: 1,
         )
 
         let frame2 = TerminalRenderer.Frame(
             lines: ["Frame 2 Content"],
             width: 15,
-            height: 1
+            height: 1,
         )
 
         // Act - Render two frames in sequence
         await frameBuffer.renderFrame(frame1)
-        await frameBuffer.waitForPendingUpdates()  // Wait for first frame to complete
+        await frameBuffer.waitForPendingUpdates() // Wait for first frame to complete
 
         // Add delay to avoid rate limiting
         try? await Task.sleep(nanoseconds: 20_000_000) // 20ms
 
-        await frameBuffer.renderFrameImmediate(frame2)  // Use immediate rendering for second frame
+        await frameBuffer.renderFrameImmediate(frame2) // Use immediate rendering for second frame
         await frameBuffer.clear()
         output.closeFile()
 
@@ -306,7 +307,7 @@ struct AlternateScreenBufferTests {
         let frame = TerminalRenderer.Frame(
             lines: ["Hello Alt Screen"],
             width: 16,
-            height: 1
+            height: 1,
         )
 
         // Act
@@ -340,7 +341,7 @@ struct AlternateScreenBufferTests {
         let frame = TerminalRenderer.Frame(
             lines: ["Hello Main Screen"],
             width: 17,
-            height: 1
+            height: 1,
         )
 
         // Act

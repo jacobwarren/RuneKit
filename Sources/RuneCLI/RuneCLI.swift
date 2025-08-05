@@ -72,6 +72,9 @@ struct RuneCLI {
         // 9. Console capture demo (RUNE-23)
         await consoleCaptureDemo()
 
+        // 10. RUNE-24 render(_:options) API demo
+        await rune24Demo()
+
         print("")
         print("🎉 All RuneKit demonstrations completed!")
         print("Thanks for exploring RuneKit's capabilities!")
@@ -100,7 +103,8 @@ struct RuneCLI {
             print("  → About to render frame \(index + 1): \(loadingContents[index])")
             await frameBuffer.renderFrame(frame)
             print("  → Rendered frame \(index + 1): \(loadingContents[index])")
-            let animationSleepTime: UInt64 = ProcessInfo.processInfo.environment["CI"] != nil ? 50_000_000 : 500_000_000 // 0.05s in CI, 0.5s locally
+            let animationSleepTime: UInt64 = ProcessInfo.processInfo
+                .environment["CI"] != nil ? 50_000_000 : 500_000_000 // 0.05s in CI, 0.5s locally
             try? await Task.sleep(nanoseconds: animationSleepTime)
         }
 
@@ -114,7 +118,8 @@ struct RuneCLI {
         await frameBuffer.waitForPendingUpdates()
         print("  → All pending updates completed")
 
-        let testSleepTime: UInt64 = ProcessInfo.processInfo.environment["CI"] != nil ? 50_000_000 : 2_000_000_000 // 0.05s in CI, 2s locally
+        let testSleepTime: UInt64 = ProcessInfo.processInfo
+            .environment["CI"] != nil ? 50_000_000 : 2_000_000_000 // 0.05s in CI, 2s locally
         try? await Task.sleep(nanoseconds: testSleepTime)
 
         // Clear the frame buffer
@@ -125,8 +130,6 @@ struct RuneCLI {
         print("If you can see this message, the final frame was rendered successfully.")
         print("The coalescing bug has been fixed!")
     }
-
-
 
     /// Demonstrate basic RuneKit functionality
     static func demonstrateBasicFunctionality() async {
@@ -194,7 +197,7 @@ struct RuneCLI {
             if let color = attrs.color { attrDesc += "\(color) " }
             print(
                 "     \(index): '\(span.text)' (\(attrDesc.isEmpty ? "plain" : attrDesc.trimmingCharacters(in: .whitespaces)))",
-                )
+            )
         }
 
         // Example 2: Merging spans
@@ -368,5 +371,9 @@ struct RuneCLI {
         print("In a real terminal application, these frames would render")
         print("smoothly in-place without flicker or cursor artifacts.")
     }
-}
 
+    /// RUNE-24 render(_:options) API demo
+    static func rune24Demo() async {
+        await RUNE24Demo.run()
+    }
+}

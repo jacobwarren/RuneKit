@@ -21,7 +21,7 @@ struct FrameBufferIntegrationTests {
         let frame = TerminalRenderer.Frame(
             lines: ["Test content"],
             width: 12,
-            height: 1
+            height: 1,
         )
 
         // Act - Start rendering then simulate an error
@@ -63,7 +63,7 @@ struct FrameBufferIntegrationTests {
             let frame = TerminalRenderer.Frame(
                 lines: ["Test content"],
                 width: 12,
-                height: 1
+                height: 1,
             )
 
             // Act
@@ -99,13 +99,13 @@ struct FrameBufferIntegrationTests {
         let frames = [
             TerminalRenderer.Frame(lines: ["Frame 1"], width: 7, height: 1),
             TerminalRenderer.Frame(lines: ["Frame 2"], width: 7, height: 1),
-            TerminalRenderer.Frame(lines: ["Frame 3"], width: 7, height: 1)
+            TerminalRenderer.Frame(lines: ["Frame 3"], width: 7, height: 1),
         ]
 
         // Act
         for (index, frame) in frames.enumerated() {
             await frameBuffer.renderFrame(frame)
-            await frameBuffer.waitForPendingUpdates()  // Wait for each frame to complete
+            await frameBuffer.waitForPendingUpdates() // Wait for each frame to complete
 
             // Add delay between frames to avoid rate limiting
             if index < frames.count - 1 {
@@ -143,7 +143,7 @@ struct FrameBufferIntegrationTests {
         let emptyFrame = TerminalRenderer.Frame(
             lines: [],
             width: 0,
-            height: 0
+            height: 0,
         )
 
         // Act
@@ -177,7 +177,7 @@ struct FrameBufferIntegrationTests {
         let frame = TerminalRenderer.Frame(
             lines: ["Test"],
             width: 4,
-            height: 1
+            height: 1,
         )
 
         // Act
@@ -213,12 +213,12 @@ struct FrameBufferIntegrationTests {
             let frame = TerminalRenderer.Frame(
                 lines: ["Test content for termination"],
                 width: 25,
-                height: 1
+                height: 1,
             )
 
             // Act - Render frame then let frameBuffer go out of scope suddenly
             await frameBuffer.renderFrame(frame)
-            await frameBuffer.waitForPendingUpdates()  // Wait for rendering to complete
+            await frameBuffer.waitForPendingUpdates() // Wait for rendering to complete
 
             // Explicitly restore cursor before termination (since deinit cannot do async operations)
             await frameBuffer.restoreCursor()
@@ -239,7 +239,10 @@ struct FrameBufferIntegrationTests {
         input.closeFile()
     }
 
-    @Test("Frame buffer handles multiple errors gracefully", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test(
+        "Frame buffer handles multiple errors gracefully",
+        .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil),
+    )
     func frameBufferHandlesMultipleErrorsGracefully() async {
         // This test ensures that multiple error conditions don't cause issues
         // Arrange
@@ -251,7 +254,7 @@ struct FrameBufferIntegrationTests {
         let frame = TerminalRenderer.Frame(
             lines: ["Error test"],
             width: 10,
-            height: 1
+            height: 1,
         )
 
         // Act - Multiple operations that could fail
@@ -296,23 +299,23 @@ struct FrameBufferIntegrationTests {
         let tallFrame = TerminalRenderer.Frame(
             lines: ["Line 1", "Line 2", "Line 3", "Line 4"],
             width: 6,
-            height: 4
+            height: 4,
         )
 
         let shortFrame = TerminalRenderer.Frame(
             lines: ["Short"],
             width: 5,
-            height: 1
+            height: 1,
         )
 
         // Act - Render tall frame then short frame
         await frameBuffer.renderFrame(tallFrame)
-        await frameBuffer.waitForPendingUpdates()  // Wait for first frame to complete
+        await frameBuffer.waitForPendingUpdates() // Wait for first frame to complete
 
         // Add delay to avoid rate limiting
         try? await Task.sleep(nanoseconds: 20_000_000) // 20ms
 
-        await frameBuffer.renderFrameImmediate(shortFrame)  // Use immediate rendering for second frame
+        await frameBuffer.renderFrameImmediate(shortFrame) // Use immediate rendering for second frame
         await frameBuffer.clear()
         output.closeFile()
 
@@ -324,7 +327,8 @@ struct FrameBufferIntegrationTests {
         #expect(result.contains("\u{001B}[2K"), "Should contain line clear sequences")
         #expect(result.contains("\u{001B}[G"), "Should contain cursor to column 1 sequence")
         // Delta rendering uses absolute positioning, not cursor up sequences
-        let hasAbsolutePositioning = result.contains("\u{001B}[1;1H") || result.contains("\u{001B}[2;1H") || result.contains("\u{001B}[3;1H")
+        let hasAbsolutePositioning = result.contains("\u{001B}[1;1H") || result.contains("\u{001B}[2;1H") || result
+            .contains("\u{001B}[3;1H")
         #expect(hasAbsolutePositioning, "Should contain absolute cursor positioning sequences")
 
         // Should contain both frame contents

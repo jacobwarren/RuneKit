@@ -26,7 +26,7 @@ struct StyledTextExampleTests {
             if let color = attrs.color { attrDesc += "\(color) " }
             print(
                 "  \(index): '\(span.text)' (\(attrDesc.isEmpty ? "plain" : attrDesc.trimmingCharacters(in: .whitespaces)))",
-                )
+            )
         }
 
         // Convert back to ANSI
@@ -169,7 +169,7 @@ struct StyledTextExampleTests {
             inverse: true,
             strikethrough: true,
             dim: true,
-            )
+        )
 
         let span = TextSpan(text: "All attributes", attributes: allAttributes)
         let styledText = StyledText(spans: [span])

@@ -20,7 +20,7 @@ struct WidthPerformanceTests {
         // Act & Assert - Measure baseline performance
         let startTime = Date()
 
-        for _ in 0 ..< 2_000 { // Run 2_000 iterations for better measurement
+        for _ in 0 ..< 2000 { // Run 2_000 iterations for better measurement
             for testString in asciiStrings {
                 _ = Width.displayWidth(of: testString)
             }
@@ -30,7 +30,7 @@ struct WidthPerformanceTests {
         let duration = endTime.timeIntervalSince(startTime)
 
         // Print performance results for documentation
-        let totalCalculations = asciiStrings.count * 2_000
+        let totalCalculations = asciiStrings.count * 2000
         print("ASCII baseline: \(totalCalculations) width calculations in \(String(format: "%.3f", duration)) seconds")
         print("ASCII rate: \(String(format: "%.0f", Double(totalCalculations) / duration)) calculations/second")
 
@@ -54,7 +54,7 @@ struct WidthPerformanceTests {
         // Act & Assert - Measure enhanced performance
         let startTime = Date()
 
-        for _ in 0 ..< 1_000 { // Run 1_000 iterations
+        for _ in 0 ..< 1000 { // Run 1_000 iterations
             for testString in mixedStrings {
                 _ = Width.displayWidth(of: testString)
             }
@@ -64,7 +64,7 @@ struct WidthPerformanceTests {
         let duration = endTime.timeIntervalSince(startTime)
 
         // Print performance results for documentation
-        let totalCalculations = mixedStrings.count * 1_000
+        let totalCalculations = mixedStrings.count * 1000
         print("Enhanced width: \(totalCalculations) width calculations in \(String(format: "%.3f", duration)) seconds")
         print("Enhanced rate: \(String(format: "%.0f", Double(totalCalculations) / duration)) calculations/second")
 
@@ -81,14 +81,14 @@ struct WidthPerformanceTests {
             "ASCII text with numbers 123456789 and symbols !@#$%^&*()",
             "Text with accents: café, naïve, résumé, piñata",
             "Mixed content: Hello 世界 🌍",
-            String(repeating: "A", count: 1_000), // Long ASCII string
+            String(repeating: "A", count: 1000), // Long ASCII string
             String(repeating: "À", count: 500), // Long string with accents
         ]
 
         // Act & Assert - Measure performance
         let startTime = Date()
 
-        for _ in 0 ..< 1_000 { // Run 1_000 iterations
+        for _ in 0 ..< 1000 { // Run 1_000 iterations
             for testString in testStrings {
                 _ = Width.displayWidth(of: testString)
             }
@@ -102,7 +102,7 @@ struct WidthPerformanceTests {
         #expect(duration < 2.0, "Performance test took \(duration) seconds, expected < 2.0 seconds")
 
         print(
-            "Performance benchmark: \(testStrings.count * 1_000) width calculations in \(String(format: "%.3f", duration)) seconds",
-            )
+            "Performance benchmark: \(testStrings.count * 1000) width calculations in \(String(format: "%.3f", duration)) seconds",
+        )
     }
 }

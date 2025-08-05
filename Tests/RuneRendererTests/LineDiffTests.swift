@@ -1,5 +1,5 @@
-import Testing
 import Foundation
+import Testing
 @testable import RuneRenderer
 
 /// Tests for the LineDiff system
@@ -15,13 +15,13 @@ struct LineDiffTests {
         let currentFrame = TerminalRenderer.Frame(
             lines: ["Line 1", "Line 2", "Line 3"],
             width: 10,
-            height: 3
+            height: 3,
         )
 
         // Act
         let result = LineDiff.compare(
             currentFrame: currentFrame,
-            previousFrame: nil
+            previousFrame: nil,
         )
 
         // Assert
@@ -45,13 +45,13 @@ struct LineDiffTests {
         let frame = TerminalRenderer.Frame(
             lines: ["Line 1", "Line 2", "Line 3"],
             width: 10,
-            height: 3
+            height: 3,
         )
 
         // Act
         let result = LineDiff.compare(
             currentFrame: frame,
-            previousFrame: frame
+            previousFrame: frame,
         )
 
         // Assert
@@ -68,19 +68,19 @@ struct LineDiffTests {
         let previousFrame = TerminalRenderer.Frame(
             lines: ["Line 1", "Line 2", "Line 3"],
             width: 10,
-            height: 3
+            height: 3,
         )
 
         let currentFrame = TerminalRenderer.Frame(
             lines: ["Line 1", "Modified Line 2", "Line 3"],
             width: 10,
-            height: 3
+            height: 3,
         )
 
         // Act
         let result = LineDiff.compare(
             currentFrame: currentFrame,
-            previousFrame: previousFrame
+            previousFrame: previousFrame,
         )
 
         // Assert
@@ -102,19 +102,19 @@ struct LineDiffTests {
         let previousFrame = TerminalRenderer.Frame(
             lines: ["Line 1", "Line 2", "Line 3", "Line 4"],
             width: 10,
-            height: 4
+            height: 4,
         )
 
         let currentFrame = TerminalRenderer.Frame(
             lines: ["Modified Line 1", "Line 2", "Modified Line 3", "Line 4"],
             width: 10,
-            height: 4
+            height: 4,
         )
 
         // Act
         let result = LineDiff.compare(
             currentFrame: currentFrame,
-            previousFrame: previousFrame
+            previousFrame: previousFrame,
         )
 
         // Assert
@@ -137,19 +137,19 @@ struct LineDiffTests {
         let previousFrame = TerminalRenderer.Frame(
             lines: ["Line 1", "Line 2"],
             width: 10,
-            height: 2
+            height: 2,
         )
 
         let currentFrame = TerminalRenderer.Frame(
             lines: ["Line 1", "Line 2", "Line 3", "Line 4"],
             width: 10,
-            height: 4
+            height: 4,
         )
 
         // Act
         let result = LineDiff.compare(
             currentFrame: currentFrame,
-            previousFrame: previousFrame
+            previousFrame: previousFrame,
         )
 
         // Assert
@@ -172,19 +172,19 @@ struct LineDiffTests {
         let previousFrame = TerminalRenderer.Frame(
             lines: ["Line 1", "Line 2", "Line 3", "Line 4"],
             width: 10,
-            height: 4
+            height: 4,
         )
 
         let currentFrame = TerminalRenderer.Frame(
             lines: ["Line 1", "Line 2"],
             width: 10,
-            height: 2
+            height: 2,
         )
 
         // Act
         let result = LineDiff.compare(
             currentFrame: currentFrame,
-            previousFrame: previousFrame
+            previousFrame: previousFrame,
         )
 
         // Assert
@@ -207,7 +207,7 @@ struct LineDiffTests {
     func generateANSISequencesForSingleChange() {
         // Arrange
         let changes = [
-            LineDiff.LineChange(lineIndex: 2, newContent: "New content")
+            LineDiff.LineChange(lineIndex: 2, newContent: "New content"),
         ]
 
         // Act
@@ -225,7 +225,7 @@ struct LineDiffTests {
         // Arrange
         let changes = [
             LineDiff.LineChange(lineIndex: 1, newContent: "Content 1"),
-            LineDiff.LineChange(lineIndex: 3, newContent: "Content 3")
+            LineDiff.LineChange(lineIndex: 3, newContent: "Content 3"),
         ]
 
         // Act
@@ -256,19 +256,19 @@ struct LineDiffTests {
     func estimateByteSavingsForEfficientDiff() {
         // Arrange
         let changes = [
-            LineDiff.LineChange(lineIndex: 1, newContent: "Short")
+            LineDiff.LineChange(lineIndex: 1, newContent: "Short"),
         ]
         let diffResult = LineDiff.DiffResult(
             changes: changes,
             totalLines: 10,
-            previousTotalLines: 10
+            previousTotalLines: 10,
         )
         let fullFrameSize = 1000
 
         // Act
         let savings = LineDiff.estimateByteSavings(
             diffResult: diffResult,
-            fullFrameSize: fullFrameSize
+            fullFrameSize: fullFrameSize,
         )
 
         // Assert
@@ -279,20 +279,20 @@ struct LineDiffTests {
     @Test("Estimate byte savings for inefficient diff")
     func estimateByteSavingsForInefficientDiff() {
         // Arrange - Many changes that might not be worth the overhead
-        let changes = (0..<8).map { index in
+        let changes = (0 ..< 8).map { index in
             LineDiff.LineChange(lineIndex: index, newContent: String(repeating: "X", count: 100))
         }
         let diffResult = LineDiff.DiffResult(
             changes: changes,
             totalLines: 10,
-            previousTotalLines: 10
+            previousTotalLines: 10,
         )
-        let fullFrameSize = 500  // Smaller than the diff
+        let fullFrameSize = 500 // Smaller than the diff
 
         // Act
         let savings = LineDiff.estimateByteSavings(
             diffResult: diffResult,
-            fullFrameSize: fullFrameSize
+            fullFrameSize: fullFrameSize,
         )
 
         // Assert
@@ -306,12 +306,12 @@ struct LineDiffTests {
         // Arrange
         let changes = [
             LineDiff.LineChange(lineIndex: 0, newContent: "First line"),
-            LineDiff.LineChange(lineIndex: 2, newContent: "Third line")
+            LineDiff.LineChange(lineIndex: 2, newContent: "Third line"),
         ]
         let diffResult = LineDiff.DiffResult(
             changes: changes,
             totalLines: 5,
-            previousTotalLines: 5
+            previousTotalLines: 5,
         )
 
         // Act
