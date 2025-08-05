@@ -1,6 +1,70 @@
 import yoga.core
 import Foundation
 
+// MARK: - Cross-Platform Yoga Enum Helpers
+
+/// Cross-platform helper functions to handle Yoga enum initialization differences
+/// between macOS (Int32, optional) and Linux (UInt32, non-optional) versions
+private extension YGDirection {
+    static func create(rawValue: Int) -> YGDirection {
+        #if os(macOS)
+        return YGDirection(rawValue: Int32(rawValue))!
+        #else
+        return YGDirection(rawValue: UInt32(rawValue))
+        #endif
+    }
+}
+
+private extension YGFlexDirection {
+    static func create(rawValue: Int) -> YGFlexDirection {
+        #if os(macOS)
+        return YGFlexDirection(rawValue: Int32(rawValue))!
+        #else
+        return YGFlexDirection(rawValue: UInt32(rawValue))
+        #endif
+    }
+}
+
+private extension YGJustify {
+    static func create(rawValue: Int) -> YGJustify {
+        #if os(macOS)
+        return YGJustify(rawValue: Int32(rawValue))!
+        #else
+        return YGJustify(rawValue: UInt32(rawValue))
+        #endif
+    }
+}
+
+private extension YGAlign {
+    static func create(rawValue: Int) -> YGAlign {
+        #if os(macOS)
+        return YGAlign(rawValue: Int32(rawValue))!
+        #else
+        return YGAlign(rawValue: UInt32(rawValue))
+        #endif
+    }
+}
+
+private extension YGEdge {
+    static func create(rawValue: Int) -> YGEdge {
+        #if os(macOS)
+        return YGEdge(rawValue: Int32(rawValue))!
+        #else
+        return YGEdge(rawValue: UInt32(rawValue))
+        #endif
+    }
+}
+
+private extension YGGutter {
+    static func create(rawValue: Int) -> YGGutter {
+        #if os(macOS)
+        return YGGutter(rawValue: Int32(rawValue))!
+        #else
+        return YGGutter(rawValue: UInt32(rawValue))
+        #endif
+    }
+}
+
 // MARK: - Yoga Swift Wrapper
 
 /// Swift wrapper for Yoga layout engine
@@ -59,7 +123,7 @@ public final class YogaLayoutEngine: Sendable {
             rootNode.ref,
             yogaWidth,
             yogaHeight,
-            YGDirection(rawValue: 1)! // YGDirectionLTR = 1
+            YGDirection.create(rawValue: 1) // YGDirectionLTR = 1
         )
         
         // Convert result back to terminal coordinates
@@ -184,10 +248,10 @@ public enum YogaFlexDirection {
     
     internal var yogaValue: YGFlexDirection {
         switch self {
-        case .row: return YGFlexDirection(rawValue: 2)! // YGFlexDirectionRow
-        case .column: return YGFlexDirection(rawValue: 0)! // YGFlexDirectionColumn
-        case .rowReverse: return YGFlexDirection(rawValue: 3)! // YGFlexDirectionRowReverse
-        case .columnReverse: return YGFlexDirection(rawValue: 1)! // YGFlexDirectionColumnReverse
+        case .row: return YGFlexDirection.create(rawValue: 2) // YGFlexDirectionRow
+        case .column: return YGFlexDirection.create(rawValue: 0) // YGFlexDirectionColumn
+        case .rowReverse: return YGFlexDirection.create(rawValue: 3) // YGFlexDirectionRowReverse
+        case .columnReverse: return YGFlexDirection.create(rawValue: 1) // YGFlexDirectionColumnReverse
         }
     }
 }
@@ -203,12 +267,12 @@ public enum JustifyContent {
     
     internal var yogaValue: YGJustify {
         switch self {
-        case .flexStart: return YGJustify(rawValue: 0)! // YGJustifyFlexStart
-        case .flexEnd: return YGJustify(rawValue: 2)! // YGJustifyFlexEnd
-        case .center: return YGJustify(rawValue: 1)! // YGJustifyCenter
-        case .spaceBetween: return YGJustify(rawValue: 3)! // YGJustifySpaceBetween
-        case .spaceAround: return YGJustify(rawValue: 4)! // YGJustifySpaceAround
-        case .spaceEvenly: return YGJustify(rawValue: 5)! // YGJustifySpaceEvenly
+        case .flexStart: return YGJustify.create(rawValue: 0) // YGJustifyFlexStart
+        case .flexEnd: return YGJustify.create(rawValue: 2) // YGJustifyFlexEnd
+        case .center: return YGJustify.create(rawValue: 1) // YGJustifyCenter
+        case .spaceBetween: return YGJustify.create(rawValue: 3) // YGJustifySpaceBetween
+        case .spaceAround: return YGJustify.create(rawValue: 4) // YGJustifySpaceAround
+        case .spaceEvenly: return YGJustify.create(rawValue: 5) // YGJustifySpaceEvenly
         }
     }
 }
@@ -223,11 +287,11 @@ public enum AlignItems {
     
     internal var yogaValue: YGAlign {
         switch self {
-        case .flexStart: return YGAlign(rawValue: 1)! // YGAlignFlexStart
-        case .flexEnd: return YGAlign(rawValue: 3)! // YGAlignFlexEnd
-        case .center: return YGAlign(rawValue: 2)! // YGAlignCenter
-        case .stretch: return YGAlign(rawValue: 4)! // YGAlignStretch
-        case .baseline: return YGAlign(rawValue: 5)! // YGAlignBaseline
+        case .flexStart: return YGAlign.create(rawValue: 1) // YGAlignFlexStart
+        case .flexEnd: return YGAlign.create(rawValue: 3) // YGAlignFlexEnd
+        case .center: return YGAlign.create(rawValue: 2) // YGAlignCenter
+        case .stretch: return YGAlign.create(rawValue: 4) // YGAlignStretch
+        case .baseline: return YGAlign.create(rawValue: 5) // YGAlignBaseline
         }
     }
 }
@@ -275,15 +339,15 @@ public enum Edge {
     
     internal var yogaValue: YGEdge {
         switch self {
-        case .left: return YGEdge(rawValue: 0)! // YGEdgeLeft
-        case .top: return YGEdge(rawValue: 1)! // YGEdgeTop
-        case .right: return YGEdge(rawValue: 2)! // YGEdgeRight
-        case .bottom: return YGEdge(rawValue: 3)! // YGEdgeBottom
-        case .start: return YGEdge(rawValue: 4)! // YGEdgeStart
-        case .end: return YGEdge(rawValue: 5)! // YGEdgeEnd
-        case .horizontal: return YGEdge(rawValue: 6)! // YGEdgeHorizontal
-        case .vertical: return YGEdge(rawValue: 7)! // YGEdgeVertical
-        case .all: return YGEdge(rawValue: 8)! // YGEdgeAll
+        case .left: return YGEdge.create(rawValue: 0) // YGEdgeLeft
+        case .top: return YGEdge.create(rawValue: 1) // YGEdgeTop
+        case .right: return YGEdge.create(rawValue: 2) // YGEdgeRight
+        case .bottom: return YGEdge.create(rawValue: 3) // YGEdgeBottom
+        case .start: return YGEdge.create(rawValue: 4) // YGEdgeStart
+        case .end: return YGEdge.create(rawValue: 5) // YGEdgeEnd
+        case .horizontal: return YGEdge.create(rawValue: 6) // YGEdgeHorizontal
+        case .vertical: return YGEdge.create(rawValue: 7) // YGEdgeVertical
+        case .all: return YGEdge.create(rawValue: 8) // YGEdgeAll
         }
     }
 }
@@ -296,9 +360,9 @@ public enum Gutter {
     
     internal var yogaValue: YGGutter {
         switch self {
-        case .column: return YGGutter(rawValue: 0)! // YGGutterColumn
-        case .row: return YGGutter(rawValue: 1)! // YGGutterRow
-        case .all: return YGGutter(rawValue: 2)! // YGGutterAll
+        case .column: return YGGutter.create(rawValue: 0) // YGGutterColumn
+        case .row: return YGGutter.create(rawValue: 1) // YGGutterRow
+        case .all: return YGGutter.create(rawValue: 2) // YGGutterAll
         }
     }
 }
