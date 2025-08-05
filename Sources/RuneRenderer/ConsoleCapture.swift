@@ -1,5 +1,11 @@
 import Foundation
 
+#if canImport(Darwin)
+import Darwin
+#elseif canImport(Glibc)
+import Glibc
+#endif
+
 /// Actor-based console capture system for stdout/stderr redirection
 ///
 /// This actor provides thread-safe capture of stdout and stderr output,
@@ -91,6 +97,9 @@ public actor ConsoleCapture {
     /// Whether to enable debug logging for the capture system itself
     private let enableDebugLogging: Bool
 
+    /// Previous SIGPIPE handler (for restoration)
+    private var previousSigpipeHandler: sig_t?
+
     // MARK: - Initialization
 
     /// Initialize console capture with configuration
@@ -105,7 +114,31 @@ public actor ConsoleCapture {
     /// Deinitializer ensures capture is stopped and handles are restored
     deinit {
         // Note: Cannot perform async operations in deinit
-        // Capture cleanup must be done explicitly via stopCapture()
+        // But we can do synchronous cleanup to prevent resource leaks
+        if isCapturing {
+            // Cancel background tasks
+            stdoutReaderTask?.cancel()
+            stderrReaderTask?.cancel()
+
+            // Restore file handles synchronously
+            if let originalStdout = originalStdout {
+                dup2(originalStdout.fileDescriptor, STDOUT_FILENO)
+            }
+            if let originalStderr = originalStderr {
+                dup2(originalStderr.fileDescriptor, STDERR_FILENO)
+            }
+
+            // Close pipes synchronously
+            try? stdoutPipe?.fileHandleForWriting.close()
+            try? stderrPipe?.fileHandleForWriting.close()
+            try? stdoutPipe?.fileHandleForReading.close()
+            try? stderrPipe?.fileHandleForReading.close()
+
+            // Restore SIGPIPE handler
+            if let previousHandler = previousSigpipeHandler {
+                signal(SIGPIPE, previousHandler)
+            }
+        }
     }
 
     // MARK: - Public Interface
@@ -126,6 +159,9 @@ public actor ConsoleCapture {
         guard !isCapturing else { return }
 
         debugLog("Starting console capture...")
+
+        // Install SIGPIPE handler to prevent crashes
+        previousSigpipeHandler = signal(SIGPIPE, SIG_IGN)
 
         // Save original file handles
         originalStdout = FileHandle.standardOutput
@@ -184,11 +220,21 @@ public actor ConsoleCapture {
             dup2(originalStderr.fileDescriptor, STDERR_FILENO)
         }
 
-        // Close pipes
-        stdoutPipe?.fileHandleForWriting.closeFile()
-        stderrPipe?.fileHandleForWriting.closeFile()
-        stdoutPipe?.fileHandleForReading.closeFile()
-        stderrPipe?.fileHandleForReading.closeFile()
+        // Close pipes safely
+        do {
+            try stdoutPipe?.fileHandleForWriting.close()
+            try stderrPipe?.fileHandleForWriting.close()
+            try stdoutPipe?.fileHandleForReading.close()
+            try stderrPipe?.fileHandleForReading.close()
+        } catch {
+            debugLog("Error closing pipes: \(error)")
+        }
+
+        // Restore SIGPIPE handler
+        if let previousHandler = previousSigpipeHandler {
+            signal(SIGPIPE, previousHandler)
+            previousSigpipeHandler = nil
+        }
 
         stdoutPipe = nil
         stderrPipe = nil
@@ -238,21 +284,25 @@ public actor ConsoleCapture {
 
         while !Task.isCancelled {
             do {
-                // Read available data
-                let data = try fileHandle.read(upToCount: 4096) ?? Data()
+                // Use availableData to check if data is ready without blocking
+                let availableData = fileHandle.availableData
 
-                if data.isEmpty {
-                    // No more data available, wait a bit
+                if availableData.isEmpty {
+                    // No data available, wait a bit and check again
                     try await Task.sleep(nanoseconds: 10_000_000) // 10ms
                     continue
                 }
 
-                buffer.append(data)
+                buffer.append(availableData)
 
                 // Process complete lines
                 await processBuffer(&buffer, source: source)
             } catch {
                 debugLog("Error reading from \(source): \(error)")
+                // Check if it's a broken pipe error
+                if let posixError = error as? POSIXError, posixError.code == .EPIPE {
+                    debugLog("Broken pipe detected for \(source), stopping reader")
+                }
                 break
             }
         }

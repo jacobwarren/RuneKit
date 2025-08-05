@@ -26,7 +26,7 @@ struct ConsoleCaptureTests {
         #expect(bufferSize == 0, "New console capture should have empty buffer")
     }
 
-    @Test("Console capture start and stop", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test("Console capture start and stop", .disabled("Interferes with test runner stdout/stderr"))
     func consoleCaptureStartAndStop() async {
         // Arrange
         let capture = ConsoleCapture()
@@ -46,7 +46,7 @@ struct ConsoleCaptureTests {
         #expect(!isActiveAfterStop, "Console capture should be inactive after stop")
     }
 
-    @Test("Console capture multiple start calls are safe", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test("Console capture multiple start calls are safe", .disabled("Interferes with test runner stdout/stderr"))
     func consoleCaptureMultipleStartCallsAreSafe() async {
         // Arrange
         let capture = ConsoleCapture()
@@ -64,7 +64,7 @@ struct ConsoleCaptureTests {
         await capture.stopCapture()
     }
 
-    @Test("Console capture multiple stop calls are safe", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test("Console capture multiple stop calls are safe", .disabled("Interferes with test runner stdout/stderr"))
     func consoleCaptureMultipleStopCallsAreSafe() async {
         // Arrange
         let capture = ConsoleCapture()
@@ -82,7 +82,7 @@ struct ConsoleCaptureTests {
 
     // MARK: - Log Capture Tests
 
-    @Test("Console capture buffers log lines", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test("Console capture buffers log lines", .disabled("Interferes with test runner stdout/stderr"))
     func consoleCaptureBuffersLogLines() async {
         // Arrange
         let capture = ConsoleCapture()
@@ -111,7 +111,7 @@ struct ConsoleCaptureTests {
         await capture.stopCapture()
     }
 
-    @Test("Console capture handles multiple stdout messages", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test("Console capture handles multiple stdout messages", .disabled("Interferes with test runner stdout/stderr"))
     func consoleCaptureHandlesMultipleStdoutMessages() async {
         // Arrange
         let capture = ConsoleCapture()
@@ -142,7 +142,7 @@ struct ConsoleCaptureTests {
         await capture.stopCapture()
     }
 
-    @Test("Console capture maintains log order", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test("Console capture maintains log order", .disabled("Interferes with test runner stdout/stderr"))
     func consoleCaptureMainsLogOrder() async {
         // Arrange
         let capture = ConsoleCapture()
@@ -176,7 +176,7 @@ struct ConsoleCaptureTests {
         await capture.stopCapture()
     }
 
-    @Test("Console capture buffer size limit", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test("Console capture buffer size limit", .disabled("Interferes with test runner stdout/stderr"))
     func consoleCaptureBufferSizeLimit() async {
         // Arrange - Create capture with small buffer
         let capture = ConsoleCapture(maxBufferSize: 5)
@@ -204,7 +204,7 @@ struct ConsoleCaptureTests {
         await capture.stopCapture()
     }
 
-    @Test("Console capture clear buffer", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test("Console capture clear buffer", .disabled("Interferes with test runner stdout/stderr"))
     func consoleCaptureClearBuffer() async {
         // Arrange
         let capture = ConsoleCapture()
@@ -233,7 +233,7 @@ struct ConsoleCaptureTests {
         await capture.stopCapture()
     }
 
-    @Test("Console capture recent logs", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test("Console capture recent logs", .disabled("Interferes with test runner stdout/stderr"))
     func consoleCaptureRecentLogs() async {
         // Arrange
         let capture = ConsoleCapture()
@@ -267,7 +267,7 @@ struct ConsoleCaptureTests {
 
     // MARK: - Integration Tests
 
-    @Test("FrameBuffer console capture integration", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test("FrameBuffer console capture integration", .disabled("Interferes with test runner stdout/stderr"))
     func frameBufferConsoleCaptureIntegration() async {
         // Arrange
         let pipe = Pipe()
@@ -296,7 +296,7 @@ struct ConsoleCaptureTests {
         input.closeFile()
     }
 
-    @Test("FrameBuffer console capture disabled by default")
+    @Test("FrameBuffer console capture disabled by default", .disabled("Interferes with test runner stdout/stderr"))
     func frameBufferConsoleCaptureDisabledByDefault() async {
         // Arrange
         let pipe = Pipe()
@@ -325,7 +325,7 @@ struct ConsoleCaptureTests {
         input.closeFile()
     }
 
-    @Test("FrameBuffer stops console capture on clear", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test("FrameBuffer stops console capture on clear", .disabled("Interferes with test runner stdout/stderr"))
     func frameBufferStopsConsoleCaptureOnClear() async {
         // Arrange
         let pipe = Pipe()

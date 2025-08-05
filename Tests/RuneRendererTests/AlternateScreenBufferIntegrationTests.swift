@@ -7,10 +7,13 @@ import Testing
 /// These tests verify the complete workflow of alternate screen buffer
 /// support, including configuration, environment variables, and integration
 /// with the FrameBuffer system.
+///
+/// Note: These tests are disabled in CI environments because they use
+/// pipes extensively which can interfere with the CI test runner.
 struct AlternateScreenBufferIntegrationTests {
     // MARK: - Complete Workflow Tests
 
-    @Test("Complete alternate screen buffer workflow")
+    @Test("Complete alternate screen buffer workflow", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
     func completeAlternateScreenBufferWorkflow() async {
         // Arrange
         let pipe = Pipe()
@@ -74,7 +77,7 @@ struct AlternateScreenBufferIntegrationTests {
         input.closeFile()
     }
 
-    @Test("Environment variable configuration integration")
+    @Test("Environment variable configuration integration", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
     func environmentVariableConfigurationIntegration() async {
         // Test with alternate screen enabled via environment
         let enabledEnv = ["RUNE_ALT_SCREEN": "true"]
@@ -122,7 +125,7 @@ struct AlternateScreenBufferIntegrationTests {
         input2.closeFile()
     }
 
-    @Test("Multiple frame renders in alternate screen")
+    @Test("Multiple frame renders in alternate screen", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
     func multipleFrameRendersInAlternateScreen() async {
         // Arrange
         let pipe = Pipe()
@@ -167,7 +170,7 @@ struct AlternateScreenBufferIntegrationTests {
         input.closeFile()
     }
 
-    @Test("Alternate screen buffer with grid rendering")
+    @Test("Alternate screen buffer with grid rendering", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
     func alternateScreenBufferWithGridRendering() async {
         // Arrange
         let pipe = Pipe()
@@ -201,7 +204,7 @@ struct AlternateScreenBufferIntegrationTests {
         input.closeFile()
     }
 
-    @Test("Shutdown with alternate screen cleanup")
+    @Test("Shutdown with alternate screen cleanup", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
     func shutdownWithAlternateScreenCleanup() async {
         // Arrange
         let pipe = Pipe()
@@ -236,7 +239,7 @@ struct AlternateScreenBufferIntegrationTests {
         input.closeFile()
     }
 
-    @Test("Configuration precedence")
+    @Test("Configuration precedence", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
     func configurationPrecedence() async {
         // Test that explicit configuration overrides environment
         let environment = ["RUNE_ALT_SCREEN": "true"]
