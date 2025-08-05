@@ -1,4 +1,5 @@
 import RuneUnicode
+import yoga.core
 
 /// Basic flexbox layout engine for terminal UIs
 ///
@@ -47,7 +48,7 @@ public enum FlexLayout {
         case spaceAround
     }
 
-    /// Basic layout calculation
+    /// Layout calculation using Yoga flexbox engine
     /// - Parameters:
     ///   - children: Array of child sizes
     ///   - containerSize: Available container size
@@ -55,24 +56,51 @@ public enum FlexLayout {
     /// - Returns: Array of calculated rectangles for children
     public static func calculateLayout(
         children: [Size],
-        containerSize _: Size,
+        containerSize: Size,
         direction: FlexDirection = .row,
         ) -> [Rect] {
-        // TODO: Implement proper flexbox layout
-        // For now, return simple linear layout
-        var rects: [Rect] = []
-        var currentX = 0
-        var currentY = 0
+        // Handle empty children case
+        guard !children.isEmpty else {
+            return []
+        }
 
+        // Create root Yoga node
+        let rootNode = YogaNode()
+
+        // Configure root node
+        let yogaDirection: YogaFlexDirection = direction == .row ? .row : .column
+        rootNode.setFlexDirection(yogaDirection)
+        rootNode.setWidth(.points(Float(containerSize.width)))
+        rootNode.setHeight(.points(Float(containerSize.height)))
+
+        // Create child nodes
+        var childNodes: [YogaNode] = []
         for child in children {
-            rects.append(Rect(x: currentX, y: currentY, width: child.width, height: child.height))
+            let childNode = YogaNode()
+            childNode.setWidth(.points(Float(child.width)))
+            childNode.setHeight(.points(Float(child.height)))
+            rootNode.addChild(childNode)
+            childNodes.append(childNode)
+        }
 
-            switch direction {
-            case .row:
-                currentX += child.width
-            case .column:
-                currentY += child.height
-            }
+        // Calculate layout
+        let layoutEngine = YogaLayoutEngine.shared
+        _ = layoutEngine.calculateLayout(
+            for: rootNode,
+            availableWidth: containerSize.width,
+            availableHeight: containerSize.height
+        )
+
+        // Extract results
+        var rects: [Rect] = []
+        for childNode in childNodes {
+            let result = layoutEngine.getLayoutResult(for: childNode)
+            rects.append(Rect(
+                x: result.x,
+                y: result.y,
+                width: result.width,
+                height: result.height
+            ))
         }
 
         return rects

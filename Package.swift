@@ -47,6 +47,10 @@ let package = Package(
             targets: ["RuneCLI"]
         ),
     ],
+    dependencies: [
+        // Yoga layout engine for flexbox implementation
+        .package(url: "https://github.com/facebook/yoga.git", from: "3.2.1")
+    ],
     targets: [
         // System library for utf8proc
         .systemLibrary(
@@ -69,7 +73,10 @@ let package = Package(
         ),
         .target(
             name: "RuneLayout",
-            dependencies: ["RuneUnicode"]
+            dependencies: [
+                "RuneUnicode",
+                .product(name: "yoga", package: "yoga")
+            ]
         ),
 
         // Rendering layer
