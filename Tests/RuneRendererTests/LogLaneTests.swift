@@ -1,5 +1,5 @@
-import Testing
 import Foundation
+import Testing
 @testable import RuneRenderer
 
 /// Tests for LogLane formatting and display functionality
@@ -21,7 +21,7 @@ struct LogLaneTests {
         let config = LogLane.Configuration(
             maxDisplayLines: 5,
             showTimestamps: false,
-            useColors: false
+            useColors: false,
         )
         let logLane = LogLane(configuration: config)
 
@@ -38,7 +38,7 @@ struct LogLaneTests {
         let logLine = ConsoleCapture.LogLine(
             content: "Test log message",
             timestamp: Date(),
-            source: .stdout
+            source: .stdout,
         )
 
         // Act
@@ -57,7 +57,7 @@ struct LogLaneTests {
         let stderrLine = ConsoleCapture.LogLine(
             content: "Error message",
             timestamp: Date(),
-            source: .stderr
+            source: .stderr,
         )
 
         // Act
@@ -76,7 +76,7 @@ struct LogLaneTests {
         let logLine = ConsoleCapture.LogLine(
             content: "Timestamped message",
             timestamp: Date(),
-            source: .stdout
+            source: .stdout,
         )
 
         // Act
@@ -97,7 +97,7 @@ struct LogLaneTests {
         let logLine = ConsoleCapture.LogLine(
             content: longMessage,
             timestamp: Date(),
-            source: .stdout
+            source: .stdout,
         )
 
         // Act
@@ -119,7 +119,7 @@ struct LogLaneTests {
         let logs = [
             ConsoleCapture.LogLine(content: "Log 1", timestamp: Date(), source: .stdout),
             ConsoleCapture.LogLine(content: "Log 2", timestamp: Date(), source: .stderr),
-            ConsoleCapture.LogLine(content: "Log 3", timestamp: Date(), source: .stdout)
+            ConsoleCapture.LogLine(content: "Log 3", timestamp: Date(), source: .stdout),
         ]
 
         // Act
@@ -140,7 +140,7 @@ struct LogLaneTests {
             ConsoleCapture.LogLine(content: "Log 1", timestamp: Date(), source: .stdout),
             ConsoleCapture.LogLine(content: "Log 2", timestamp: Date(), source: .stdout),
             ConsoleCapture.LogLine(content: "Log 3", timestamp: Date(), source: .stdout),
-            ConsoleCapture.LogLine(content: "Log 4", timestamp: Date(), source: .stdout)
+            ConsoleCapture.LogLine(content: "Log 4", timestamp: Date(), source: .stdout),
         ]
 
         // Act
@@ -159,7 +159,7 @@ struct LogLaneTests {
         let logLane = LogLane(showTimestamps: false, useColors: false)
         let logs = [
             ConsoleCapture.LogLine(content: "Log 1", timestamp: Date(), source: .stdout),
-            ConsoleCapture.LogLine(content: "Log 2", timestamp: Date(), source: .stdout)
+            ConsoleCapture.LogLine(content: "Log 2", timestamp: Date(), source: .stdout),
         ]
 
         // Act

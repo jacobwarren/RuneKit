@@ -278,8 +278,6 @@ public enum UnicodeCategories {
     /// // Returns: true
     /// ```
     public static func isEmojiScalar(_ scalar: Unicode.Scalar) -> Bool {
-        let codePoint = Int32(scalar.value)
-
         // Use a safer approach to avoid potential memory issues
         // For now, use a simple range-based check for common emoji ranges
         let value = scalar.value

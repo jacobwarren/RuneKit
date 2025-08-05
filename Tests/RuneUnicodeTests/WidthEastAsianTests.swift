@@ -36,7 +36,7 @@ struct WidthEastAsianTests {
             #expect(
                 width == testCase.expectedWidth,
                 "\(testCase.description): '\(testCase.character)' should have width \(testCase.expectedWidth), got \(width)",
-                )
+            )
         }
     }
 
@@ -58,7 +58,7 @@ struct WidthEastAsianTests {
             #expect(
                 width == testCase.expectedWidth,
                 "\(testCase.description): '\(testCase.character)' should have width \(testCase.expectedWidth), got \(width)",
-                )
+            )
         }
     }
 
@@ -80,7 +80,7 @@ struct WidthEastAsianTests {
             #expect(
                 width == testCase.expectedWidth,
                 "\(testCase.description): '\(testCase.character)' should have width \(testCase.expectedWidth), got \(width)",
-                )
+            )
         }
     }
 
@@ -100,7 +100,7 @@ struct WidthEastAsianTests {
             #expect(
                 width == testCase.expectedWidth,
                 "\(testCase.description): '\(testCase.character)' should have width \(testCase.expectedWidth), got \(width)",
-                )
+            )
         }
     }
 

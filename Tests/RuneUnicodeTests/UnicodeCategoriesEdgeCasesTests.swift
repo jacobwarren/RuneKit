@@ -17,15 +17,15 @@ struct UnicodeCategoriesEdgeCasesTests {
         #expect(
             UnicodeCategories.category(of: tab) == .control,
             "TAB should be categorized as control character",
-            )
+        )
         #expect(
             UnicodeCategories.category(of: newline) == .control,
             "Newline should be categorized as control character",
-            )
+        )
         #expect(
             UnicodeCategories.category(of: del) == .control,
             "DEL should be categorized as control character",
-            )
+        )
     }
 
     @Test("CJK character detection")
@@ -39,15 +39,15 @@ struct UnicodeCategoriesEdgeCasesTests {
         #expect(
             UnicodeCategories.category(of: chineseChar) == .otherLetter,
             "Chinese character should be categorized as other letter",
-            )
+        )
         #expect(
             UnicodeCategories.category(of: japaneseHiragana) == .otherLetter,
             "Japanese Hiragana should be categorized as other letter",
-            )
+        )
         #expect(
             UnicodeCategories.category(of: koreanHangul) == .otherLetter,
             "Korean Hangul should be categorized as other letter",
-            )
+        )
     }
 
     // MARK: - Performance Tests
@@ -82,6 +82,6 @@ struct UnicodeCategoriesEdgeCasesTests {
         #expect(
             elapsedTime < 0.1,
             "Category detection should be fast: \(elapsedTime)s for 1,200 operations",
-            )
+        )
     }
 }

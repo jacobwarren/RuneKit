@@ -1,5 +1,5 @@
-import Testing
 import Foundation
+import Testing
 @testable import RuneRenderer
 
 /// Tests for the RenderConfiguration system
@@ -76,7 +76,7 @@ struct RenderConfigurationTests {
             maxLinesForDiff: 500,
             minEfficiencyThreshold: 0.6,
             maxFrameRate: 45.0,
-            writeBufferSize: 2048
+            writeBufferSize: 2048,
         )
 
         // Act
@@ -86,7 +86,7 @@ struct RenderConfigurationTests {
             enableMetrics: false,
             enableDebugLogging: true,
             hideCursorDuringRender: false,
-            useAlternateScreen: true
+            useAlternateScreen: true,
         )
 
         // Assert
@@ -124,7 +124,7 @@ struct RenderConfigurationTests {
         // Arrange
         let config = RenderConfiguration(
             optimizationMode: .lineDiff,
-            performance: RenderConfiguration.PerformanceTuning(maxLinesForDiff: 100)
+            performance: RenderConfiguration.PerformanceTuning(maxLinesForDiff: 100),
         )
 
         // Act & Assert
@@ -140,7 +140,7 @@ struct RenderConfigurationTests {
         // Arrange
         let config = RenderConfiguration(
             optimizationMode: .lineDiff,
-            performance: RenderConfiguration.PerformanceTuning(minEfficiencyThreshold: 0.5)
+            performance: RenderConfiguration.PerformanceTuning(minEfficiencyThreshold: 0.5),
         )
 
         // Act & Assert
@@ -158,8 +158,8 @@ struct RenderConfigurationTests {
             optimizationMode: .automatic,
             performance: RenderConfiguration.PerformanceTuning(
                 maxLinesForDiff: 100,
-                minEfficiencyThreshold: 0.6
-            )
+                minEfficiencyThreshold: 0.6,
+            ),
         )
 
         // Act & Assert
@@ -176,12 +176,12 @@ struct RenderConfigurationTests {
             totalLines: 100,
             framesDropped: 0,
             renderMode: .lineDiff,
-            renderDuration: 0.1
+            renderDuration: 0.1,
         )
 
         let result3 = config.resolveOptimizationMode(
             frameLines: 50,
-            previousMetrics: poorMetrics
+            previousMetrics: poorMetrics,
         )
         #expect(result3 == .fullRedraw, "Should use full redraw when previous efficiency was poor")
     }
@@ -192,7 +192,7 @@ struct RenderConfigurationTests {
     func frameRateLimitingWorksCorrectly() {
         // Arrange
         let config = RenderConfiguration(
-            performance: RenderConfiguration.PerformanceTuning(maxFrameRate: 30.0)
+            performance: RenderConfiguration.PerformanceTuning(maxFrameRate: 30.0),
         )
 
         let now = Date()
@@ -211,7 +211,7 @@ struct RenderConfigurationTests {
     func highFrameRateAllowsMoreFrequentUpdates() {
         // Arrange
         let config = RenderConfiguration(
-            performance: RenderConfiguration.PerformanceTuning(maxFrameRate: 120.0)
+            performance: RenderConfiguration.PerformanceTuning(maxFrameRate: 120.0),
         )
 
         let now = Date()
@@ -264,7 +264,7 @@ struct RenderConfigurationTests {
             maxLinesForDiff: 2500,
             minEfficiencyThreshold: 0.85,
             maxFrameRate: 144.0,
-            writeBufferSize: 32768
+            writeBufferSize: 32768,
         )
 
         // Assert
@@ -291,9 +291,18 @@ struct RenderConfigurationTests {
     @Test("Optimization mode raw values are correct")
     func optimizationModeRawValuesAreCorrect() {
         // Act & Assert
-        #expect(RenderConfiguration.OptimizationMode.fullRedraw.rawValue == "full_redraw", "Full redraw raw value should match")
-        #expect(RenderConfiguration.OptimizationMode.lineDiff.rawValue == "line_diff", "Line diff raw value should match")
-        #expect(RenderConfiguration.OptimizationMode.automatic.rawValue == "automatic", "Automatic raw value should match")
+        #expect(
+            RenderConfiguration.OptimizationMode.fullRedraw.rawValue == "full_redraw",
+            "Full redraw raw value should match",
+        )
+        #expect(
+            RenderConfiguration.OptimizationMode.lineDiff.rawValue == "line_diff",
+            "Line diff raw value should match",
+        )
+        #expect(
+            RenderConfiguration.OptimizationMode.automatic.rawValue == "automatic",
+            "Automatic raw value should match",
+        )
     }
 
     // MARK: - Environment Variable Tests
@@ -331,7 +340,10 @@ struct RenderConfigurationTests {
         let config = RenderConfiguration.fromEnvironment(environment)
 
         // Assert
-        #expect(config.useAlternateScreen == true, "Should enable alternate screen when RUNE_ALT_SCREEN=TRUE (case insensitive)")
+        #expect(
+            config.useAlternateScreen == true,
+            "Should enable alternate screen when RUNE_ALT_SCREEN=TRUE (case insensitive)",
+        )
     }
 
     @Test("Environment variable RUNE_ALT_SCREEN=false disables alternate screen")
@@ -442,7 +454,10 @@ struct RenderConfigurationTests {
         // Test False
         let environmentFalse = ["RUNE_CONSOLE_CAPTURE": "False"]
         let configFalse = RenderConfiguration.fromEnvironment(environmentFalse)
-        #expect(configFalse.enableConsoleCapture == false, "Should disable console capture when RUNE_CONSOLE_CAPTURE=False")
+        #expect(
+            configFalse.enableConsoleCapture == false,
+            "Should disable console capture when RUNE_CONSOLE_CAPTURE=False",
+        )
     }
 
     @Test("Environment variable RUNE_CONSOLE_CAPTURE not set uses default")

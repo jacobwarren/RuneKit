@@ -1,5 +1,5 @@
-import Testing
 import Foundation
+import Testing
 @testable import RuneRenderer
 
 /// Integration tests for the enhanced FrameBuffer with line-diff support
@@ -19,23 +19,23 @@ struct LineDiffFrameBufferTests {
         let config = RenderConfiguration(
             optimizationMode: .lineDiff,
             performance: RenderConfiguration.PerformanceTuning(
-                minEfficiencyThreshold: 0.5,  // Require at least 50% efficiency
-                maxFrameRate: 1000.0  // Very high frame rate to avoid dropping frames
+                minEfficiencyThreshold: 0.5, // Require at least 50% efficiency
+                maxFrameRate: 1000.0, // Very high frame rate to avoid dropping frames
             ),
-            enableDebugLogging: true  // Enable debug logging to see what's happening
+            enableDebugLogging: true, // Enable debug logging to see what's happening
         )
         let frameBuffer = FrameBuffer(output: output, configuration: config)
 
         let frame1 = TerminalRenderer.Frame(
             lines: ["Line 1", "Line 2", "Line 3"],
-            width: 20,  // Increased to accommodate "Modified Line 2" (14 chars)
-            height: 3
+            width: 20, // Increased to accommodate "Modified Line 2" (14 chars)
+            height: 3,
         )
 
         let frame2 = TerminalRenderer.Frame(
             lines: ["Line 1", "Modified Line 2", "Line 3"],
-            width: 20,  // Increased to accommodate "Modified Line 2" (14 chars)
-            height: 3
+            width: 20, // Increased to accommodate "Modified Line 2" (14 chars)
+            height: 3,
         )
 
         // Act
@@ -92,20 +92,20 @@ struct LineDiffFrameBufferTests {
 
         let config = RenderConfiguration(
             optimizationMode: .fullRedraw,
-            enableDebugLogging: false
+            enableDebugLogging: false,
         )
         let frameBuffer = FrameBuffer(output: output, configuration: config)
 
         let frame1 = TerminalRenderer.Frame(
             lines: ["Line 1", "Line 2"],
             width: 10,
-            height: 2
+            height: 2,
         )
 
         let frame2 = TerminalRenderer.Frame(
             lines: ["Line 1", "Modified Line 2"],
             width: 10,
-            height: 2
+            height: 2,
         )
 
         // Act
@@ -140,8 +140,8 @@ struct LineDiffFrameBufferTests {
             optimizationMode: .automatic,
             performance: RenderConfiguration.PerformanceTuning(
                 maxLinesForDiff: 10,
-                minEfficiencyThreshold: 0.5
-            )
+                minEfficiencyThreshold: 0.5,
+            ),
         )
         let frameBuffer = FrameBuffer(output: output, configuration: config)
 
@@ -149,13 +149,13 @@ struct LineDiffFrameBufferTests {
         let frame1 = TerminalRenderer.Frame(
             lines: ["Line 1", "Line 2", "Line 3"],
             width: 10,
-            height: 3
+            height: 3,
         )
 
         let frame2 = TerminalRenderer.Frame(
             lines: ["Line 1", "Modified", "Line 3"],
             width: 10,
-            height: 3
+            height: 3,
         )
 
         // Act
@@ -195,22 +195,22 @@ struct LineDiffFrameBufferTests {
         let config = RenderConfiguration(
             optimizationMode: .lineDiff,
             performance: RenderConfiguration.PerformanceTuning(
-                minEfficiencyThreshold: 0.3,  // Require at least 30% efficiency
-                maxFrameRate: 1000.0  // Very high frame rate to avoid dropping frames
-            )
+                minEfficiencyThreshold: 0.3, // Require at least 30% efficiency
+                maxFrameRate: 1000.0, // Very high frame rate to avoid dropping frames
+            ),
         )
         let frameBuffer = FrameBuffer(output: output, configuration: config)
 
         let frame1 = TerminalRenderer.Frame(
             lines: ["Line 1", "Line 2"],
             width: 10,
-            height: 2
+            height: 2,
         )
 
         let frame2 = TerminalRenderer.Frame(
             lines: ["Line 1", "Line 2", "Line 3", "Line 4"],
             width: 10,
-            height: 4
+            height: 4,
         )
 
         // Act
@@ -251,22 +251,22 @@ struct LineDiffFrameBufferTests {
         let config = RenderConfiguration(
             optimizationMode: .lineDiff,
             performance: RenderConfiguration.PerformanceTuning(
-                minEfficiencyThreshold: 0.3,  // Require at least 30% efficiency
-                maxFrameRate: 1000.0  // Very high frame rate to avoid dropping frames
-            )
+                minEfficiencyThreshold: 0.3, // Require at least 30% efficiency
+                maxFrameRate: 1000.0, // Very high frame rate to avoid dropping frames
+            ),
         )
         let frameBuffer = FrameBuffer(output: output, configuration: config)
 
         let frame1 = TerminalRenderer.Frame(
             lines: ["Line 1", "Line 2", "Line 3", "Line 4"],
             width: 10,
-            height: 4
+            height: 4,
         )
 
         let frame2 = TerminalRenderer.Frame(
             lines: ["Line 1", "Line 2"],
             width: 10,
-            height: 2
+            height: 2,
         )
 
         // Act
@@ -300,7 +300,6 @@ struct LineDiffFrameBufferTests {
         input.closeFile()
     }
 
-
     // MARK: - Error Handling and Edge Cases
 
     @Test("Empty frame renders correctly")
@@ -315,7 +314,7 @@ struct LineDiffFrameBufferTests {
         let emptyFrame = TerminalRenderer.Frame(
             lines: [],
             width: 0,
-            height: 0
+            height: 0,
         )
 
         // Act
@@ -345,15 +344,15 @@ struct LineDiffFrameBufferTests {
 
         let config = RenderConfiguration(
             optimizationMode: .lineDiff,
-            performance: RenderConfiguration.PerformanceTuning(maxLinesForDiff: 5)
+            performance: RenderConfiguration.PerformanceTuning(maxLinesForDiff: 5),
         )
         let frameBuffer = FrameBuffer(output: output, configuration: config)
 
         // Create a frame larger than the limit
         let largeFrame = TerminalRenderer.Frame(
-            lines: Array(1...10).map { "Line \($0)" },
+            lines: Array(1 ... 10).map { "Line \($0)" },
             width: 10,
-            height: 10
+            height: 10,
         )
 
         // Act

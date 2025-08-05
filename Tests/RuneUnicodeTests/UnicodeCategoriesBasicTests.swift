@@ -16,11 +16,11 @@ struct UnicodeCategoriesBasicTests {
         #expect(
             UnicodeCategories.category(of: uppercaseA) == .uppercaseLetter,
             "Uppercase 'A' should be categorized as uppercase letter",
-            )
+        )
         #expect(
             UnicodeCategories.category(of: lowercaseA) == .lowercaseLetter,
             "Lowercase 'a' should be categorized as lowercase letter",
-            )
+        )
     }
 
     @Test("Combining mark detection")
@@ -34,15 +34,15 @@ struct UnicodeCategoriesBasicTests {
         #expect(
             UnicodeCategories.isCombining(combiningAcute),
             "U+0301 COMBINING ACUTE ACCENT should be detected as combining mark",
-            )
+        )
         #expect(
             UnicodeCategories.isCombining(combiningGrave),
             "U+0300 COMBINING GRAVE ACCENT should be detected as combining mark",
-            )
+        )
         #expect(
             !UnicodeCategories.isCombining(regularA),
             "Regular letter 'A' should not be detected as combining mark",
-            )
+        )
     }
 
     @Test("Emoji scalar detection")
@@ -57,18 +57,18 @@ struct UnicodeCategoriesBasicTests {
         #expect(
             UnicodeCategories.isEmojiScalar(thumbsUp),
             "U+1F44D THUMBS UP SIGN should be detected as emoji scalar",
-            )
+        )
         #expect(
             UnicodeCategories.isEmojiScalar(redHeart),
             "U+2764 HEAVY BLACK HEART should be detected as emoji scalar",
-            )
+        )
         #expect(
             !UnicodeCategories.isEmojiScalar(regularA),
             "Regular letter 'A' should not be detected as emoji scalar",
-            )
+        )
         #expect(
             !UnicodeCategories.isEmojiScalar(digit),
             "Digit '0' should not be detected as emoji scalar",
-            )
+        )
     }
 }

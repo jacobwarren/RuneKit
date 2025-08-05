@@ -26,13 +26,13 @@ struct AlternateScreenBufferIntegrationTests {
         let frame1 = TerminalRenderer.Frame(
             lines: ["Welcome to alternate screen!"],
             width: 29,
-            height: 1
+            height: 1,
         )
 
         let frame2 = TerminalRenderer.Frame(
             lines: ["Updated content in alternate screen"],
             width: 35,
-            height: 1
+            height: 1,
         )
 
         // Act - Complete workflow
@@ -77,7 +77,10 @@ struct AlternateScreenBufferIntegrationTests {
         input.closeFile()
     }
 
-    @Test("Environment variable configuration integration", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test(
+        "Environment variable configuration integration",
+        .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil),
+    )
     func environmentVariableConfigurationIntegration() async {
         // Test with alternate screen enabled via environment
         let enabledEnv = ["RUNE_ALT_SCREEN": "true"]
@@ -140,7 +143,7 @@ struct AlternateScreenBufferIntegrationTests {
             TerminalRenderer.Frame(lines: ["Frame 2"], width: 7, height: 1),
             TerminalRenderer.Frame(lines: ["Frame 3"], width: 7, height: 1),
             TerminalRenderer.Frame(lines: ["Frame 4"], width: 7, height: 1),
-            TerminalRenderer.Frame(lines: ["Frame 5"], width: 7, height: 1)
+            TerminalRenderer.Frame(lines: ["Frame 5"], width: 7, height: 1),
         ]
 
         // Act - Render multiple frames

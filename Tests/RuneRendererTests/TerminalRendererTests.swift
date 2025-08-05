@@ -79,9 +79,9 @@ struct TerminalRendererTests {
 
         let frame = TerminalRenderer.Frame(
             lines: ["Hello", "World"],
-            width: 5,  // Use exact width to avoid padding
+            width: 5, // Use exact width to avoid padding
             height: 2,
-            )
+        )
 
         // Act
         await renderer.render(frame)
@@ -116,7 +116,10 @@ struct TerminalRendererTests {
         // Assert
         let data = input.readDataToEndOfFile()
         let result = String(data: data, encoding: .utf8) ?? ""
-        #expect(result == "\u{001B}[2J\u{001B}[H\u{001B}[?25h", "Should output clear screen ANSI sequence and show cursor")
+        #expect(
+            result == "\u{001B}[2J\u{001B}[H\u{001B}[?25h",
+            "Should output clear screen ANSI sequence and show cursor",
+        )
 
         // Cleanup
         input.closeFile()
@@ -173,8 +176,8 @@ struct TerminalRendererTests {
         let renderer = TerminalRenderer(output: output)
 
         // Act
-        await renderer.hideCursor()  // First hide cursor
-        await renderer.showCursor()  // Then show it
+        await renderer.hideCursor() // First hide cursor
+        await renderer.showCursor() // Then show it
         output.closeFile()
 
         // Assert
@@ -203,5 +206,4 @@ struct TerminalRendererTests {
         // Cleanup
         output.closeFile()
     }
-
 }
