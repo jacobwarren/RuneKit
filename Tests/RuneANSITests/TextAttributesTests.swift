@@ -61,7 +61,7 @@ struct TextAttributesTests {
         // Arrange & Act
         let red = ANSIColor.red
         let green = ANSIColor.green
-        let blue = ANSIColor.blue
+        let _ = ANSIColor.blue
 
         // Assert
         #expect(red != green, "Different colors should not be equal")

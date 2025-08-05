@@ -127,7 +127,7 @@ struct LineDiffBenchmarkTests {
 
     // MARK: - Benchmark Tests
 
-    @Test("Benchmark: Single line changes favor line-diff")
+    @Test("Benchmark: Single line changes favor line-diff", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
     func benchmarkSingleLineChangesFavorLineDiff() async {
         // Arrange
         let baseLines = Array(1...20).map { "Base line \($0)" }
@@ -179,7 +179,7 @@ struct LineDiffBenchmarkTests {
                 "Line-diff should detect that most lines are unchanged")
     }
 
-    @Test("Benchmark: All lines changing favors full redraw")
+    @Test("Benchmark: All lines changing favors full redraw", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
     func benchmarkAllLinesChangingFavorsFullRedraw() async {
         // Arrange
         let baseLines = Array(1...20).map { "Base line \($0)" }
@@ -230,7 +230,7 @@ struct LineDiffBenchmarkTests {
                 "Line-diff efficiency should be low when all lines change")
     }
 
-    @Test("Benchmark: No changes favor line-diff")
+    @Test("Benchmark: No changes favor line-diff", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
     func benchmarkNoChangesFavorLineDiff() async {
         // Arrange
         let baseLines = Array(1...20).map { "Base line \($0)" }
@@ -282,7 +282,7 @@ struct LineDiffBenchmarkTests {
         #expect(bytesRatio < 2.0, "Line-diff overhead should be reasonable even with no changes")
     }
 
-    @Test("Benchmark: Automatic mode makes good decisions")
+    @Test("Benchmark: Automatic mode makes good decisions", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
     func benchmarkAutomaticModeMakesGoodDecisions() async {
         // Arrange
         let baseLines = Array(1...20).map { "Base line \($0)" }

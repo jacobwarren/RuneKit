@@ -35,7 +35,7 @@ import Foundation
 public actor AlternateScreenBuffer {
     /// The output file handle for writing ANSI sequences
     private let output: FileHandle
-    
+
     /// Whether alternate screen buffer is currently active
     private var _isActive: Bool = false
 
@@ -44,20 +44,20 @@ public actor AlternateScreenBuffer {
 
     /// Whether the buffer has been entered at least once (for deinit cleanup)
     private var hasBeenEntered: Bool = false
-    
+
     // MARK: - ANSI Escape Sequences
-    
+
     /// ANSI sequence to enter alternate screen buffer
     private static let enterSequence = "\u{001B}[?1049h"
-    
+
     /// ANSI sequence to leave alternate screen buffer
     private static let leaveSequence = "\u{001B}[?1049l"
-    
+
     /// Fallback sequence to clear screen and move cursor to home
     private static let fallbackClearSequence = "\u{001B}[2J\u{001B}[H"
-    
+
     // MARK: - Initialization
-    
+
     /// Initialize alternate screen buffer with output handle
     /// - Parameters:
     ///   - output: File handle for terminal output (defaults to stdout)
@@ -66,14 +66,14 @@ public actor AlternateScreenBuffer {
         self.output = output
         self.enableFallback = enableFallback
     }
-    
+
     // MARK: - Public Interface
-    
+
     /// Whether alternate screen buffer is currently active
     public var isActive: Bool {
         return _isActive
     }
-    
+
     /// Enter alternate screen buffer
     ///
     /// This switches the terminal to the alternate screen buffer, clearing
@@ -109,7 +109,7 @@ public actor AlternateScreenBuffer {
 
         _isActive = false
     }
-    
+
     /// Enter alternate screen buffer with fallback support
     ///
     /// This method attempts to enter the alternate screen buffer, but if
@@ -120,7 +120,7 @@ public actor AlternateScreenBuffer {
     /// buffer sequences (like some older terminals or terminal emulators).
     public func enterWithFallback() async {
         guard !_isActive else { return }
-        
+
         if enableFallback {
             // For now, we'll always try the alternate screen sequence
             // In a real implementation, we might detect terminal capabilities
@@ -130,14 +130,14 @@ public actor AlternateScreenBuffer {
             await enter()
         }
     }
-    
+
     /// Leave alternate screen buffer with fallback support
     ///
     /// This method attempts to leave the alternate screen buffer, with
     /// fallback behavior for terminals that don't support it.
     public func leaveWithFallback() async {
         guard _isActive else { return }
-        
+
         if enableFallback {
             // For now, we'll always try the alternate screen sequence
             // In a real implementation, we might use different sequences
@@ -147,7 +147,7 @@ public actor AlternateScreenBuffer {
             await leave()
         }
     }
-    
+
     /// Force clear the screen (fallback behavior)
     ///
     /// This method provides the fallback behavior of clearing the screen

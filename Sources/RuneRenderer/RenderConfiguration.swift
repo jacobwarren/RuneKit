@@ -67,6 +67,9 @@ public struct RenderConfiguration: Sendable {
     /// Whether to use alternate screen buffer if available
     public let useAlternateScreen: Bool
 
+    /// Whether to capture stdout/stderr and display logs above live region
+    public let enableConsoleCapture: Bool
+
     // MARK: - Initialization
 
     public init(
@@ -75,7 +78,8 @@ public struct RenderConfiguration: Sendable {
         enableMetrics: Bool = true,
         enableDebugLogging: Bool = false,
         hideCursorDuringRender: Bool = true,
-        useAlternateScreen: Bool = false
+        useAlternateScreen: Bool = false,
+        enableConsoleCapture: Bool = false
     ) {
         self.optimizationMode = optimizationMode
         self.performance = performance
@@ -83,6 +87,7 @@ public struct RenderConfiguration: Sendable {
         self.enableDebugLogging = enableDebugLogging
         self.hideCursorDuringRender = hideCursorDuringRender
         self.useAlternateScreen = useAlternateScreen
+        self.enableConsoleCapture = enableConsoleCapture
     }
 
     // MARK: - Predefined Configurations
@@ -102,7 +107,8 @@ public struct RenderConfiguration: Sendable {
             writeBufferSize: 16384
         ),
         enableMetrics: true,
-        enableDebugLogging: false
+        enableDebugLogging: false,
+        enableConsoleCapture: false
     )
 
     /// Conservative configuration for slow terminals or debugging
@@ -116,7 +122,8 @@ public struct RenderConfiguration: Sendable {
             writeBufferSize: 4096
         ),
         enableMetrics: true,
-        enableDebugLogging: true
+        enableDebugLogging: true,
+        enableConsoleCapture: false
     )
 
     /// Debug configuration with extensive logging and metrics
@@ -132,7 +139,8 @@ public struct RenderConfiguration: Sendable {
         enableMetrics: true,
         enableDebugLogging: true,
         hideCursorDuringRender: true,
-        useAlternateScreen: false
+        useAlternateScreen: false,
+        enableConsoleCapture: true
     )
 
     // MARK: - Decision Logic
@@ -220,7 +228,8 @@ public extension RenderConfiguration {
                 enableMetrics: config.enableMetrics,
                 enableDebugLogging: config.enableDebugLogging,
                 hideCursorDuringRender: config.hideCursorDuringRender,
-                useAlternateScreen: config.useAlternateScreen
+                useAlternateScreen: config.useAlternateScreen,
+                enableConsoleCapture: config.enableConsoleCapture
             )
         }
 
@@ -233,7 +242,22 @@ public extension RenderConfiguration {
                 enableMetrics: config.enableMetrics,
                 enableDebugLogging: config.enableDebugLogging,
                 hideCursorDuringRender: config.hideCursorDuringRender,
-                useAlternateScreen: useAltScreen
+                useAlternateScreen: useAltScreen,
+                enableConsoleCapture: config.enableConsoleCapture
+            )
+        }
+
+        // Check for console capture override
+        if let captureString = environment["RUNE_CONSOLE_CAPTURE"] {
+            let enableCapture = captureString.lowercased() == "true" || captureString == "1"
+            config = RenderConfiguration(
+                optimizationMode: config.optimizationMode,
+                performance: config.performance,
+                enableMetrics: config.enableMetrics,
+                enableDebugLogging: config.enableDebugLogging,
+                hideCursorDuringRender: config.hideCursorDuringRender,
+                useAlternateScreen: config.useAlternateScreen,
+                enableConsoleCapture: enableCapture
             )
         }
 

@@ -279,16 +279,21 @@ public enum UnicodeCategories {
     /// ```
     public static func isEmojiScalar(_ scalar: Unicode.Scalar) -> Bool {
         let codePoint = Int32(scalar.value)
-        guard let property = utf8proc_get_property(codePoint) else {
-            return false
-        }
 
-        // Check if the character has Extended_Pictographic property
-        // This is the most accurate way to detect emoji scalars
-        let boundclass = property.pointee.boundclass
-        return boundclass == UTF8PROC_BOUNDCLASS_EXTENDED_PICTOGRAPHIC.rawValue ||
-            boundclass == UTF8PROC_BOUNDCLASS_E_BASE.rawValue ||
-            boundclass == UTF8PROC_BOUNDCLASS_E_MODIFIER.rawValue
+        // Use a safer approach to avoid potential memory issues
+        // For now, use a simple range-based check for common emoji ranges
+        let value = scalar.value
+
+        // Common emoji ranges (simplified detection)
+        // This is a temporary fix to avoid utf8proc memory issues
+        return (value >= 0x1F600 && value <= 0x1F64F) || // Emoticons
+               (value >= 0x1F300 && value <= 0x1F5FF) || // Misc Symbols and Pictographs
+               (value >= 0x1F680 && value <= 0x1F6FF) || // Transport and Map
+               (value >= 0x1F1E6 && value <= 0x1F1FF) || // Regional Indicator Symbols
+               (value >= 0x2600 && value <= 0x26FF) ||   // Misc symbols
+               (value >= 0x2700 && value <= 0x27BF) ||   // Dingbats
+               (value == 0x1F44D) ||                     // 👍 (thumbs up)
+               (value == 0x2764)                         // ❤ (heart)
     }
 }
 

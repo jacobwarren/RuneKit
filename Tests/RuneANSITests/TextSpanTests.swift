@@ -184,7 +184,7 @@ struct TextSpanTests {
 
         // Act
         let totalWidth = Width.displayWidth(of: text)
-        let (left, right) = span.splitByDisplayWidth(at: 2)
+        let (left, _) = span.splitByDisplayWidth(at: 2)
 
         // Assert
         #expect(totalWidth == 3, "Should count base characters only, not combining marks")

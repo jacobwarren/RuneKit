@@ -381,4 +381,93 @@ struct RenderConfigurationTests {
         // Assert
         #expect(config.useAlternateScreen == false, "Should use default (false) when RUNE_ALT_SCREEN not set")
     }
+
+    // MARK: - Console Capture Environment Tests
+
+    @Test("Environment variable RUNE_CONSOLE_CAPTURE=true enables console capture")
+    func environmentVariableConsoleCaptureTrue() {
+        // Arrange
+        let environment = ["RUNE_CONSOLE_CAPTURE": "true"]
+
+        // Act
+        let config = RenderConfiguration.fromEnvironment(environment)
+
+        // Assert
+        #expect(config.enableConsoleCapture == true, "Should enable console capture when RUNE_CONSOLE_CAPTURE=true")
+    }
+
+    @Test("Environment variable RUNE_CONSOLE_CAPTURE=1 enables console capture")
+    func environmentVariableConsoleCapture1() {
+        // Arrange
+        let environment = ["RUNE_CONSOLE_CAPTURE": "1"]
+
+        // Act
+        let config = RenderConfiguration.fromEnvironment(environment)
+
+        // Assert
+        #expect(config.enableConsoleCapture == true, "Should enable console capture when RUNE_CONSOLE_CAPTURE=1")
+    }
+
+    @Test("Environment variable RUNE_CONSOLE_CAPTURE=false disables console capture")
+    func environmentVariableConsoleCaptureFalse() {
+        // Arrange
+        let environment = ["RUNE_CONSOLE_CAPTURE": "false"]
+
+        // Act
+        let config = RenderConfiguration.fromEnvironment(environment)
+
+        // Assert
+        #expect(config.enableConsoleCapture == false, "Should disable console capture when RUNE_CONSOLE_CAPTURE=false")
+    }
+
+    @Test("Environment variable RUNE_CONSOLE_CAPTURE=0 disables console capture")
+    func environmentVariableConsoleCapture0() {
+        // Arrange
+        let environment = ["RUNE_CONSOLE_CAPTURE": "0"]
+
+        // Act
+        let config = RenderConfiguration.fromEnvironment(environment)
+
+        // Assert
+        #expect(config.enableConsoleCapture == false, "Should disable console capture when RUNE_CONSOLE_CAPTURE=0")
+    }
+
+    @Test("Environment variable RUNE_CONSOLE_CAPTURE case insensitive")
+    func environmentVariableConsoleCaptureCase() {
+        // Test TRUE
+        let environmentTrue = ["RUNE_CONSOLE_CAPTURE": "TRUE"]
+        let configTrue = RenderConfiguration.fromEnvironment(environmentTrue)
+        #expect(configTrue.enableConsoleCapture == true, "Should enable console capture when RUNE_CONSOLE_CAPTURE=TRUE")
+
+        // Test False
+        let environmentFalse = ["RUNE_CONSOLE_CAPTURE": "False"]
+        let configFalse = RenderConfiguration.fromEnvironment(environmentFalse)
+        #expect(configFalse.enableConsoleCapture == false, "Should disable console capture when RUNE_CONSOLE_CAPTURE=False")
+    }
+
+    @Test("Environment variable RUNE_CONSOLE_CAPTURE not set uses default")
+    func environmentVariableConsoleCaptureNotSet() {
+        // Arrange
+        let environment: [String: String] = [:]
+
+        // Act
+        let config = RenderConfiguration.fromEnvironment(environment)
+
+        // Assert
+        #expect(config.enableConsoleCapture == false, "Should use default (false) when RUNE_CONSOLE_CAPTURE not set")
+    }
+
+    @Test("Environment variable RUNE_DEBUG enables console capture")
+    func environmentVariableDebugEnablesConsoleCapture() {
+        // Arrange
+        let environment = ["RUNE_DEBUG": "1"]
+
+        // Act
+        let config = RenderConfiguration.fromEnvironment(environment)
+
+        // Assert
+        #expect(config.enableConsoleCapture == true, "Debug mode should enable console capture")
+        #expect(config.enableDebugLogging == true, "Debug mode should enable debug logging")
+        #expect(config.optimizationMode == .automatic, "Debug mode should use automatic optimization")
+    }
 }

@@ -59,15 +59,22 @@ public actor HybridReconciler {
         currentGrid = nil
     }
 
-    /// Shutdown the reconciler and wait for all tasks to complete
-    /// This must be called before the actor is deallocated to prevent hanging
-    public func shutdown() async {
+    /// Cancel background tasks without clearing performance history
+    /// This prevents hanging while preserving test data
+    public func cancelBackgroundTasks() async {
         // Cancel any pending update task
         updateTask?.cancel()
         updateTask = nil
 
         // Clear any pending update
         pendingUpdate = nil
+    }
+
+    /// Shutdown the reconciler and wait for all tasks to complete
+    /// This must be called before the actor is deallocated to prevent hanging
+    public func shutdown() async {
+        // Cancel background tasks first
+        await cancelBackgroundTasks()
 
         // Shutdown the renderer
         await renderer.shutdown()
