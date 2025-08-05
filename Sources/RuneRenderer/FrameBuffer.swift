@@ -120,6 +120,10 @@ public actor FrameBuffer {
         // Leave alternate screen if active
         await leaveAlternateScreenIfNeeded()
 
+        // Cancel background tasks to prevent hanging in CI
+        // This preserves performance history for tests
+        await reconciler.cancelBackgroundTasks()
+
         await reconciler.clear()
     }
 

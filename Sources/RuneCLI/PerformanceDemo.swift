@@ -54,7 +54,8 @@ extension RuneCLI {
         let metricsFrame = createFinalResultsFrame(terminalWidth: 80, metrics: finalMetrics)
         await frameBuffer.renderFrame(metricsFrame)
 
-        try? await Task.sleep(nanoseconds: 3_000_000_000) // 3 seconds to read
+        let readSleepTime: UInt64 = ProcessInfo.processInfo.environment["CI"] != nil ? 100_000_000 : 3_000_000_000 // 0.1s in CI, 3s locally
+        try? await Task.sleep(nanoseconds: readSleepTime)
 
         await frameBuffer.clear()
 
@@ -99,7 +100,8 @@ extension RuneCLI {
             for (index, frame) in loadingFrames.enumerated() {
                 await frameBuffer.renderFrame(frame)
                 print("  → Rendered frame \(cycle * 4 + index + 1): \(loadingContents[index])")
-                try? await Task.sleep(nanoseconds: 800_000_000) // 0.8 seconds
+                let frameSleepTime: UInt64 = ProcessInfo.processInfo.environment["CI"] != nil ? 50_000_000 : 800_000_000 // 0.05s in CI, 0.8s locally
+                try? await Task.sleep(nanoseconds: frameSleepTime)
             }
         }
 
@@ -108,8 +110,9 @@ extension RuneCLI {
         await frameBuffer.renderFrame(completeFrame)
         print("  → Rendered final frame: Complete! ✅")
 
-        // Wait to show final result
-        try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+        // Wait to show final result (reduced in CI)
+        let finalSleepTime: UInt64 = ProcessInfo.processInfo.environment["CI"] != nil ? 50_000_000 : 2_000_000_000 // 0.05s in CI, 2s locally
+        try? await Task.sleep(nanoseconds: finalSleepTime)
 
         // Clean up
         await frameBuffer.clear()

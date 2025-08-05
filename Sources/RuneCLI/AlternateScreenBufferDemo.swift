@@ -34,8 +34,9 @@ extension RuneCLI {
         print("Rendering welcome frame in alternate screen...")
         await frameBuffer.renderFrame(welcomeFrame)
 
-        // Wait to show the welcome screen
-        try? await Task.sleep(nanoseconds: 3_000_000_000) // 3 seconds
+        // Wait to show the welcome screen (reduced in CI)
+        let sleepTime: UInt64 = ProcessInfo.processInfo.environment["CI"] != nil ? 100_000_000 : 3_000_000_000 // 0.1s in CI, 3s locally
+        try? await Task.sleep(nanoseconds: sleepTime)
 
         // Create an application simulation frame
         let appFrame = createAlternateScreenAppFrame(terminalWidth: terminalSize.width)
@@ -43,14 +44,16 @@ extension RuneCLI {
         print("Switching to application view...")
         await frameBuffer.renderFrame(appFrame)
 
-        // Wait to show the application
-        try? await Task.sleep(nanoseconds: 3_000_000_000) // 3 seconds
+        // Wait to show the application (reduced in CI)
+        let appSleepTime: UInt64 = ProcessInfo.processInfo.environment["CI"] != nil ? 100_000_000 : 3_000_000_000 // 0.1s in CI, 3s locally
+        try? await Task.sleep(nanoseconds: appSleepTime)
 
         // Clean up - this should restore the previous terminal content
         print("Exiting alternate screen (should restore previous content)...")
         await frameBuffer.clear()
 
-        try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
+        let cleanupSleepTime: UInt64 = ProcessInfo.processInfo.environment["CI"] != nil ? 50_000_000 : 1_000_000_000 // 0.05s in CI, 1s locally
+        try? await Task.sleep(nanoseconds: cleanupSleepTime)
 
         print("")
         print("Demo 1 complete. Previous terminal content should be restored!")
@@ -68,7 +71,8 @@ extension RuneCLI {
 
         await normalFrameBuffer.renderFrame(fallbackFrame)
 
-        try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+        let fallbackSleepTime: UInt64 = ProcessInfo.processInfo.environment["CI"] != nil ? 50_000_000 : 2_000_000_000 // 0.05s in CI, 2s locally
+        try? await Task.sleep(nanoseconds: fallbackSleepTime)
 
         await normalFrameBuffer.clear()
 

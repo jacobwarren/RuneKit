@@ -100,7 +100,8 @@ struct RuneCLI {
             print("  → About to render frame \(index + 1): \(loadingContents[index])")
             await frameBuffer.renderFrame(frame)
             print("  → Rendered frame \(index + 1): \(loadingContents[index])")
-            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+            let animationSleepTime: UInt64 = ProcessInfo.processInfo.environment["CI"] != nil ? 50_000_000 : 500_000_000 // 0.05s in CI, 0.5s locally
+            try? await Task.sleep(nanoseconds: animationSleepTime)
         }
 
         // Final completion frame - this is the critical test
@@ -113,7 +114,8 @@ struct RuneCLI {
         await frameBuffer.waitForPendingUpdates()
         print("  → All pending updates completed")
 
-        try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+        let testSleepTime: UInt64 = ProcessInfo.processInfo.environment["CI"] != nil ? 50_000_000 : 2_000_000_000 // 0.05s in CI, 2s locally
+        try? await Task.sleep(nanoseconds: testSleepTime)
 
         // Clear the frame buffer
         await frameBuffer.clear()
