@@ -51,31 +51,34 @@ struct RuneCLI {
         // 2. Basic functionality
         await demonstrateBasicFunctionality()
 
-        // 3. Styled text spans
+        // 3. Styled Text component (RUNE-29)
+        demonstrateStyledTextComponent()
+
+        // 4. Styled text spans
         demonstrateStyledTextSpans()
 
-        // 4. Unicode categories
+        // 5. Unicode categories
         demonstrateUnicodeCategories()
 
-        // 5. Frame buffer
+        // 6. Frame buffer
         await demonstrateFrameBuffer()
 
-        // 6. Live frame buffer demo
+        // 7. Live frame buffer demo
         await liveFrameBufferDemo()
 
-        // 7. Backpressure and coalescing demo
+        // 8. Backpressure and coalescing demo
         await backpressureDemo()
 
-        // 8. Alternate screen buffer demo (RUNE-22)
+        // 9. Alternate screen buffer demo (RUNE-22)
         await alternateScreenBufferDemo()
 
-        // 9. Console capture demo (RUNE-23)
+        // 10. Console capture demo (RUNE-23)
         await consoleCaptureDemo()
 
-        // 10. RUNE-24 render(_:options) API demo
+        // 11. RUNE-24 render(_:options) API demo
         await rune24Demo()
 
-        // 11. RUNE-25 render handle control methods demo
+        // 12. RUNE-25 render handle control methods demo
         await rune25Demo()
 
         // 12. RUNE-26 Yoga layout engine demo
@@ -171,17 +174,97 @@ struct RuneCLI {
         let rects = FlexLayout.calculateLayout(children: children, containerSize: containerSize)
         print("Layout: Calculated \(rects.count) rectangles")
 
-        // Test component rendering
-        let text = Text("Demo")
-        let rect = FlexLayout.Rect(x: 0, y: 0, width: 10, height: 1)
-        let lines = text.render(in: rect)
-        print("Component: Text rendered to \(lines.count) lines")
+        // Test component rendering with styling
+        let plainText = Text("Demo")
+        let styledText = Text("Styled Demo", color: .green, bold: true)
+        let rect = FlexLayout.Rect(x: 0, y: 0, width: 15, height: 1)
+
+        let plainLines = plainText.render(in: rect)
+        let styledLines = styledText.render(in: rect)
+
+        print("Component: Plain text rendered to \(plainLines.count) lines")
+        print("Component: Styled text rendered to \(styledLines.count) lines")
+
+        // Demonstrate the styled output
+        print("Plain output: \(plainLines[0])")
+        print("Styled output: \(styledLines[0])")
 
         // Test renderer (without actually writing to terminal)
         _ = TerminalRenderer()
         print("Renderer: Created successfully")
 
         print("All modules working correctly! 🚀")
+    }
+
+    /// Demonstrate styled Text component functionality (RUNE-29)
+    static func demonstrateStyledTextComponent() {
+        print("\n--- Styled Text Component Demo (RUNE-29) ---")
+
+        let rect = FlexLayout.Rect(x: 0, y: 0, width: 30, height: 1)
+
+        print("\n1. Basic Styling:")
+
+        // Basic color styling
+        let redText = Text("Error: Something went wrong", color: .red)
+        let greenText = Text("Success: Operation completed", color: .green)
+        let blueText = Text("Info: Processing data", color: .blue)
+
+        print("Red text: \(redText.render(in: rect)[0])")
+        print("Green text: \(greenText.render(in: rect)[0])")
+        print("Blue text: \(blueText.render(in: rect)[0])")
+
+        print("\n2. Text Formatting:")
+
+        // Text formatting
+        let boldText = Text("Bold Important Text", bold: true)
+        let italicText = Text("Italic Emphasis", italic: true)
+        let underlineText = Text("Underlined Link", underline: true)
+
+        print("Bold: \(boldText.render(in: rect)[0])")
+        print("Italic: \(italicText.render(in: rect)[0])")
+        print("Underline: \(underlineText.render(in: rect)[0])")
+
+        print("\n3. Combined Styling:")
+
+        // Combined styling
+        let warningText = Text("⚠️  Warning", color: .yellow, bold: true)
+        let errorText = Text("❌ Critical Error", color: .red, bold: true, underline: true)
+        let successText = Text("✅ All Good", color: .green, bold: true)
+
+        print("Warning: \(warningText.render(in: rect)[0])")
+        print("Error: \(errorText.render(in: rect)[0])")
+        print("Success: \(successText.render(in: rect)[0])")
+
+        print("\n4. Advanced Colors:")
+
+        // RGB and 256 colors
+        let rgbText = Text("RGB Orange Text", color: .rgb(255, 165, 0))
+        let color256Text = Text("256-Color Bright Red", color: .color256(196))
+
+        print("RGB: \(rgbText.render(in: rect)[0])")
+        print("256-color: \(color256Text.render(in: rect)[0])")
+
+        print("\n5. Background Colors:")
+
+        // Background colors
+        let highlightText = Text("Highlighted Text", color: .black, backgroundColor: .yellow)
+        let inverseText = Text("Inverse Text", inverse: true)
+
+        print("Highlight: \(highlightText.render(in: rect)[0])")
+        print("Inverse: \(inverseText.render(in: rect)[0])")
+
+        print("\n6. Unicode and Emoji:")
+
+        // Unicode and emoji support
+        let emojiText = Text("🚀 Rocket Launch", color: .cyan, bold: true)
+        let cjkText = Text("你好世界 (Hello World)", color: .magenta)
+        let symbolText = Text("© 2024 RuneKit ™", color: .blue, italic: true)
+
+        print("Emoji: \(emojiText.render(in: rect)[0])")
+        print("CJK: \(cjkText.render(in: rect)[0])")
+        print("Symbols: \(symbolText.render(in: rect)[0])")
+
+        print("\nStyled Text component working perfectly! ✨")
     }
 
     /// Demonstrate styled text spans functionality
