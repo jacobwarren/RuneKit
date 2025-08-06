@@ -10,6 +10,8 @@ internal struct BoxLayout {
     static func calculateIntrinsicSize(for component: Component) -> (width: Float, height: Float) {
         if let textComponent = component as? Text {
             return (width: Float(Width.displayWidth(of: textComponent.content)), height: 1.0)
+        } else if let spacerComponent = component as? Spacer {
+            return spacerComponent.intrinsicSize
         } else if let boxComponent = component as? Box {
             // For box components, calculate based on their children
             let allChildren = boxComponent.children.isEmpty ? (boxComponent.child.map { [$0] } ?? []) : boxComponent.children

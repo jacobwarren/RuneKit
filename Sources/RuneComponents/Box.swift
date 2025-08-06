@@ -22,6 +22,9 @@ public struct Box: Component {
     /// Align items along cross axis
     public let alignItems: AlignItems
 
+    /// Align self - overrides parent's alignItems for this specific item
+    public let alignSelf: AlignSelf
+
     /// Width dimension
     public let width: Dimension
 
@@ -85,6 +88,7 @@ public struct Box: Component {
         flexDirection: YogaFlexDirection = .column,
         justifyContent: JustifyContent = .flexStart,
         alignItems: AlignItems = .stretch,
+        alignSelf: AlignSelf = .auto,
         width: Dimension = .auto,
         height: Dimension = .auto,
         paddingTop: Float = 0,
@@ -113,6 +117,7 @@ public struct Box: Component {
         self.flexDirection = flexDirection
         self.justifyContent = justifyContent
         self.alignItems = alignItems
+        self.alignSelf = alignSelf
         self.width = width
         self.height = height
         self.paddingTop = paddingTop
@@ -145,6 +150,7 @@ public struct Box: Component {
         flexDirection: YogaFlexDirection = .column,
         justifyContent: JustifyContent = .flexStart,
         alignItems: AlignItems = .stretch,
+        alignSelf: AlignSelf = .auto,
         width: Dimension = .auto,
         height: Dimension = .auto,
         paddingTop: Float = 0,
@@ -173,6 +179,7 @@ public struct Box: Component {
         self.flexDirection = flexDirection
         self.justifyContent = justifyContent
         self.alignItems = alignItems
+        self.alignSelf = alignSelf
         self.width = width
         self.height = height
         self.paddingTop = paddingTop
@@ -205,6 +212,7 @@ public struct Box: Component {
         flexDirection: YogaFlexDirection = .column,
         justifyContent: JustifyContent = .flexStart,
         alignItems: AlignItems = .stretch,
+        alignSelf: AlignSelf = .auto,
         width: Dimension = .auto,
         height: Dimension = .auto,
         paddingTop: Float = 0,
@@ -233,6 +241,7 @@ public struct Box: Component {
         self.flexDirection = flexDirection
         self.justifyContent = justifyContent
         self.alignItems = alignItems
+        self.alignSelf = alignSelf
         self.width = width
         self.height = height
         self.paddingTop = paddingTop
@@ -300,6 +309,7 @@ public struct Box: Component {
     public static func row(
         justifyContent: JustifyContent = .flexStart,
         alignItems: AlignItems = .stretch,
+        alignSelf: AlignSelf = .auto,
         gap: Float = 0,
         child: Component? = nil
     ) -> Box {
@@ -309,6 +319,7 @@ public struct Box: Component {
             flexDirection: .row,
             justifyContent: justifyContent,
             alignItems: alignItems,
+            alignSelf: alignSelf,
             columnGap: gap,
             child: child
         )
@@ -318,6 +329,7 @@ public struct Box: Component {
     public static func column(
         justifyContent: JustifyContent = .flexStart,
         alignItems: AlignItems = .stretch,
+        alignSelf: AlignSelf = .auto,
         gap: Float = 0,
         child: Component? = nil
     ) -> Box {
@@ -327,6 +339,7 @@ public struct Box: Component {
             flexDirection: .column,
             justifyContent: justifyContent,
             alignItems: alignItems,
+            alignSelf: alignSelf,
             rowGap: gap,
             child: child
         )
@@ -420,6 +433,18 @@ public struct Box: Component {
 
                 childNode.setWidth(.points(intrinsicWidth))
                 childNode.setHeight(.points(intrinsicHeight))
+            } else if let spacerComponent = childComponent as? Spacer {
+                // For spacer components, use minimal intrinsic size but set flex properties
+                let intrinsicSize = spacerComponent.intrinsicSize
+                let flexProps = spacerComponent.flexProperties
+
+                childNode.setWidth(.points(intrinsicSize.width))
+                childNode.setHeight(.points(intrinsicSize.height))
+
+                // Apply flex properties to make spacer consume available space
+                childNode.setFlexGrow(flexProps.grow)
+                childNode.setFlexShrink(flexProps.shrink)
+                childNode.setFlexBasis(flexProps.basis)
             } else if let boxComponent = childComponent as? Box {
                 // For box components, calculate intrinsic size if needed
                 if boxComponent.width == .auto || boxComponent.height == .auto {
@@ -448,10 +473,16 @@ public struct Box: Component {
                 childNode.setMaxWidth(boxComponent.maxWidth)
                 childNode.setMinHeight(boxComponent.minHeight)
                 childNode.setMaxHeight(boxComponent.maxHeight)
+
+                // Apply align self property
+                childNode.setAlignSelf(boxComponent.alignSelf)
             } else {
                 // For other components, let them size themselves automatically
                 childNode.setWidth(.auto)
                 childNode.setHeight(.auto)
+
+                // Apply default alignSelf for non-Box components
+                childNode.setAlignSelf(.auto)
             }
 
             boxNode.addChild(childNode)

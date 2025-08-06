@@ -40,42 +40,79 @@ public struct RUNE27Demo {
     }
 
     private static func runRowLayoutDemo() {
-        print("\n🔄 Demo 2: Row layout with column gap")
-        let rowBox = Box(
+        print("\n🔄 Demo 2: Row layout - comparing gap vs Spacer")
+
+        // Old way: using columnGap
+        print("\n  📏 Using columnGap (old way):")
+        let rowBoxWithGap = Box(
             flexDirection: .row,
             columnGap: 2,
             children: Text("First"), Text("Second"), Text("Third")
         )
 
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 30, height: 10)
-        let layout2 = rowBox.calculateLayout(in: containerRect)
-        print("Container: \(containerRect)")
+        let layoutWithGap = rowBoxWithGap.calculateLayout(in: containerRect)
+        print("    Container: \(containerRect)")
         print("Children:")
-        for (index, rect) in layout2.childRects.enumerated() {
-            print("  Child \(index): \(rect)")
+        for (index, rect) in layoutWithGap.childRects.enumerated() {
+            print("      Child \(index): \(rect)")
+        }
+
+        // New way: using Spacer for flexible spacing
+        print("\n  🚀 Using Spacer (new way - flexible spacing):")
+        let rowBoxWithSpacer = Box(
+            flexDirection: .row,
+            children: Text("Left"), Spacer(), Text("Center"), Spacer(), Text("Right")
+        )
+
+        let layoutWithSpacer = rowBoxWithSpacer.calculateLayout(in: containerRect)
+        print("    Container: \(containerRect)")
+        for (index, rect) in layoutWithSpacer.childRects.enumerated() {
+            let componentType = index % 2 == 0 ? "Text" : "Spacer"
+            print("      \(componentType) \(index): \(rect)")
         }
     }
 
     private static func runColumnLayoutDemo() {
-        print("\n📋 Demo 3: Column layout with row gap")
-        let columnBox = Box(
+        print("\n📋 Demo 3: Column layout - comparing gap vs Spacer")
+
+        // Old way: using rowGap
+        print("\n  📏 Using rowGap (old way):")
+        let columnBoxWithGap = Box(
             flexDirection: .column,
             rowGap: 1,
             children: Text("Item A"), Text("Item B"), Text("Item C")
         )
 
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 30, height: 10)
-        let layout3 = columnBox.calculateLayout(in: containerRect)
-        print("Container: \(containerRect)")
+        let layoutWithGap = columnBoxWithGap.calculateLayout(in: containerRect)
+        print("    Container: \(containerRect)")
         print("Children:")
-        for (index, rect) in layout3.childRects.enumerated() {
-            print("  Child \(index): \(rect)")
+        for (index, rect) in layoutWithGap.childRects.enumerated() {
+            print("      Child \(index): \(rect)")
+        }
+
+        // New way: using Spacer for flexible spacing
+        print("\n  🚀 Using Spacer (new way - push to edges):")
+        let columnBoxWithSpacer = Box(
+            flexDirection: .column,
+            children: Text("Header"), Spacer(), Text("Footer")
+        )
+
+        let layoutWithSpacer = columnBoxWithSpacer.calculateLayout(in: containerRect)
+        print("    Container: \(containerRect)")
+        for (index, rect) in layoutWithSpacer.childRects.enumerated() {
+            let componentType = index == 1 ? "Spacer" : "Text"
+            print("      \(componentType) \(index): \(rect)")
         }
     }
 
     private static func runNestedLayoutDemo() {
-        print("\n🏗️  Demo 4: Nested boxes with mixed properties")
-        let nestedBox = Box(
+        print("\n🏗️  Demo 4: Nested boxes - comparing gap vs Spacer")
+
+        // Old way: using columnGap
+        print("\n  📏 Using columnGap (old way):")
+        let nestedBoxWithGap = Box(
             paddingTop: 1,
             paddingRight: 2,
             paddingBottom: 1,
@@ -88,17 +125,45 @@ public struct RUNE27Demo {
         )
 
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 30, height: 10)
-        let layout4 = nestedBox.calculateLayout(in: containerRect)
-        print("Container: \(containerRect)")
-        print("Outer box: \(layout4.boxRect)")
-        print("Content:   \(layout4.contentRect)")
+        let layoutWithGap = nestedBoxWithGap.calculateLayout(in: containerRect)
+        print("    Container: \(containerRect)")
+        print("    Outer box: \(layoutWithGap.boxRect)")
+        print("    Content:   \(layoutWithGap.contentRect)")
 
         // Get inner layout
-        if let innerBox = nestedBox.child as? Box {
-            let innerLayout = innerBox.calculateLayout(in: layout4.contentRect)
-            print("Inner children:")
+        if let innerBox = nestedBoxWithGap.child as? Box {
+            let innerLayout = innerBox.calculateLayout(in: layoutWithGap.contentRect)
+            print("    Inner children:")
             for (index, rect) in innerLayout.childRects.enumerated() {
-                print("  Child \(index): \(rect)")
+                print("      Child \(index): \(rect)")
+            }
+        }
+
+        // New way: using Spacer to push elements apart
+        print("\n  🚀 Using Spacer (new way - push apart):")
+        let nestedBoxWithSpacer = Box(
+            paddingTop: 1,
+            paddingRight: 2,
+            paddingBottom: 1,
+            paddingLeft: 2,
+            child: Box(
+                flexDirection: .row,
+                children: Text("Left"), Spacer(), Text("Right")
+            )
+        )
+
+        let layoutWithSpacer = nestedBoxWithSpacer.calculateLayout(in: containerRect)
+        print("    Container: \(containerRect)")
+        print("    Outer box: \(layoutWithSpacer.boxRect)")
+        print("    Content:   \(layoutWithSpacer.contentRect)")
+
+        // Get inner layout
+        if let innerBox = nestedBoxWithSpacer.child as? Box {
+            let innerLayout = innerBox.calculateLayout(in: layoutWithSpacer.contentRect)
+            print("    Inner children:")
+            for (index, rect) in innerLayout.childRects.enumerated() {
+                let componentType = index == 1 ? "Spacer" : "Text"
+                print("      \(componentType) \(index): \(rect)")
             }
         }
     }

@@ -12,6 +12,7 @@
 /// - `Component`: Base protocol for all UI components
 /// - `Text`: Styled text component with ANSI support
 /// - `Box`: Container component with borders and layout
+/// - `Spacer`: Flexible space component for layout spacing
 /// - `Static`: Immutable text region for logs and headers
 /// - `BoxLayoutResult`: Layout calculation result
 ///

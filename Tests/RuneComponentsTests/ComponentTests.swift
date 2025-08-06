@@ -345,6 +345,427 @@ struct ComponentTests {
         #expect(lines[0].contains("\u{001B}[0m"), "Should contain reset code")
     }
 
+    // MARK: - Spacer Component Tests (RUNE-32)
+
+    @Test("Spacer component exists and conforms to Component protocol")
+    func spacerComponentExists() {
+        // Arrange & Act
+        let spacer = Spacer()
+
+        // Assert
+        #expect(spacer is Component, "Spacer should conform to Component protocol")
+    }
+
+    @Test("Spacer in row layout consumes remaining horizontal space")
+    func spacerInRowLayoutConsumesHorizontalSpace() {
+        // Arrange
+        let box = Box(
+            flexDirection: .row,
+            width: .points(20),
+            height: .points(3),
+            children: Text("Left"), Spacer(), Text("Right")
+        )
+        let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 3)
+
+        // Act
+        let layout = box.calculateLayout(in: containerRect)
+
+        // Assert
+        #expect(layout.childRects.count == 3, "Should have 3 child rects")
+
+        let leftRect = layout.childRects[0]
+        let spacerRect = layout.childRects[1]
+        let rightRect = layout.childRects[2]
+
+        // Left text should be at start
+        #expect(leftRect.x == 0, "Left text should start at x=0")
+
+        // Right text should be at end
+        #expect(rightRect.x + rightRect.width == 20, "Right text should end at container width")
+
+        // Spacer should fill the gap between them
+        #expect(spacerRect.x == leftRect.x + leftRect.width, "Spacer should start after left text")
+        #expect(spacerRect.x + spacerRect.width == rightRect.x, "Spacer should end before right text")
+        #expect(spacerRect.width > 0, "Spacer should have positive width")
+    }
+
+    @Test("Spacer in column layout consumes remaining vertical space")
+    func spacerInColumnLayoutConsumesVerticalSpace() {
+        // Arrange
+        let box = Box(
+            flexDirection: .column,
+            width: .points(10),
+            height: .points(10),
+            children: Text("Top"), Spacer(), Text("Bottom")
+        )
+        let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 10, height: 10)
+
+        // Act
+        let layout = box.calculateLayout(in: containerRect)
+
+        // Assert
+        #expect(layout.childRects.count == 3, "Should have 3 child rects")
+
+        let topRect = layout.childRects[0]
+        let spacerRect = layout.childRects[1]
+        let bottomRect = layout.childRects[2]
+
+        // Top text should be at start
+        #expect(topRect.y == 0, "Top text should start at y=0")
+
+        // Bottom text should be at end
+        #expect(bottomRect.y + bottomRect.height == 10, "Bottom text should end at container height")
+
+        // Spacer should fill the gap between them
+        #expect(spacerRect.y == topRect.y + topRect.height, "Spacer should start after top text")
+        #expect(spacerRect.y + spacerRect.height == bottomRect.y, "Spacer should end before bottom text")
+        #expect(spacerRect.height > 0, "Spacer should have positive height")
+    }
+
+    @Test("Multiple spacers divide remaining space equally")
+    func multipleSpacersDivideSpaceEqually() {
+        // Arrange
+        let box = Box(
+            flexDirection: .row,
+            width: .points(20),
+            height: .points(3),
+            children: Text("A"), Spacer(), Text("B"), Spacer(), Text("C")
+        )
+        let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 3)
+
+        // Act
+        let layout = box.calculateLayout(in: containerRect)
+
+        // Assert
+        #expect(layout.childRects.count == 5, "Should have 5 child rects")
+
+        let spacer1Rect = layout.childRects[1]
+        let spacer2Rect = layout.childRects[3]
+
+        // Both spacers should have equal width (within rounding tolerance)
+        let widthDiff = abs(spacer1Rect.width - spacer2Rect.width)
+        #expect(widthDiff <= 1, "Spacers should have equal width (within 1 column tolerance)")
+    }
+
+    @Test("Spacer with no available space has zero size")
+    func spacerWithNoAvailableSpaceHasZeroSize() {
+        // Arrange - container too small for content
+        let box = Box(
+            flexDirection: .row,
+            width: .points(5),
+            height: .points(3),
+            children: Text("VeryLongText"), Spacer(), Text("MoreText")
+        )
+        let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 5, height: 3)
+
+        // Act
+        let layout = box.calculateLayout(in: containerRect)
+
+        // Assert
+        let spacerRect = layout.childRects[1]
+        #expect(spacerRect.width == 0, "Spacer should have zero width when no space available")
+    }
+
+    @Test("Spacer does not affect cross-axis sizing")
+    func spacerDoesNotAffectCrossAxisSizing() {
+        // Arrange
+        let box = Box(
+            flexDirection: .row,
+            width: .points(20),
+            height: .points(5),
+            children: Text("Text"), Spacer()
+        )
+        let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 5)
+
+        // Act
+        let layout = box.calculateLayout(in: containerRect)
+
+        // Assert
+        let spacerRect = layout.childRects[1]
+
+        // Spacer should not affect height in row layout
+        #expect(spacerRect.height == 1, "Spacer should have minimal cross-axis size")
+    }
+
+    @Test("Spacer renders as empty content")
+    func spacerRendersAsEmptyContent() {
+        // Arrange
+        let spacer = Spacer()
+        let rect = FlexLayout.Rect(x: 0, y: 0, width: 10, height: 3)
+
+        // Act
+        let lines = spacer.render(in: rect)
+
+        // Assert
+        #expect(lines.count == 3, "Should render correct number of lines")
+        #expect(lines.allSatisfy { $0.isEmpty }, "All lines should be empty")
+    }
+
+    // MARK: - AlignSelf Tests (RUNE-32)
+
+    @Test("AlignSelf enum exists with all required cases")
+    func alignSelfEnumExists() {
+        // Arrange & Act
+        let alignSelfCases: [AlignSelf] = [
+            .auto,
+            .flexStart,
+            .flexEnd,
+            .center,
+            .stretch,
+            .baseline
+        ]
+
+        // Assert
+        #expect(alignSelfCases.count == 6, "AlignSelf should have 6 cases")
+    }
+
+    @Test("Box supports alignSelf property")
+    func boxSupportsAlignSelfProperty() {
+        // Arrange & Act
+        let box = Box(alignSelf: .center)
+
+        // Assert
+        #expect(box.alignSelf == .center, "Box should store alignSelf property")
+    }
+
+    @Test("AlignSelf auto inherits from parent alignItems")
+    func alignSelfAutoInheritsFromParentAlignItems() {
+        // Arrange
+        let parentBox = Box(
+            flexDirection: .row,
+            alignItems: .center,
+            width: .points(20),
+            height: .points(10),
+            children: Box(alignSelf: .auto, width: .points(5), height: .points(3)),
+                     Box(alignSelf: .flexEnd, width: .points(5), height: .points(3))
+        )
+        let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 10)
+
+        // Act
+        let layout = parentBox.calculateLayout(in: containerRect)
+
+        // Assert
+        #expect(layout.childRects.count == 2, "Should have 2 child rects")
+
+        let autoAlignChild = layout.childRects[0]
+        let flexEndChild = layout.childRects[1]
+
+        // Auto child should be centered (inheriting from parent alignItems)
+        // Test what center actually produces
+        let centerParentBox = Box(
+            flexDirection: .row,
+            alignItems: .center,
+            width: .points(20),
+            height: .points(10),
+            children: Box(width: .points(5), height: .points(3))
+        )
+        let centerLayout = centerParentBox.calculateLayout(in: containerRect)
+        let expectedCenterY = centerLayout.childRects[0].y
+
+        #expect(autoAlignChild.y == expectedCenterY, "Auto align child should be centered")
+
+        // FlexEnd child should be at bottom
+        #expect(flexEndChild.y == 10 - 3, "FlexEnd child should be at bottom")
+    }
+
+    @Test("AlignSelf center overrides parent alignItems")
+    func alignSelfCenterOverridesParentAlignItems() {
+        // Arrange
+        let parentBox = Box(
+            flexDirection: .row,
+            alignItems: .flexStart,
+            width: .points(20),
+            height: .points(10),
+            children: Box(alignSelf: .center, width: .points(5), height: .points(3))
+        )
+        let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 10)
+
+        // Act
+        let layout = parentBox.calculateLayout(in: containerRect)
+
+        // Assert
+        let childRect = layout.childRects[0]
+
+        // Test what happens with alignItems center for comparison
+        let centerParentBox = Box(
+            flexDirection: .row,
+            alignItems: .center,
+            width: .points(20),
+            height: .points(10),
+            children: Box(width: .points(5), height: .points(3))
+        )
+        let centerLayout = centerParentBox.calculateLayout(in: containerRect)
+        let centerChildRect = centerLayout.childRects[0]
+
+        // The alignSelf center child should be at the same position as alignItems center
+        #expect(childRect.y == centerChildRect.y, "alignSelf center should position child same as alignItems center")
+    }
+
+    // MARK: - RUNE27 Demo Integration Tests
+
+    @Test("RUNE27 demo Spacer examples work correctly")
+    func rune27DemoSpacerExamples() {
+        let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 30, height: 10)
+
+        // Test the row layout with Spacer (from RUNE27 demo)
+        let rowBoxWithSpacer = Box(
+            flexDirection: .row,
+            children: Text("Left"), Spacer(), Text("Center"), Spacer(), Text("Right")
+        )
+
+        let rowLayout = rowBoxWithSpacer.calculateLayout(in: containerRect)
+
+        // Verify we have 5 children (Text, Spacer, Text, Spacer, Text)
+        #expect(rowLayout.childRects.count == 5, "Should have 5 children")
+
+        let leftRect = rowLayout.childRects[0]
+        let spacer1Rect = rowLayout.childRects[1]
+        let centerRect = rowLayout.childRects[2]
+        let spacer2Rect = rowLayout.childRects[3]
+        let rightRect = rowLayout.childRects[4]
+
+        // Verify spacers have positive width
+        #expect(spacer1Rect.width > 0, "First spacer should have positive width")
+        #expect(spacer2Rect.width > 0, "Second spacer should have positive width")
+
+        // Verify no overlaps
+        #expect(leftRect.x + leftRect.width <= spacer1Rect.x, "Left text should not overlap first spacer")
+        #expect(spacer1Rect.x + spacer1Rect.width <= centerRect.x, "First spacer should not overlap center text")
+        #expect(centerRect.x + centerRect.width <= spacer2Rect.x, "Center text should not overlap second spacer")
+        #expect(spacer2Rect.x + spacer2Rect.width <= rightRect.x, "Second spacer should not overlap right text")
+
+        // Test the column layout with Spacer (from RUNE27 demo)
+        let columnBoxWithSpacer = Box(
+            flexDirection: .column,
+            children: Text("Header"), Spacer(), Text("Footer")
+        )
+
+        let columnLayout = columnBoxWithSpacer.calculateLayout(in: containerRect)
+
+        // Verify we have 3 children (Text, Spacer, Text)
+        #expect(columnLayout.childRects.count == 3, "Should have 3 children")
+
+        let headerRect = columnLayout.childRects[0]
+        let spacerRect = columnLayout.childRects[1]
+        let footerRect = columnLayout.childRects[2]
+
+        // Verify spacer has positive height
+        #expect(spacerRect.height > 0, "Spacer should have positive height")
+
+        // Verify header is at top, footer is at bottom
+        #expect(headerRect.y == 0, "Header should be at top")
+        #expect(footerRect.y + footerRect.height == 10, "Footer should be at bottom")
+
+        // Verify spacer fills the gap
+        #expect(spacerRect.y == headerRect.y + headerRect.height, "Spacer should start after header")
+        #expect(spacerRect.y + spacerRect.height == footerRect.y, "Spacer should end before footer")
+    }
+
+    @Test("RUNE32 real-world layout patterns work correctly")
+    func rune32RealWorldLayoutPatterns() {
+        // Test navigation bar pattern (from RUNE32Demo)
+        let navBar = Box(
+            flexDirection: .row,
+            alignItems: .center,
+            width: .points(50),
+            height: .points(3),
+            children: Text("← Back"), Spacer(), Text("Page Title"), Spacer(), Text("Menu ☰")
+        )
+
+        let navResult = navBar.calculateLayout(in: FlexLayout.Rect(x: 0, y: 0, width: 50, height: 3))
+
+        // Verify navigation layout
+        #expect(navResult.childRects.count == 5, "Nav bar should have 5 elements")
+
+        let backRect = navResult.childRects[0]
+        let spacer1Rect = navResult.childRects[1]
+        let titleRect = navResult.childRects[2]
+        let spacer2Rect = navResult.childRects[3]
+        let menuRect = navResult.childRects[4]
+
+        // Back button should be at start
+        #expect(backRect.x == 0, "Back button should be at start")
+
+        // Menu should be at end
+        #expect(menuRect.x + menuRect.width == 50, "Menu should be at end")
+
+        // Spacers should have positive width
+        #expect(spacer1Rect.width > 0, "First spacer should have positive width")
+        #expect(spacer2Rect.width > 0, "Second spacer should have positive width")
+
+        // Title should be roughly centered (within spacer tolerance)
+        let titleCenter = titleRect.x + titleRect.width / 2
+        let containerCenter = 50 / 2
+        let centerTolerance = 5 // Allow some tolerance for centering
+        #expect(abs(titleCenter - containerCenter) <= centerTolerance, "Title should be roughly centered")
+
+        // Test card layout pattern (from RUNE32Demo)
+        let cardLayout = Box(
+            flexDirection: .column,
+            width: .points(30),
+            height: .points(15),
+            children: Text("Card Title"),
+                     Spacer(),
+                     Box(
+                        flexDirection: .row,
+                        children: Text("Cancel"), Spacer(), Text("OK")
+                     )
+        )
+
+        let cardResult = cardLayout.calculateLayout(in: FlexLayout.Rect(x: 0, y: 0, width: 30, height: 15))
+
+        // Verify card layout
+        #expect(cardResult.childRects.count == 3, "Card should have 3 elements")
+
+        let titleRect2 = cardResult.childRects[0]
+        let contentSpacerRect = cardResult.childRects[1]
+        let buttonRowRect = cardResult.childRects[2]
+
+        // Title should be at top
+        #expect(titleRect2.y == 0, "Title should be at top")
+
+        // Button row should be at bottom
+        #expect(buttonRowRect.y + buttonRowRect.height == 15, "Button row should be at bottom")
+
+        // Content spacer should fill the gap
+        #expect(contentSpacerRect.height > 0, "Content spacer should have positive height")
+        #expect(contentSpacerRect.y == titleRect2.y + titleRect2.height, "Spacer should start after title")
+        #expect(contentSpacerRect.y + contentSpacerRect.height == buttonRowRect.y, "Spacer should end before buttons")
+    }
+
+    @Test("AlignSelf stretch makes child fill cross-axis")
+    func alignSelfStretchMakesChildFillCrossAxis() {
+        // Arrange
+        let parentBox = Box(
+            flexDirection: .row,
+            alignItems: .flexStart,
+            width: .points(20),
+            height: .points(10),
+            children: Box(alignSelf: .stretch, width: .points(5))
+        )
+        let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 10)
+
+        // Act
+        let layout = parentBox.calculateLayout(in: containerRect)
+
+        // Assert
+        let childRect = layout.childRects[0]
+
+        // Test what stretch actually produces by comparing with alignItems stretch
+        let stretchParentBox = Box(
+            flexDirection: .row,
+            alignItems: .stretch,
+            width: .points(20),
+            height: .points(10),
+            children: Box(width: .points(5))
+        )
+        let stretchLayout = stretchParentBox.calculateLayout(in: containerRect)
+        let expectedStretchHeight = stretchLayout.childRects[0].height
+
+        #expect(childRect.height == expectedStretchHeight, "alignSelf stretch should behave same as alignItems stretch")
+        #expect(childRect.y == 0, "Stretch child should start at container top")
+    }
+
     // MARK: - Enhanced Box Component Tests (RUNE-30)
 
     @Test("Box with single border renders correctly")
