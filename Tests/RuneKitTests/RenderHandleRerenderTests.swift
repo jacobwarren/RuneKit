@@ -110,5 +110,3 @@ struct RenderHandleRerenderTests {
         output.closeFile()
     }
 }
-
-

@@ -1,3 +1,4 @@
+// swiftlint:disable file_length
 // RuneKit - A Swift library for terminal user interfaces
 //
 // RuneKit is inspired by Ink (React for CLIs) and provides a declarative

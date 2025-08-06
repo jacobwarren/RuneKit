@@ -34,7 +34,7 @@ public enum RUNE25Demo {
             useAltScreen: false,
             fpsCap: 30.0
         )
-        
+
         let handle = await render(welcomeView, options: options)
         print("✓ Render handle created")
 
@@ -187,7 +187,7 @@ public enum RUNE25Demo {
                     await task.value
                 }
             }
-            
+
             var allResolved = true
             for await result in group {
                 allResolved = allResolved && result
