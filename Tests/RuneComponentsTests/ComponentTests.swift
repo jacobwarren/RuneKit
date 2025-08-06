@@ -5,6 +5,7 @@ import Testing
 @testable import RuneANSI
 @testable import RuneUnicode
 @testable import RuneRenderer
+@testable import RuneKit
 @testable import RuneCLI
 
 /// Tests for component functionality following TDD principles
@@ -1088,5 +1089,206 @@ struct ComponentTests {
         #expect(lines[3].contains("RAM:"), "Should contain RAM data")
         #expect(lines[4].contains("DISK:"), "Should contain DISK data")
         #expect(lines[5].contains("NET:"), "Should contain NET data")
+    }
+
+    // MARK: - Static Component Tests (RUNE-31)
+
+    @Test("Static component with single line")
+    func staticComponentSingleLine() {
+        // Arrange
+        let staticComponent = Static("Header: Application Started")
+        let rect = FlexLayout.Rect(x: 0, y: 0, width: 30, height: 1)
+
+        // Act
+        let lines = staticComponent.render(in: rect)
+
+        // Assert
+        #expect(lines.count == 1, "Should return one line")
+        #expect(lines[0] == "Header: Application Started", "Should contain the static text")
+    }
+
+    @Test("Static component with multiple lines")
+    func staticComponentMultipleLines() {
+        // Arrange
+        let staticLines = [
+            "=== Application Log ===",
+            "Started at: 2024-01-01 12:00:00",
+            "Version: 1.0.0"
+        ]
+        let staticComponent = Static(staticLines)
+        let rect = FlexLayout.Rect(x: 0, y: 0, width: 35, height: 3)
+
+        // Act
+        let lines = staticComponent.render(in: rect)
+
+        // Assert
+        #expect(lines.count == 3, "Should return three lines")
+        #expect(lines[0] == "=== Application Log ===", "Should contain first static line")
+        #expect(lines[1] == "Started at: 2024-01-01 12:00:00", "Should contain second static line")
+        #expect(lines[2] == "Version: 1.0.0", "Should contain third static line")
+    }
+
+    @Test("Static component with zero dimensions")
+    func staticComponentZeroDimensions() {
+        // Arrange
+        let staticComponent = Static("Test")
+        let rect = FlexLayout.Rect(x: 0, y: 0, width: 0, height: 0)
+
+        // Act
+        let lines = staticComponent.render(in: rect)
+
+        // Assert
+        #expect(lines.isEmpty, "Should return empty array for zero dimensions")
+    }
+
+    @Test("Static component with height constraint")
+    func staticComponentHeightConstraint() {
+        // Arrange
+        let staticLines = [
+            "Line 1",
+            "Line 2",
+            "Line 3",
+            "Line 4"
+        ]
+        let staticComponent = Static(staticLines)
+        let rect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 2)
+
+        // Act
+        let lines = staticComponent.render(in: rect)
+
+        // Assert
+        #expect(lines.count == 2, "Should respect height constraint")
+        #expect(lines[0] == "Line 1", "Should contain first line")
+        #expect(lines[1] == "Line 2", "Should contain second line")
+    }
+
+    @Test("Static component with width constraint")
+    func staticComponentWidthConstraint() {
+        // Arrange
+        let staticComponent = Static("This is a very long line that should be truncated")
+        let rect = FlexLayout.Rect(x: 0, y: 0, width: 10, height: 1)
+
+        // Act
+        let lines = staticComponent.render(in: rect)
+
+        // Assert
+        #expect(lines.count == 1, "Should return one line")
+        #expect(lines[0] == "This is a ", "Should truncate to fit width")
+    }
+
+    @Test("Static component immutability")
+    func staticComponentImmutability() {
+        // Arrange
+        let originalLines = ["Original Line 1", "Original Line 2"]
+        let staticComponent = Static(originalLines)
+        let rect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 2)
+
+        // Act - render multiple times
+        let firstRender = staticComponent.render(in: rect)
+        let secondRender = staticComponent.render(in: rect)
+
+        // Assert - should be identical
+        #expect(firstRender.count == secondRender.count, "Renders should be identical")
+        for (index, line) in firstRender.enumerated() {
+            #expect(line == secondRender[index], "Line \(index) should be identical across renders")
+        }
+    }
+
+    @Test("Static component with empty lines")
+    func staticComponentWithEmptyLines() {
+        // Arrange
+        let staticLines = ["Header", "", "Footer"]
+        let staticComponent = Static(staticLines)
+        let rect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 3)
+
+        // Act
+        let lines = staticComponent.render(in: rect)
+
+        // Assert
+        #expect(lines.count == 3, "Should return three lines")
+        #expect(lines[0] == "Header", "Should contain header")
+        #expect(lines[1].isEmpty, "Should preserve empty line")
+        #expect(lines[2] == "Footer", "Should contain footer")
+    }
+
+    @Test("Static component with emoji content")
+    func staticComponentWithEmojiContent() {
+        // Arrange
+        let staticComponent = Static("Status: ✅ Complete")
+        let rect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 1)
+
+        // Act
+        let lines = staticComponent.render(in: rect)
+
+        // Assert
+        #expect(lines.count == 1, "Should return one line")
+        #expect(lines[0] == "Status: ✅ Complete", "Should preserve emoji content")
+    }
+
+    @Test("Static component with CJK characters")
+    func staticComponentWithCJKCharacters() {
+        // Arrange
+        let staticComponent = Static("状态: 完成")
+        let rect = FlexLayout.Rect(x: 0, y: 0, width: 15, height: 1)
+
+        // Act
+        let lines = staticComponent.render(in: rect)
+
+        // Assert
+        #expect(lines.count == 1, "Should return one line")
+        #expect(lines[0] == "状态: 完成", "Should preserve CJK characters")
+    }
+
+    @Test("Static component with emoji width constraint")
+    func staticComponentWithEmojiWidthConstraint() {
+        // Arrange
+        let staticComponent = Static("Progress: 👨‍👩‍👧‍👦 Family")
+        let rect = FlexLayout.Rect(x: 0, y: 0, width: 12, height: 1)
+
+        // Act
+        let lines = staticComponent.render(in: rect)
+
+        // Assert
+        #expect(lines.count == 1, "Should return one line")
+        // Should truncate properly respecting emoji width
+        #expect(lines[0] == "Progress: 👨‍👩‍👧‍👦", "Should truncate at emoji boundary")
+    }
+
+    @Test("Static component ordering consistency")
+    func staticComponentOrderingConsistency() {
+        // Arrange
+        let staticLines = [
+            "Log Entry 1",
+            "Log Entry 2",
+            "Log Entry 3"
+        ]
+        let staticComponent = Static(staticLines)
+        let rect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 3)
+
+        // Act - render multiple times
+        let render1 = staticComponent.render(in: rect)
+        let render2 = staticComponent.render(in: rect)
+        let render3 = staticComponent.render(in: rect)
+
+        // Assert - ordering should be consistent
+        #expect(render1 == render2, "First and second render should be identical")
+        #expect(render2 == render3, "Second and third render should be identical")
+
+        // Verify specific ordering
+        #expect(render1[0] == "Log Entry 1", "First line should always be first")
+        #expect(render1[1] == "Log Entry 2", "Second line should always be second")
+        #expect(render1[2] == "Log Entry 3", "Third line should always be third")
+    }
+
+    @Test("Static component View protocol conformance")
+    func staticComponentViewProtocolConformance() {
+        // Arrange
+        let staticComponent = Static("Test View")
+
+        // Act - Test View protocol conformance
+        let body = staticComponent.body
+
+        // Assert
+        #expect(body is EmptyView, "Static should conform to View protocol")
     }
 }

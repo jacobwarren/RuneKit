@@ -87,6 +87,9 @@ struct RuneCLI {
         // 13. RUNE-27 Box layout with padding/margin/gap demo
         rune27Demo()
 
+        // 14. RUNE-31 Static component demo
+        await rune31Demo()
+
         print("")
         print("🎉 All RuneKit demonstrations completed!")
         print("Thanks for exploring RuneKit's capabilities!")
@@ -482,5 +485,10 @@ struct RuneCLI {
     /// RUNE-27 Box layout with padding/margin/gap demo
     static func rune27Demo() {
         RUNE27Demo.run()
+    }
+
+    /// RUNE-31 Static component demo
+    static func rune31Demo() async {
+        await RUNE31Demo.run()
     }
 }
