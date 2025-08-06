@@ -81,6 +81,9 @@ struct RuneCLI {
         // 12. RUNE-26 Yoga layout engine demo
         await yogaLayoutDemo()
 
+        // 13. RUNE-27 Box layout with padding/margin/gap demo
+        rune27Demo()
+
         print("")
         print("🎉 All RuneKit demonstrations completed!")
         print("Thanks for exploring RuneKit's capabilities!")
@@ -391,5 +394,10 @@ struct RuneCLI {
     /// RUNE-26 Yoga layout engine demo
     static func yogaLayoutDemo() async {
         await YogaLayoutDemo.run()
+    }
+
+    /// RUNE-27 Box layout with padding/margin/gap demo
+    static func rune27Demo() {
+        RUNE27Demo.run()
     }
 }
