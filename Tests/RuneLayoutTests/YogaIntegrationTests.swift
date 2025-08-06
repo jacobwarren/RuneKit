@@ -331,6 +331,34 @@ struct YogaIntegrationTests {
         #expect(childResult.y == expectedY, "Child should be centered vertically")
     }
 
+    @Test("Align self center overrides parent align items")
+    func alignSelfCenterOverridesParentAlignItems() {
+        let rootNode = YogaNode()
+        rootNode.setFlexDirection(.row)
+        rootNode.setAlignItems(.flexStart) // Parent says flex start
+        rootNode.setWidth(.points(100))
+        rootNode.setHeight(.points(50))
+
+        let child = YogaNode()
+        child.setWidth(.points(30))
+        child.setHeight(.points(20))
+        child.setAlignSelf(.center) // Child overrides with center
+        rootNode.addChild(child)
+
+        let layoutEngine = YogaLayoutEngine.shared
+        _ = layoutEngine.calculateLayout(
+            for: rootNode,
+            availableWidth: 100,
+            availableHeight: 50
+        )
+
+        let childResult = layoutEngine.getLayoutResult(for: child)
+
+        // Child should be centered vertically despite parent alignItems
+        let expectedY = (50 - 20) / 2 // (container height - child height) / 2
+        #expect(childResult.y == expectedY, "Child should be centered despite parent alignItems")
+    }
+
     // MARK: - Coordinate Conversion Tests
 
     @Test("Float to terminal coordinate conversion")

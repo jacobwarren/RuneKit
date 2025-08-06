@@ -209,6 +209,12 @@ public final class YogaNode {
         YGNodeStyleSetAlignItems(ref, align.yogaValue)
     }
 
+    /// Set align self
+    /// - Parameter align: The align self value
+    public func setAlignSelf(_ align: AlignSelf) {
+        YGNodeStyleSetAlignSelf(ref, align.yogaValue)
+    }
+
     /// Set width
     /// - Parameter width: The width dimension
     public func setWidth(_ width: Dimension) {
@@ -316,7 +322,7 @@ public enum YogaFlexDirection {
 }
 
 /// Justify content enumeration
-public enum JustifyContent {
+public enum JustifyContent: Sendable {
     case flexStart
     case flexEnd
     case center
@@ -337,7 +343,7 @@ public enum JustifyContent {
 }
 
 /// Align items enumeration
-public enum AlignItems {
+public enum AlignItems: Sendable {
     case flexStart
     case flexEnd
     case center
@@ -346,6 +352,27 @@ public enum AlignItems {
 
     internal var yogaValue: YGAlign {
         switch self {
+        case .flexStart: return YGAlign.create(rawValue: 1) // YGAlignFlexStart
+        case .flexEnd: return YGAlign.create(rawValue: 3) // YGAlignFlexEnd
+        case .center: return YGAlign.create(rawValue: 2) // YGAlignCenter
+        case .stretch: return YGAlign.create(rawValue: 4) // YGAlignStretch
+        case .baseline: return YGAlign.create(rawValue: 5) // YGAlignBaseline
+        }
+    }
+}
+
+/// Align self enumeration for individual item alignment
+public enum AlignSelf: Sendable {
+    case auto
+    case flexStart
+    case flexEnd
+    case center
+    case stretch
+    case baseline
+
+    internal var yogaValue: YGAlign {
+        switch self {
+        case .auto: return YGAlign.create(rawValue: 0) // YGAlignAuto
         case .flexStart: return YGAlign.create(rawValue: 1) // YGAlignFlexStart
         case .flexEnd: return YGAlign.create(rawValue: 3) // YGAlignFlexEnd
         case .center: return YGAlign.create(rawValue: 2) // YGAlignCenter
