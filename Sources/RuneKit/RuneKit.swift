@@ -358,6 +358,12 @@ extension Static: View {
     public var body: EmptyView { EmptyView() }
 }
 
+/// Make Newline conform to View protocol
+extension Newline: View {
+    public typealias Body = EmptyView
+    public var body: EmptyView { EmptyView() }
+}
+
 /// Handle for controlling a running render session
 ///
 /// This actor provides control over a running terminal application,
@@ -571,6 +577,8 @@ private func convertViewToComponent(_ view: some View) -> Component {
         boxView
     } else if let staticView = view as? Static {
         staticView
+    } else if let newlineView = view as? Newline {
+        newlineView
     } else {
         // For composite views, we need to resolve the body
         // This is a simplified implementation - a full implementation

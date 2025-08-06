@@ -1712,4 +1712,155 @@ struct ComponentTests {
         // Assert
         #expect(body is EmptyView, "Static should conform to View protocol")
     }
+
+    // MARK: - Newline Component Tests (RUNE-33)
+
+    @Test("Newline component exists and conforms to Component protocol")
+    func newlineComponentExists() {
+        // Arrange & Act
+        let newline = Newline(count: 1)
+
+        // Assert
+        #expect(newline is Component, "Newline should conform to Component protocol")
+    }
+
+    @Test("Newline component with count 1 renders single newline")
+    func newlineComponentSingleNewline() {
+        // Arrange
+        let newline = Newline(count: 1)
+        let rect = FlexLayout.Rect(x: 0, y: 0, width: 10, height: 5)
+
+        // Act
+        let lines = newline.render(in: rect)
+
+        // Assert
+        #expect(lines.count == 1, "Should render exactly 1 line")
+        #expect(lines[0].isEmpty, "Newline should render as empty line")
+    }
+
+    @Test("Newline component with count 3 renders three newlines")
+    func newlineComponentThreeNewlines() {
+        // Arrange
+        let newline = Newline(count: 3)
+        let rect = FlexLayout.Rect(x: 0, y: 0, width: 10, height: 5)
+
+        // Act
+        let lines = newline.render(in: rect)
+
+        // Assert
+        #expect(lines.count == 3, "Should render exactly 3 lines")
+        #expect(lines[0].isEmpty, "First newline should be empty")
+        #expect(lines[1].isEmpty, "Second newline should be empty")
+        #expect(lines[2].isEmpty, "Third newline should be empty")
+    }
+
+    @Test("Newline component with count 0 renders no lines")
+    func newlineComponentZeroCount() {
+        // Arrange
+        let newline = Newline(count: 0)
+        let rect = FlexLayout.Rect(x: 0, y: 0, width: 10, height: 5)
+
+        // Act
+        let lines = newline.render(in: rect)
+
+        // Assert
+        #expect(lines.isEmpty, "Should render no lines for count 0")
+    }
+
+    @Test("Newline component respects height constraint")
+    func newlineComponentHeightConstraint() {
+        // Arrange
+        let newline = Newline(count: 5)
+        let rect = FlexLayout.Rect(x: 0, y: 0, width: 10, height: 3)
+
+        // Act
+        let lines = newline.render(in: rect)
+
+        // Assert
+        #expect(lines.count == 3, "Should respect height constraint and render only 3 lines")
+        #expect(lines.allSatisfy { $0.isEmpty }, "All lines should be empty")
+    }
+
+    @Test("Newline component with zero height renders no lines")
+    func newlineComponentZeroHeight() {
+        // Arrange
+        let newline = Newline(count: 3)
+        let rect = FlexLayout.Rect(x: 0, y: 0, width: 10, height: 0)
+
+        // Act
+        let lines = newline.render(in: rect)
+
+        // Assert
+        #expect(lines.isEmpty, "Should render no lines for zero height")
+    }
+
+    @Test("Newline component with zero width renders correctly")
+    func newlineComponentZeroWidth() {
+        // Arrange
+        let newline = Newline(count: 2)
+        let rect = FlexLayout.Rect(x: 0, y: 0, width: 0, height: 5)
+
+        // Act
+        let lines = newline.render(in: rect)
+
+        // Assert
+        #expect(lines.count == 2, "Should render 2 lines even with zero width")
+        #expect(lines.allSatisfy { $0.isEmpty }, "All lines should be empty")
+    }
+
+    @Test("Newline component with large count respects height constraint")
+    func newlineComponentLargeCountHeightConstraint() {
+        // Arrange
+        let newline = Newline(count: 100)
+        let rect = FlexLayout.Rect(x: 0, y: 0, width: 10, height: 2)
+
+        // Act
+        let lines = newline.render(in: rect)
+
+        // Assert
+        #expect(lines.count == 2, "Should respect height constraint even with large count")
+        #expect(lines.allSatisfy { $0.isEmpty }, "All lines should be empty")
+    }
+
+    @Test("Newline component View protocol conformance")
+    func newlineComponentViewProtocolConformance() {
+        // Arrange
+        let newline = Newline(count: 2)
+
+        // Act - Test View protocol conformance
+        let body = newline.body
+
+        // Assert
+        #expect(body is EmptyView, "Newline should conform to View protocol")
+    }
+
+    @Test("Newline component produces no SGR leakage")
+    func newlineComponentNoSGRLeakage() {
+        // Arrange
+        let newline = Newline(count: 3)
+        let rect = FlexLayout.Rect(x: 0, y: 0, width: 10, height: 5)
+
+        // Act
+        let lines = newline.render(in: rect)
+
+        // Assert
+        #expect(lines.count == 3, "Should render 3 lines")
+        for (index, line) in lines.enumerated() {
+            #expect(!line.contains("\u{001B}["), "Line \(index) should not contain ANSI escape sequences")
+            #expect(line.isEmpty, "Line \(index) should be empty")
+        }
+    }
+
+    @Test("Newline component with negative count treats as zero")
+    func newlineComponentNegativeCount() {
+        // Arrange
+        let newline = Newline(count: -5)
+        let rect = FlexLayout.Rect(x: 0, y: 0, width: 10, height: 5)
+
+        // Act
+        let lines = newline.render(in: rect)
+
+        // Assert
+        #expect(lines.isEmpty, "Should render no lines for negative count")
+    }
 }

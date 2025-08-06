@@ -14,6 +14,7 @@
 /// - `Box`: Container component with borders and layout
 /// - `Spacer`: Flexible space component for layout spacing
 /// - `Static`: Immutable text region for logs and headers
+/// - `Newline`: Convenience component for rendering N newlines
 /// - `BoxLayoutResult`: Layout calculation result
 ///
 /// ## Utilities

@@ -93,6 +93,9 @@ struct RuneCLI {
         // 15. RUNE-32 Spacer and alignment demo
         rune32Demo()
 
+        // 16. RUNE-33 Newline component demo
+        await rune33Demo()
+
         print("")
         print("🎉 All RuneKit demonstrations completed!")
         print("Thanks for exploring RuneKit's capabilities!")
@@ -498,5 +501,10 @@ struct RuneCLI {
     /// RUNE-32 Spacer and alignment demo
     static func rune32Demo() {
         RUNE32Demo.run()
+    }
+
+    /// RUNE-33 Newline component demo
+    static func rune33Demo() async {
+        await RUNE33Demo.run()
     }
 }
