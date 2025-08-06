@@ -172,6 +172,7 @@ public struct Box: Component {
     public let child: Component?
     public let children: [Component]
 
+    @inlinable
     public init(
         border: BorderStyle = .none,
         flexDirection: YogaFlexDirection = .column,
@@ -228,6 +229,7 @@ public struct Box: Component {
     }
 
     /// Initializer for multiple children
+    @inlinable
     public init(
         border: BorderStyle = .none,
         flexDirection: YogaFlexDirection = .column,
