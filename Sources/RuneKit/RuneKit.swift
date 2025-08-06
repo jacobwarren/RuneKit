@@ -352,6 +352,12 @@ extension Box: View {
     public var body: EmptyView { EmptyView() }
 }
 
+/// Make Static conform to View protocol
+extension Static: View {
+    public typealias Body = EmptyView
+    public var body: EmptyView { EmptyView() }
+}
+
 /// Handle for controlling a running render session
 ///
 /// This actor provides control over a running terminal application,
@@ -563,6 +569,8 @@ private func convertViewToComponent(_ view: some View) -> Component {
         textView
     } else if let boxView = view as? Box {
         boxView
+    } else if let staticView = view as? Static {
+        staticView
     } else {
         // For composite views, we need to resolve the body
         // This is a simplified implementation - a full implementation

@@ -12,6 +12,7 @@
 /// - `Component`: Base protocol for all UI components
 /// - `Text`: Styled text component with ANSI support
 /// - `Box`: Container component with borders and layout
+/// - `Static`: Immutable text region for logs and headers
 /// - `BoxLayoutResult`: Layout calculation result
 ///
 /// ## Utilities
@@ -21,6 +22,7 @@
 /// Key features:
 /// - Text rendering with wrapping support
 /// - Box containers with border styles
+/// - Static regions for immutable content
 /// - Layout-aware component rendering
 /// - Integration with layout and renderer modules
 public enum RuneComponents {}
