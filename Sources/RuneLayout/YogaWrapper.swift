@@ -65,6 +65,16 @@ private extension YGGutter {
     }
 }
 
+private extension YGWrap {
+    static func create(rawValue: Int) -> YGWrap {
+        #if os(macOS)
+        return YGWrap(rawValue: Int32(rawValue))!
+        #else
+        return YGWrap(rawValue: UInt32(rawValue))
+        #endif
+    }
+}
+
 // MARK: - Yoga Swift Wrapper
 
 /// Swift wrapper for Yoga layout engine
@@ -227,6 +237,56 @@ public final class YogaNode {
     public func setMargin(_ edge: Edge, _ value: Float) {
         YGNodeStyleSetMargin(ref, edge.yogaValue, value)
     }
+
+    // MARK: - Flex Properties (RUNE-28)
+
+    /// Set flex grow factor
+    /// - Parameter grow: The flex grow value
+    public func setFlexGrow(_ grow: Float) {
+        YGNodeStyleSetFlexGrow(ref, grow)
+    }
+
+    /// Set flex shrink factor
+    /// - Parameter shrink: The flex shrink value
+    public func setFlexShrink(_ shrink: Float) {
+        YGNodeStyleSetFlexShrink(ref, shrink)
+    }
+
+    /// Set flex basis
+    /// - Parameter basis: The flex basis dimension
+    public func setFlexBasis(_ basis: Dimension) {
+        basis.applyToYogaFlexBasis(ref)
+    }
+
+    /// Set flex wrap
+    /// - Parameter wrap: The flex wrap value
+    public func setFlexWrap(_ wrap: FlexWrap) {
+        YGNodeStyleSetFlexWrap(ref, wrap.yogaValue)
+    }
+
+    /// Set minimum width
+    /// - Parameter minWidth: The minimum width dimension
+    public func setMinWidth(_ minWidth: Dimension) {
+        minWidth.applyToYogaMinWidth(ref)
+    }
+
+    /// Set maximum width
+    /// - Parameter maxWidth: The maximum width dimension
+    public func setMaxWidth(_ maxWidth: Dimension) {
+        maxWidth.applyToYogaMaxWidth(ref)
+    }
+
+    /// Set minimum height
+    /// - Parameter minHeight: The minimum height dimension
+    public func setMinHeight(_ minHeight: Dimension) {
+        minHeight.applyToYogaMinHeight(ref)
+    }
+
+    /// Set maximum height
+    /// - Parameter maxHeight: The maximum height dimension
+    public func setMaxHeight(_ maxHeight: Dimension) {
+        maxHeight.applyToYogaMaxHeight(ref)
+    }
     
     /// Set gap between children
     /// - Parameters:
@@ -284,7 +344,7 @@ public enum AlignItems {
     case center
     case stretch
     case baseline
-    
+
     internal var yogaValue: YGAlign {
         switch self {
         case .flexStart: return YGAlign.create(rawValue: 1) // YGAlignFlexStart
@@ -296,8 +356,23 @@ public enum AlignItems {
     }
 }
 
+/// Flex wrap enumeration
+public enum FlexWrap {
+    case noWrap
+    case wrap
+    case wrapReverse
+
+    internal var yogaValue: YGWrap {
+        switch self {
+        case .noWrap: return YGWrap.create(rawValue: 0) // YGWrapNoWrap
+        case .wrap: return YGWrap.create(rawValue: 1) // YGWrapWrap
+        case .wrapReverse: return YGWrap.create(rawValue: 2) // YGWrapWrapReverse
+        }
+    }
+}
+
 /// Dimension type for width/height values
-public enum Dimension {
+public enum Dimension: Equatable {
     case auto
     case points(Float)
     case percent(Float)
@@ -321,6 +396,65 @@ public enum Dimension {
             YGNodeStyleSetHeight(node, value)
         case .percent(let value):
             YGNodeStyleSetHeightPercent(node, value)
+        }
+    }
+
+    internal func applyToYogaFlexBasis(_ node: YGNodeRef) {
+        switch self {
+        case .auto:
+            YGNodeStyleSetFlexBasisAuto(node)
+        case .points(let value):
+            YGNodeStyleSetFlexBasis(node, value)
+        case .percent(let value):
+            YGNodeStyleSetFlexBasisPercent(node, value)
+        }
+    }
+
+    internal func applyToYogaMinWidth(_ node: YGNodeRef) {
+        switch self {
+        case .auto:
+            // Yoga doesn't have auto for min width, use 0
+            YGNodeStyleSetMinWidth(node, 0)
+        case .points(let value):
+            YGNodeStyleSetMinWidth(node, value)
+        case .percent(let value):
+            YGNodeStyleSetMinWidthPercent(node, value)
+        }
+    }
+
+    internal func applyToYogaMaxWidth(_ node: YGNodeRef) {
+        switch self {
+        case .auto:
+            // Yoga doesn't have auto for max width, use undefined (NaN)
+            YGNodeStyleSetMaxWidth(node, Float.nan)
+        case .points(let value):
+            YGNodeStyleSetMaxWidth(node, value)
+        case .percent(let value):
+            YGNodeStyleSetMaxWidthPercent(node, value)
+        }
+    }
+
+    internal func applyToYogaMinHeight(_ node: YGNodeRef) {
+        switch self {
+        case .auto:
+            // Yoga doesn't have auto for min height, use 0
+            YGNodeStyleSetMinHeight(node, 0)
+        case .points(let value):
+            YGNodeStyleSetMinHeight(node, value)
+        case .percent(let value):
+            YGNodeStyleSetMinHeightPercent(node, value)
+        }
+    }
+
+    internal func applyToYogaMaxHeight(_ node: YGNodeRef) {
+        switch self {
+        case .auto:
+            // Yoga doesn't have auto for max height, use undefined (NaN)
+            YGNodeStyleSetMaxHeight(node, Float.nan)
+        case .points(let value):
+            YGNodeStyleSetMaxHeight(node, value)
+        case .percent(let value):
+            YGNodeStyleSetMaxHeightPercent(node, value)
         }
     }
 }

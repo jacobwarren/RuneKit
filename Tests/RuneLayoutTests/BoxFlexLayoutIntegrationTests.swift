@@ -38,11 +38,7 @@ struct BoxFlexLayoutIntegrationTests {
         // Arrange - use row direction to match FlexLayout default
         let box = Box(
             flexDirection: .row,
-            children: [
-                Text("First"),   // 5x1
-                Text("Second"),  // 6x1
-                Text("Third")    // 5x1
-            ]
+            children: Text("First"), Text("Second"), Text("Third")
         )
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 10)
 
@@ -81,7 +77,7 @@ struct BoxFlexLayoutIntegrationTests {
         let box = Box(
             flexDirection: .row,
             columnGap: 1,
-            children: [text1, text2]
+            children: text1, text2
         )
         let containerRect = FlexLayout.Rect(x: 10, y: 5, width: 30, height: 8)
 
@@ -103,17 +99,17 @@ struct BoxFlexLayoutIntegrationTests {
         // Arrange
         let innerBox1 = Box(
             flexDirection: .column,
-            children: [Text("A"), Text("B")]  // 1x1 each, total 1x2
+            children: Text("A"), Text("B")  // 1x1 each, total 1x2
         )
         let innerBox2 = Box(
             flexDirection: .column,
-            children: [Text("C"), Text("D"), Text("E")]  // 1x1 each, total 1x3
+            children: Text("C"), Text("D"), Text("E")  // 1x1 each, total 1x3
         )
 
         let outerBox = Box(
             flexDirection: .row,
             columnGap: 2,
-            children: [innerBox1, innerBox2]
+            children: innerBox1, innerBox2
         )
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 10)
 
@@ -207,10 +203,7 @@ struct BoxFlexLayoutIntegrationTests {
                 flexDirection: i % 2 == 0 ? .row : .column,
                 paddingTop: Float(i % 3),
                 paddingLeft: Float(i % 4),
-                children: [
-                    Text("Item \(i)"),
-                    Text("Child \(i)")
-                ]
+                children: Text("Item \(i)"), Text("Child \(i)")
             )
             let containerRect = FlexLayout.Rect(x: i, y: i, width: 20, height: 10)
 

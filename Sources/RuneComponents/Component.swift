@@ -140,6 +140,32 @@ public struct Box: Component {
     public let rowGap: Float
     public let columnGap: Float
 
+    // MARK: - Flex Properties (RUNE-28)
+
+    /// Flex grow factor - how much this item should grow relative to other items
+    public let flexGrow: Float
+
+    /// Flex shrink factor - how much this item should shrink relative to other items
+    public let flexShrink: Float
+
+    /// Flex basis - initial size before growing/shrinking
+    public let flexBasis: Dimension
+
+    /// Flex wrap behavior
+    public let flexWrap: FlexWrap
+
+    /// Minimum width constraint
+    public let minWidth: Dimension
+
+    /// Maximum width constraint
+    public let maxWidth: Dimension
+
+    /// Minimum height constraint
+    public let minHeight: Dimension
+
+    /// Maximum height constraint
+    public let maxHeight: Dimension
+
     // MARK: - Visual Properties
 
     public let borderStyle: BorderStyle
@@ -163,6 +189,14 @@ public struct Box: Component {
         marginLeft: Float = 0,
         rowGap: Float = 0,
         columnGap: Float = 0,
+        flexGrow: Float = 0,
+        flexShrink: Float = 1,
+        flexBasis: Dimension = .auto,
+        flexWrap: FlexWrap = .noWrap,
+        minWidth: Dimension = .auto,
+        maxWidth: Dimension = .auto,
+        minHeight: Dimension = .auto,
+        maxHeight: Dimension = .auto,
         child: Component? = nil
     ) {
         self.borderStyle = border
@@ -181,6 +215,14 @@ public struct Box: Component {
         self.marginLeft = marginLeft
         self.rowGap = rowGap
         self.columnGap = columnGap
+        self.flexGrow = flexGrow
+        self.flexShrink = flexShrink
+        self.flexBasis = flexBasis
+        self.flexWrap = flexWrap
+        self.minWidth = minWidth
+        self.maxWidth = maxWidth
+        self.minHeight = minHeight
+        self.maxHeight = maxHeight
         self.child = child
         self.children = []
     }
@@ -203,7 +245,15 @@ public struct Box: Component {
         marginLeft: Float = 0,
         rowGap: Float = 0,
         columnGap: Float = 0,
-        children: [Component]
+        flexGrow: Float = 0,
+        flexShrink: Float = 1,
+        flexBasis: Dimension = .auto,
+        flexWrap: FlexWrap = .noWrap,
+        minWidth: Dimension = .auto,
+        maxWidth: Dimension = .auto,
+        minHeight: Dimension = .auto,
+        maxHeight: Dimension = .auto,
+        children: Component...
     ) {
         self.borderStyle = border
         self.flexDirection = flexDirection
@@ -221,8 +271,72 @@ public struct Box: Component {
         self.marginLeft = marginLeft
         self.rowGap = rowGap
         self.columnGap = columnGap
+        self.flexGrow = flexGrow
+        self.flexShrink = flexShrink
+        self.flexBasis = flexBasis
+        self.flexWrap = flexWrap
+        self.minWidth = minWidth
+        self.maxWidth = maxWidth
+        self.minHeight = minHeight
+        self.maxHeight = maxHeight
         self.child = nil
-        self.children = children
+        self.children = Array(children)
+    }
+
+    /// Internal initializer for array of children (used by helper functions)
+    internal init(
+        border: BorderStyle = .none,
+        flexDirection: YogaFlexDirection = .column,
+        justifyContent: JustifyContent = .flexStart,
+        alignItems: AlignItems = .stretch,
+        width: Dimension = .auto,
+        height: Dimension = .auto,
+        paddingTop: Float = 0,
+        paddingRight: Float = 0,
+        paddingBottom: Float = 0,
+        paddingLeft: Float = 0,
+        marginTop: Float = 0,
+        marginRight: Float = 0,
+        marginBottom: Float = 0,
+        marginLeft: Float = 0,
+        rowGap: Float = 0,
+        columnGap: Float = 0,
+        flexGrow: Float = 0,
+        flexShrink: Float = 1,
+        flexBasis: Dimension = .auto,
+        flexWrap: FlexWrap = .noWrap,
+        minWidth: Dimension = .auto,
+        maxWidth: Dimension = .auto,
+        minHeight: Dimension = .auto,
+        maxHeight: Dimension = .auto,
+        childrenArray: [Component]
+    ) {
+        self.borderStyle = border
+        self.flexDirection = flexDirection
+        self.justifyContent = justifyContent
+        self.alignItems = alignItems
+        self.width = width
+        self.height = height
+        self.paddingTop = paddingTop
+        self.paddingRight = paddingRight
+        self.paddingBottom = paddingBottom
+        self.paddingLeft = paddingLeft
+        self.marginTop = marginTop
+        self.marginRight = marginRight
+        self.marginBottom = marginBottom
+        self.marginLeft = marginLeft
+        self.rowGap = rowGap
+        self.columnGap = columnGap
+        self.flexGrow = flexGrow
+        self.flexShrink = flexShrink
+        self.flexBasis = flexBasis
+        self.flexWrap = flexWrap
+        self.minWidth = minWidth
+        self.maxWidth = maxWidth
+        self.minHeight = minHeight
+        self.maxHeight = maxHeight
+        self.child = nil
+        self.children = childrenArray
     }
 
     // MARK: - Convenience Initializers
@@ -353,8 +467,36 @@ public struct Box: Component {
         boxNode.setFlexDirection(flexDirection)
         boxNode.setJustifyContent(justifyContent)
         boxNode.setAlignItems(alignItems)
-        boxNode.setWidth(width)
-        boxNode.setHeight(height)
+
+        // Apply width/height constraints, respecting intrinsic sizing for .auto
+        // This allows flex wrap to work correctly while preserving intrinsic sizing
+        switch width {
+        case .auto:
+            // Let Yoga calculate intrinsic width based on children
+            boxNode.setWidth(.auto)
+        case .points(let value):
+            // Constrain explicit width to container bounds
+            let constrainedWidth = min(value, Float(containerRect.width))
+            boxNode.setWidth(.points(constrainedWidth))
+        case .percent(let value):
+            // Calculate percentage of container width
+            let percentWidth = Float(containerRect.width) * value / 100.0
+            boxNode.setWidth(.points(percentWidth))
+        }
+
+        switch height {
+        case .auto:
+            // Let Yoga calculate intrinsic height based on children
+            boxNode.setHeight(.auto)
+        case .points(let value):
+            // Constrain explicit height to container bounds
+            let constrainedHeight = min(value, Float(containerRect.height))
+            boxNode.setHeight(.points(constrainedHeight))
+        case .percent(let value):
+            // Calculate percentage of container height
+            let percentHeight = Float(containerRect.height) * value / 100.0
+            boxNode.setHeight(.points(percentHeight))
+        }
 
         // Apply padding
         boxNode.setPadding(.top, paddingTop)
@@ -371,6 +513,18 @@ public struct Box: Component {
         // Apply gap
         boxNode.setGap(.row, rowGap)
         boxNode.setGap(.column, columnGap)
+
+        // Apply flex properties (RUNE-28)
+        boxNode.setFlexGrow(flexGrow)
+        boxNode.setFlexShrink(flexShrink)
+        boxNode.setFlexBasis(flexBasis)
+        boxNode.setFlexWrap(flexWrap)
+
+        // Apply min/max constraints
+        boxNode.setMinWidth(minWidth)
+        boxNode.setMaxWidth(maxWidth)
+        boxNode.setMinHeight(minHeight)
+        boxNode.setMaxHeight(maxHeight)
 
         // Get all children (either from children array or single child)
         let allChildren: [Component] = children.isEmpty ? (child.map { [$0] } ?? []) : children
@@ -389,10 +543,33 @@ public struct Box: Component {
                 childNode.setWidth(.points(intrinsicWidth))
                 childNode.setHeight(.points(intrinsicHeight))
             } else if let boxComponent = childComponent as? Box {
-                // For box components, calculate their intrinsic size recursively
-                let intrinsicSize = calculateIntrinsicSize(for: boxComponent)
-                childNode.setWidth(.points(intrinsicSize.width))
-                childNode.setHeight(.points(intrinsicSize.height))
+                // For box components, calculate intrinsic size if needed
+                if boxComponent.width == .auto || boxComponent.height == .auto {
+                    // Calculate intrinsic size by doing a preliminary layout
+                    let intrinsicSize = calculateIntrinsicSize(for: boxComponent)
+
+                    // Use intrinsic size for auto dimensions, explicit size for others
+                    let effectiveWidth: Dimension = boxComponent.width == .auto ? .points(intrinsicSize.width) : boxComponent.width
+                    let effectiveHeight: Dimension = boxComponent.height == .auto ? .points(intrinsicSize.height) : boxComponent.height
+
+                    childNode.setWidth(effectiveWidth)
+                    childNode.setHeight(effectiveHeight)
+                } else {
+                    // Use explicit dimensions
+                    childNode.setWidth(boxComponent.width)
+                    childNode.setHeight(boxComponent.height)
+                }
+
+                // Apply flex properties from the child box
+                childNode.setFlexGrow(boxComponent.flexGrow)
+                childNode.setFlexShrink(boxComponent.flexShrink)
+                childNode.setFlexBasis(boxComponent.flexBasis)
+
+                // Apply min/max constraints
+                childNode.setMinWidth(boxComponent.minWidth)
+                childNode.setMaxWidth(boxComponent.maxWidth)
+                childNode.setMinHeight(boxComponent.minHeight)
+                childNode.setMaxHeight(boxComponent.maxHeight)
             } else {
                 // For other components, let them size themselves automatically
                 childNode.setWidth(.auto)
@@ -427,7 +604,7 @@ public struct Box: Component {
             height: max(0, boxRect.height - Int((paddingTop + paddingBottom).roundedToTerminal()))
         )
 
-        // Get child rectangles (relative to content area)
+        // Get child rectangles (relative to content area) with overflow clipping
         var childRects: [FlexLayout.Rect] = []
         for childNode in childNodes {
             let childResult = layoutEngine.getLayoutResult(for: childNode)
@@ -437,7 +614,16 @@ public struct Box: Component {
                 width: childResult.width,
                 height: childResult.height
             )
-            childRects.append(childRect)
+
+            // Clip child to content area bounds (RUNE-28: overflow clipping)
+            let clippedChildRect = FlexLayout.Rect(
+                x: childRect.x,
+                y: childRect.y,
+                width: min(childRect.width, max(0, contentRect.width - childRect.x)),
+                height: min(childRect.height, max(0, contentRect.height - childRect.y))
+            )
+
+            childRects.append(clippedChildRect)
         }
 
         return BoxLayoutResult(

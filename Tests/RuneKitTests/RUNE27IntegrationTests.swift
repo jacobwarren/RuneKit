@@ -46,10 +46,7 @@ struct RUNE27IntegrationTests {
         let box = Box(
             flexDirection: .row,
             columnGap: 1,
-            children: [
-                Text("Left"),
-                Text("Right")
-            ]
+            children: Text("Left"), Text("Right")
         )
 
         // Use default options to avoid file handle issues
@@ -70,10 +67,7 @@ struct RUNE27IntegrationTests {
         let newBox = Box(
             flexDirection: .column,
             rowGap: 1,
-            children: [
-                Text("Top"),
-                Text("Bottom")
-            ]
+            children: Text("Top"), Text("Bottom")
         )
         await handle.rerender(newBox)
 
@@ -92,10 +86,7 @@ struct RUNE27IntegrationTests {
         let box = Box(
             paddingTop: 2,
             paddingLeft: 3,
-            children: [
-                Text("Frame Buffer Test"),
-                Text("Second Line")
-            ]
+            children: Text("Frame Buffer Test"), Text("Second Line")
         )
 
         let config = RenderConfiguration(
@@ -189,22 +180,14 @@ struct RUNE27IntegrationTests {
         let box1 = Box(
             flexDirection: .column,
             rowGap: 1,
-            children: [
-                Text("Line 1"),
-                Text("Line 2"),
-                Text("Line 3")
-            ]
+            children: Text("Line 1"), Text("Line 2"), Text("Line 3")
         )
 
         // Create modified box (small change)
         let box2 = Box(
             flexDirection: .column,
             rowGap: 1,
-            children: [
-                Text("Line 1"),
-                Text("Line 2 Modified"),  // Only this line changed
-                Text("Line 3")
-            ]
+            children: Text("Line 1"), Text("Line 2 Modified"), Text("Line 3")
         )
 
         let terminalSize = (width: 30, height: 10)
@@ -263,10 +246,7 @@ struct RUNE27IntegrationTests {
             paddingLeft: 1,
             marginTop: 2,
             marginLeft: 3,
-            children: [
-                Text("A"),
-                Text("B")
-            ]
+            children: Text("A"), Text("B")
         )
 
         let containerRect = FlexLayout.Rect(x: 10, y: 20, width: 30, height: 15)
@@ -300,11 +280,7 @@ struct RUNE27IntegrationTests {
             paddingTop: 2,
             paddingLeft: 3,
             rowGap: 1,
-            children: [
-                Text("Platform Test 1"),
-                Text("Platform Test 2"),
-                Text("Platform Test 3")
-            ]
+            children: Text("Platform Test 1"), Text("Platform Test 2"), Text("Platform Test 3")
         )
 
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 40, height: 20)
@@ -361,7 +337,7 @@ struct RUNE27IntegrationTests {
             paddingLeft: 1,
             rowGap: 1,
             columnGap: 1,
-            children: children
+            childrenArray: children
         )
     }
 }

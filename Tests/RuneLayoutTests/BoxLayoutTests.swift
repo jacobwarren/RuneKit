@@ -3,6 +3,7 @@ import Testing
 @testable import RuneComponents
 
 /// Tests for Box layout with nested structures and complex scenarios (RUNE-27)
+/// Extended for RUNE-28: Flex grow/shrink, min/max, wrap
 struct BoxLayoutTests {
     
     // MARK: - Nested Box Layout Tests
@@ -58,26 +59,19 @@ struct BoxLayoutTests {
         let leftColumn = Box(
             flexDirection: .column,
             rowGap: 1,
-            children: [
-                Text("Left 1"),
-                Text("Left 2")
-            ]
+            children: Text("Left 1"), Text("Left 2")
         )
-        
+
         let rightColumn = Box(
             flexDirection: .column,
             rowGap: 2,
-            children: [
-                Text("Right 1"),
-                Text("Right 2"),
-                Text("Right 3")
-            ]
+            children: Text("Right 1"), Text("Right 2"), Text("Right 3")
         )
-        
+
         let mainRow = Box(
             flexDirection: .row,
             columnGap: 3,
-            children: [leftColumn, rightColumn]
+            children: leftColumn, rightColumn
         )
         
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 30, height: 12)
@@ -133,17 +127,11 @@ struct BoxLayoutTests {
             child: Box(
                 flexDirection: .column,
                 rowGap: 1,
-                children: [
-                    Text("Title"),
-                    Box(
-                        flexDirection: .row,
-                        columnGap: 2,
-                        children: [
-                            Text("Button 1"),
-                            Text("Button 2")
-                        ]
-                    )
-                ]
+                children: Text("Title"), Box(
+                    flexDirection: .row,
+                    columnGap: 2,
+                    children: Text("Button 1"), Text("Button 2")
+                )
             )
         )
         
@@ -211,9 +199,7 @@ struct BoxLayoutTests {
         // Arrange
         let box = Box(
             flexDirection: .row,
-            children: [
-                Text("A"), Text("B"), Text("C")
-            ]
+            children: Text("A"), Text("B"), Text("C")
         )
         // Use container width that doesn't divide evenly by 3
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 10, height: 5)
@@ -256,9 +242,7 @@ struct BoxLayoutTests {
             paddingRight: 3,
             paddingBottom: 2,
             paddingLeft: 3,
-            children: [
-                Text("Centered")
-            ]
+            children: Text("Centered")
         )
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 10)
         
@@ -279,5 +263,139 @@ struct BoxLayoutTests {
         #expect(childRect.y >= expectedContentRect.y, "Child should be within content area")
         #expect(childRect.x + childRect.width <= expectedContentRect.x + expectedContentRect.width, "Child should fit in content area")
         #expect(childRect.y + childRect.height <= expectedContentRect.y + expectedContentRect.height, "Child should fit in content area")
+    }
+
+    // MARK: - RUNE-28: Flex Grow/Shrink Tests
+
+    @Test("Flex grow distributes extra space proportionally")
+    func flexGrowDistributesExtraSpace() {
+        // Arrange
+        let child1 = Box(
+            width: .points(50),
+            height: .points(20),
+            flexGrow: 1,
+            child: Text("Child 1")
+        )
+
+        let child2 = Box(
+            width: .points(50),
+            height: .points(20),
+            flexGrow: 2,
+            child: Text("Child 2")
+        )
+
+        let container = Box(
+            flexDirection: .row,
+            width: .points(200),
+            height: .points(50),
+            children: child1, child2
+        )
+
+        let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 200, height: 50)
+
+        // Act
+        let layout = container.calculateLayout(in: containerRect)
+
+        // Assert
+        // Total width: 200, initial child widths: 50 + 50 = 100
+        // Extra space: 200 - 100 = 100
+        // Child 1 gets 1/3 of extra space: 50 + 33 = 83
+        // Child 2 gets 2/3 of extra space: 50 + 67 = 117
+        #expect(layout.childRects.count == 2, "Should have 2 child rects")
+
+        let child1Rect = layout.childRects[0]
+        let child2Rect = layout.childRects[1]
+
+        #expect(child1Rect.width == 83, "Child 1 should get 1/3 of extra space")
+        #expect(child2Rect.width == 117, "Child 2 should get 2/3 of extra space")
+        #expect(child1Rect.x == 0, "Child 1 should start at x=0")
+        #expect(child2Rect.x == 83, "Child 2 should start after child 1")
+    }
+
+    @Test("Flex shrink reduces size proportionally when space is insufficient")
+    func flexShrinkReducesSizeProportionally() {
+        // Arrange
+        let child1 = Box(
+            width: .points(100),
+            height: .points(20),
+            flexShrink: 1,
+            child: Text("Child 1")
+        )
+
+        let child2 = Box(
+            width: .points(100),
+            height: .points(20),
+            flexShrink: 2,
+            child: Text("Child 2")
+        )
+
+        let container = Box(
+            flexDirection: .row,
+            width: .points(150),
+            height: .points(50),
+            children: child1, child2
+        )
+
+        let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 150, height: 50)
+
+        // Act
+        let layout = container.calculateLayout(in: containerRect)
+
+        // Assert
+        // Total width: 150, initial child widths: 100 + 100 = 200
+        // Overflow: 200 - 150 = 50
+        // Child 1 shrinks by 1/3 of overflow: 100 - 17 = 83
+        // Child 2 shrinks by 2/3 of overflow: 100 - 33 = 67
+        #expect(layout.childRects.count == 2, "Should have 2 child rects")
+
+        let child1Rect = layout.childRects[0]
+        let child2Rect = layout.childRects[1]
+
+        #expect(child1Rect.width == 83, "Child 1 should shrink by 1/3 of overflow")
+        #expect(child2Rect.width == 67, "Child 2 should shrink by 2/3 of overflow")
+        #expect(child1Rect.x == 0, "Child 1 should start at x=0")
+        #expect(child2Rect.x == 83, "Child 2 should start after child 1")
+    }
+
+    @Test("Flex basis sets initial size before grow/shrink")
+    func flexBasisSetsInitialSize() {
+        // Arrange
+        let child1 = Box(
+            flexGrow: 1,
+            flexBasis: .points(30),
+            child: Text("Child 1")
+        )
+
+        let child2 = Box(
+            flexGrow: 1,
+            flexBasis: .points(70),
+            child: Text("Child 2")
+        )
+
+        let container = Box(
+            flexDirection: .row,
+            width: .points(200),
+            height: .points(50),
+            children: child1, child2
+        )
+
+        let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 200, height: 50)
+
+        // Act
+        let layout = container.calculateLayout(in: containerRect)
+
+        // Assert
+        // Total width: 200, initial basis: 30 + 70 = 100
+        // Extra space: 200 - 100 = 100
+        // Each child gets 50 extra (equal grow)
+        // Child 1: 30 + 50 = 80
+        // Child 2: 70 + 50 = 120
+        #expect(layout.childRects.count == 2, "Should have 2 child rects")
+
+        let child1Rect = layout.childRects[0]
+        let child2Rect = layout.childRects[1]
+
+        #expect(child1Rect.width == 80, "Child 1 should use basis + equal grow")
+        #expect(child2Rect.width == 120, "Child 2 should use basis + equal grow")
     }
 }
