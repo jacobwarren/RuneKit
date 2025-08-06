@@ -369,9 +369,9 @@ public enum Gutter {
 
 // MARK: - Float Extensions
 
-extension Float {
+public extension Float {
     /// Round float to terminal integer coordinate using banker's rounding
-    public func roundedToTerminal() -> Int {
+    func roundedToTerminal() -> Int {
         return Int(self.rounded(.toNearestOrEven))
     }
 }

@@ -161,7 +161,7 @@ public enum RUNE25Demo {
             // Check status operations
             for _ in 0..<2 {
                 group.addTask {
-                    let _ = await handle.isActive
+                    _ = await handle.isActive
                 }
             }
         }
