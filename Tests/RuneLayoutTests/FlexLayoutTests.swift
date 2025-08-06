@@ -177,7 +177,7 @@ struct FlexLayoutTests {
         let box = Box(
             flexDirection: .row,
             columnGap: 2,
-            children: children
+            childrenArray: children
         )
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 30, height: 5)
 
@@ -207,7 +207,7 @@ struct FlexLayoutTests {
         let box = Box(
             flexDirection: .column,
             rowGap: 1,
-            children: children
+            childrenArray: children
         )
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 15)
 

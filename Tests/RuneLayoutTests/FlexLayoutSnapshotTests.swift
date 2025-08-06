@@ -35,7 +35,7 @@ struct FlexLayoutSnapshotTests {
             flexDirection: .row,
             width: .points(100),
             height: .points(40),
-            children: [sidebar, mainContent, rightPanel]
+            children: sidebar, mainContent, rightPanel
         )
         
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 100, height: 40)
@@ -97,7 +97,7 @@ struct FlexLayoutSnapshotTests {
             width: .points(80),
             height: .points(60),
             flexWrap: .wrap,
-            children: [card1, card2, card3, card4]
+            children: card1, card2, card3, card4
         )
         
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 80, height: 60)
@@ -159,7 +159,7 @@ struct FlexLayoutSnapshotTests {
             width: .points(25),
             height: .points(5),
             flexWrap: .wrap,
-            children: [emojiHeader, textContent, statusIcon]
+            children: emojiHeader, textContent, statusIcon
         )
         
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 25, height: 5)
@@ -226,7 +226,7 @@ struct FlexLayoutSnapshotTests {
             flexDirection: .row,
             width: .points(120),
             height: .points(30),
-            children: [flexibleColumn, fixedColumn, constrainedColumn]
+            children: flexibleColumn, fixedColumn, constrainedColumn
         )
         
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 120, height: 30)

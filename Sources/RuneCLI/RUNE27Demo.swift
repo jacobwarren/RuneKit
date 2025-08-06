@@ -44,11 +44,7 @@ public struct RUNE27Demo {
         let rowBox = Box(
             flexDirection: .row,
             columnGap: 2,
-            children: [
-                Text("First"),
-                Text("Second"),
-                Text("Third")
-            ]
+            children: Text("First"), Text("Second"), Text("Third")
         )
 
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 30, height: 10)
@@ -65,11 +61,7 @@ public struct RUNE27Demo {
         let columnBox = Box(
             flexDirection: .column,
             rowGap: 1,
-            children: [
-                Text("Item A"),
-                Text("Item B"),
-                Text("Item C")
-            ]
+            children: Text("Item A"), Text("Item B"), Text("Item C")
         )
 
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 30, height: 10)
@@ -91,10 +83,7 @@ public struct RUNE27Demo {
             child: Box(
                 flexDirection: .row,
                 columnGap: 1,
-                children: [
-                    Text("Left"),
-                    Text("Right")
-                ]
+                children: Text("Left"), Text("Right")
             )
         )
 

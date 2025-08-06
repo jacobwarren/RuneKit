@@ -172,7 +172,6 @@ public struct Box: Component {
     public let child: Component?
     public let children: [Component]
 
-    @inlinable
     public init(
         border: BorderStyle = .none,
         flexDirection: YogaFlexDirection = .column,
@@ -229,7 +228,6 @@ public struct Box: Component {
     }
 
     /// Initializer for multiple children
-    @inlinable
     public init(
         border: BorderStyle = .none,
         flexDirection: YogaFlexDirection = .column,
@@ -255,7 +253,7 @@ public struct Box: Component {
         maxWidth: Dimension = .auto,
         minHeight: Dimension = .auto,
         maxHeight: Dimension = .auto,
-        children: [Component]
+        children: Component...
     ) {
         self.borderStyle = border
         self.flexDirection = flexDirection
@@ -282,7 +280,63 @@ public struct Box: Component {
         self.minHeight = minHeight
         self.maxHeight = maxHeight
         self.child = nil
-        self.children = children
+        self.children = Array(children)
+    }
+
+    /// Internal initializer for array of children (used by helper functions)
+    internal init(
+        border: BorderStyle = .none,
+        flexDirection: YogaFlexDirection = .column,
+        justifyContent: JustifyContent = .flexStart,
+        alignItems: AlignItems = .stretch,
+        width: Dimension = .auto,
+        height: Dimension = .auto,
+        paddingTop: Float = 0,
+        paddingRight: Float = 0,
+        paddingBottom: Float = 0,
+        paddingLeft: Float = 0,
+        marginTop: Float = 0,
+        marginRight: Float = 0,
+        marginBottom: Float = 0,
+        marginLeft: Float = 0,
+        rowGap: Float = 0,
+        columnGap: Float = 0,
+        flexGrow: Float = 0,
+        flexShrink: Float = 1,
+        flexBasis: Dimension = .auto,
+        flexWrap: FlexWrap = .noWrap,
+        minWidth: Dimension = .auto,
+        maxWidth: Dimension = .auto,
+        minHeight: Dimension = .auto,
+        maxHeight: Dimension = .auto,
+        childrenArray: [Component]
+    ) {
+        self.borderStyle = border
+        self.flexDirection = flexDirection
+        self.justifyContent = justifyContent
+        self.alignItems = alignItems
+        self.width = width
+        self.height = height
+        self.paddingTop = paddingTop
+        self.paddingRight = paddingRight
+        self.paddingBottom = paddingBottom
+        self.paddingLeft = paddingLeft
+        self.marginTop = marginTop
+        self.marginRight = marginRight
+        self.marginBottom = marginBottom
+        self.marginLeft = marginLeft
+        self.rowGap = rowGap
+        self.columnGap = columnGap
+        self.flexGrow = flexGrow
+        self.flexShrink = flexShrink
+        self.flexBasis = flexBasis
+        self.flexWrap = flexWrap
+        self.minWidth = minWidth
+        self.maxWidth = maxWidth
+        self.minHeight = minHeight
+        self.maxHeight = maxHeight
+        self.child = nil
+        self.children = childrenArray
     }
 
     // MARK: - Convenience Initializers

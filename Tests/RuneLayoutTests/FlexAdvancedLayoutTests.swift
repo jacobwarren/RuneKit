@@ -31,7 +31,7 @@ struct FlexAdvancedLayoutTests {
             flexDirection: .row,
             width: .points(120),
             height: .points(50),
-            children: [child1, child2]
+            children: child1, child2
         )
         
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 120, height: 50)
@@ -76,7 +76,7 @@ struct FlexAdvancedLayoutTests {
             flexDirection: .row,
             width: .points(300),
             height: .points(50),
-            children: [child1, child2]
+            children: child1, child2
         )
         
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 300, height: 50)
@@ -121,7 +121,7 @@ struct FlexAdvancedLayoutTests {
             flexDirection: .column,
             width: .points(100),
             height: .points(200),
-            children: [child1, child2]
+            children: child1, child2
         )
         
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 100, height: 200)
@@ -169,7 +169,7 @@ struct FlexAdvancedLayoutTests {
             width: .points(150),
             height: .points(100),
             flexWrap: .wrap,
-            children: [child1, child2, child3]
+            children: child1, child2, child3
         )
         
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 150, height: 100)
@@ -213,7 +213,7 @@ struct FlexAdvancedLayoutTests {
             width: .points(12), // Just enough for emoji but not both
             height: .points(100),
             flexWrap: .wrap,
-            children: [emojiChild, textChild]
+            children: emojiChild, textChild
         )
         
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 12, height: 100)
@@ -249,7 +249,7 @@ struct FlexAdvancedLayoutTests {
             width: .points(100),
             height: .points(50),
             flexWrap: .wrap,
-            children: [wideChild]
+            children: wideChild
         )
         
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 100, height: 50)
@@ -282,7 +282,7 @@ struct FlexAdvancedLayoutTests {
             width: .points(100),
             height: .points(50),
             flexWrap: .wrap,
-            children: [tallChild]
+            children: tallChild
         )
         
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 100, height: 50)

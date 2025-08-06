@@ -59,26 +59,19 @@ struct BoxLayoutTests {
         let leftColumn = Box(
             flexDirection: .column,
             rowGap: 1,
-            children: [
-                Text("Left 1"),
-                Text("Left 2")
-            ]
+            children: Text("Left 1"), Text("Left 2")
         )
-        
+
         let rightColumn = Box(
             flexDirection: .column,
             rowGap: 2,
-            children: [
-                Text("Right 1"),
-                Text("Right 2"),
-                Text("Right 3")
-            ]
+            children: Text("Right 1"), Text("Right 2"), Text("Right 3")
         )
-        
+
         let mainRow = Box(
             flexDirection: .row,
             columnGap: 3,
-            children: [leftColumn, rightColumn]
+            children: leftColumn, rightColumn
         )
         
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 30, height: 12)
@@ -134,17 +127,11 @@ struct BoxLayoutTests {
             child: Box(
                 flexDirection: .column,
                 rowGap: 1,
-                children: [
-                    Text("Title"),
-                    Box(
-                        flexDirection: .row,
-                        columnGap: 2,
-                        children: [
-                            Text("Button 1"),
-                            Text("Button 2")
-                        ]
-                    )
-                ]
+                children: Text("Title"), Box(
+                    flexDirection: .row,
+                    columnGap: 2,
+                    children: Text("Button 1"), Text("Button 2")
+                )
             )
         )
         
@@ -212,9 +199,7 @@ struct BoxLayoutTests {
         // Arrange
         let box = Box(
             flexDirection: .row,
-            children: [
-                Text("A"), Text("B"), Text("C")
-            ]
+            children: Text("A"), Text("B"), Text("C")
         )
         // Use container width that doesn't divide evenly by 3
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 10, height: 5)
@@ -257,9 +242,7 @@ struct BoxLayoutTests {
             paddingRight: 3,
             paddingBottom: 2,
             paddingLeft: 3,
-            children: [
-                Text("Centered")
-            ]
+            children: Text("Centered")
         )
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 10)
         
@@ -305,7 +288,7 @@ struct BoxLayoutTests {
             flexDirection: .row,
             width: .points(200),
             height: .points(50),
-            children: [child1, child2]
+            children: child1, child2
         )
 
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 200, height: 50)
@@ -350,7 +333,7 @@ struct BoxLayoutTests {
             flexDirection: .row,
             width: .points(150),
             height: .points(50),
-            children: [child1, child2]
+            children: child1, child2
         )
 
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 150, height: 50)
@@ -393,7 +376,7 @@ struct BoxLayoutTests {
             flexDirection: .row,
             width: .points(200),
             height: .points(50),
-            children: [child1, child2]
+            children: child1, child2
         )
 
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 200, height: 50)
