@@ -41,18 +41,17 @@ public struct TerminalGrid: Sendable, Equatable {
             var columnIndex = 0
 
             // Convert string to cells, handling wide characters properly
-            for grapheme in line.unicodeScalars {
-                let char = String(grapheme)
-                let cell = TerminalCell(content: char)
+            // Use String.SubSequence to iterate over grapheme clusters (visual characters)
+            for char in line {
+                let charString = String(char)
+                let cell = TerminalCell(content: charString)
 
-                // Add the cell
-                if columnIndex < width {
+                // Add the cell if it fits
+                if columnIndex + cell.width <= width {
                     row.append(cell)
                     columnIndex += cell.width
-                }
-
-                // Handle wide characters that might overflow
-                if columnIndex >= width {
+                } else {
+                    // Character doesn't fit, stop processing this line
                     break
                 }
             }
@@ -62,7 +61,7 @@ public struct TerminalGrid: Sendable, Equatable {
                 row.append(.empty)
             }
 
-            // Truncate if too long
+            // Truncate if too long (shouldn't happen with the new logic, but safety check)
             if row.count > width {
                 row = Array(row.prefix(width))
             }

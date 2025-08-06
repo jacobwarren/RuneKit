@@ -106,5 +106,3 @@ struct RenderFunctionTests {
         pipe.fileHandleForWriting.closeFile()
     }
 }
-
-

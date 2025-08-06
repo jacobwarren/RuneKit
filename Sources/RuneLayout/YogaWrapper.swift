@@ -80,23 +80,22 @@ private extension YGWrap {
 /// Swift wrapper for Yoga layout engine
 /// Provides a safe, Swift-friendly interface to Facebook's Yoga C++ layout engine
 public final class YogaLayoutEngine: Sendable {
-    
     // MARK: - Core Types
-    
+
     /// Represents a layout result with terminal coordinates
     public struct LayoutResult {
         public let x: Int
         public let y: Int
         public let width: Int
         public let height: Int
-        
+
         internal init(node: YGNodeRef) {
             self.x = YGNodeLayoutGetLeft(node).roundedToTerminal()
             self.y = YGNodeLayoutGetTop(node).roundedToTerminal()
             self.width = YGNodeLayoutGetWidth(node).roundedToTerminal()
             self.height = YGNodeLayoutGetHeight(node).roundedToTerminal()
         }
-        
+
         public init(x: Int, y: Int, width: Int, height: Int) {
             self.x = x
             self.y = y
@@ -104,15 +103,15 @@ public final class YogaLayoutEngine: Sendable {
             self.height = height
         }
     }
-    
+
     // MARK: - Shared Instance
-    
+
     public static let shared = YogaLayoutEngine()
-    
+
     private init() {}
-    
+
     // MARK: - Layout Calculation
-    
+
     /// Calculate layout for a node tree
     /// - Parameters:
     ///   - rootNode: The root node to calculate layout for
@@ -127,7 +126,7 @@ public final class YogaLayoutEngine: Sendable {
         // Convert terminal dimensions to Yoga coordinates
         let yogaWidth = Float(availableWidth)
         let yogaHeight = Float(availableHeight)
-        
+
         // Perform layout calculation
         YGNodeCalculateLayout(
             rootNode.ref,
@@ -135,11 +134,11 @@ public final class YogaLayoutEngine: Sendable {
             yogaHeight,
             YGDirection.create(rawValue: 1) // YGDirectionLTR = 1
         )
-        
+
         // Convert result back to terminal coordinates
         return LayoutResult(node: rootNode.ref)
     }
-    
+
     /// Get layout result for any node in the tree after calculation
     /// - Parameter node: The node to get layout for
     /// - Returns: Layout result for the node
@@ -155,17 +154,17 @@ public final class YogaLayoutEngine: Sendable {
 public final class YogaNode {
     internal let ref: YGNodeRef
     private var children: [YogaNode] = []
-    
+
     public init() {
         ref = YGNodeNew()
     }
-    
+
     deinit {
         YGNodeFree(ref)
     }
-    
+
     // MARK: - Tree Management
-    
+
     /// Add a child node
     /// - Parameter child: The child node to add
     public func addChild(_ child: YogaNode) {
@@ -173,14 +172,14 @@ public final class YogaNode {
         YGNodeInsertChild(ref, child.ref, childCount)
         children.append(child)
     }
-    
+
     /// Remove a child node
     /// - Parameter child: The child node to remove
     public func removeChild(_ child: YogaNode) {
         YGNodeRemoveChild(ref, child.ref)
         children.removeAll { $0 === child }
     }
-    
+
     /// Remove all children
     public func removeAllChildren() {
         while YGNodeGetChildCount(ref) > 0 {
@@ -189,39 +188,39 @@ public final class YogaNode {
         }
         children.removeAll()
     }
-    
+
     // MARK: - Style Properties
-    
+
     /// Set flex direction
     /// - Parameter direction: The flex direction
     public func setFlexDirection(_ direction: YogaFlexDirection) {
         YGNodeStyleSetFlexDirection(ref, direction.yogaValue)
     }
-    
+
     /// Set justify content
     /// - Parameter justify: The justify content value
     public func setJustifyContent(_ justify: JustifyContent) {
         YGNodeStyleSetJustifyContent(ref, justify.yogaValue)
     }
-    
+
     /// Set align items
     /// - Parameter align: The align items value
     public func setAlignItems(_ align: AlignItems) {
         YGNodeStyleSetAlignItems(ref, align.yogaValue)
     }
-    
+
     /// Set width
     /// - Parameter width: The width dimension
     public func setWidth(_ width: Dimension) {
         width.applyToYogaWidth(ref)
     }
-    
+
     /// Set height
     /// - Parameter height: The height dimension
     public func setHeight(_ height: Dimension) {
         height.applyToYogaHeight(ref)
     }
-    
+
     /// Set padding for an edge
     /// - Parameters:
     ///   - edge: The edge to set padding for
@@ -229,7 +228,7 @@ public final class YogaNode {
     public func setPadding(_ edge: Edge, _ value: Float) {
         YGNodeStyleSetPadding(ref, edge.yogaValue, value)
     }
-    
+
     /// Set margin for an edge
     /// - Parameters:
     ///   - edge: The edge to set margin for
@@ -287,7 +286,7 @@ public final class YogaNode {
     public func setMaxHeight(_ maxHeight: Dimension) {
         maxHeight.applyToYogaMaxHeight(ref)
     }
-    
+
     /// Set gap between children
     /// - Parameters:
     ///   - gutter: The gutter type (row or column)
@@ -305,7 +304,7 @@ public enum YogaFlexDirection {
     case column
     case rowReverse
     case columnReverse
-    
+
     internal var yogaValue: YGFlexDirection {
         switch self {
         case .row: return YGFlexDirection.create(rawValue: 2) // YGFlexDirectionRow
@@ -324,7 +323,7 @@ public enum JustifyContent {
     case spaceBetween
     case spaceAround
     case spaceEvenly
-    
+
     internal var yogaValue: YGJustify {
         switch self {
         case .flexStart: return YGJustify.create(rawValue: 0) // YGJustifyFlexStart
@@ -376,7 +375,7 @@ public enum Dimension: Equatable {
     case auto
     case points(Float)
     case percent(Float)
-    
+
     internal func applyToYogaWidth(_ node: YGNodeRef) {
         switch self {
         case .auto:
@@ -387,7 +386,7 @@ public enum Dimension: Equatable {
             YGNodeStyleSetWidthPercent(node, value)
         }
     }
-    
+
     internal func applyToYogaHeight(_ node: YGNodeRef) {
         switch self {
         case .auto:
@@ -470,7 +469,7 @@ public enum Edge {
     case horizontal
     case vertical
     case all
-    
+
     internal var yogaValue: YGEdge {
         switch self {
         case .left: return YGEdge.create(rawValue: 0) // YGEdgeLeft
@@ -491,7 +490,7 @@ public enum Gutter {
     case column
     case row
     case all
-    
+
     internal var yogaValue: YGGutter {
         switch self {
         case .column: return YGGutter.create(rawValue: 0) // YGGutterColumn
