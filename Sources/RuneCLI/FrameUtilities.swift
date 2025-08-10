@@ -59,6 +59,19 @@ extension RuneCLI {
         return boxToFrame(box, width: totalWidth, height: 3)
     }
 
+    /// Create a box frame using Transform component (RUNE-34)
+    static func createBoxFrameWithTransform(transform: Transform) -> TerminalRenderer.Frame {
+        let box = Box(
+            border: .single,
+            paddingRight: 1,
+            paddingLeft: 1,
+            child: transform
+        )
+
+        // Use a fixed width for consistent animation frames
+        return boxToFrame(box, width: 20, height: 3)
+    }
+
     /// Create a multi-line box frame using Box component
     static func createMultiLineBoxFrame(contents: [String]) -> TerminalRenderer.Frame {
         let maxContentDisplayWidth = contents.map { Width.displayWidth(of: $0) }.max() ?? 10
@@ -122,7 +135,7 @@ extension RuneCLI {
                      Text("This is running in the alternate screen buffer."),
                      Text("When we exit, your previous terminal content"),
                      Text("will be restored automatically."),
-                     Text(""),
+                     Newline(count: 1),
                      Text("This is how applications like vim, less, and"),
                      Text("htop work - they don't interfere with your"),
                      Text("terminal history.")
@@ -145,9 +158,9 @@ extension RuneCLI {
             children: Text("Full-Screen Application"),
                      Text("Status: Running"),
                      Text("Mode: Alternate Screen Buffer"),
-                     Text(""),
+                     Newline(count: 1),
                      Text("[F1] Help    [F2] Settings    [Q] Quit"),
-                     Text(""),
+                     Newline(count: 1),
                      Text("This simulates a full-screen application"),
                      Text("interface that takes over the entire"),
                      Text("terminal without affecting your history.")
@@ -187,10 +200,10 @@ extension RuneCLI {
         let rect = FlexLayout.Rect(x: 0, y: 0, width: width, height: height)
         let lines = box.render(in: rect)
 
-        // Use the actual string length instead of display width calculation
-        // The Box component already handles emoji width correctly during rendering
-        // Using Width.displayWidth() here causes issues with emoji-containing strings
-        let actualWidth = lines.map { $0.count }.max() ?? width
+        // Use display width for ANSI-safe width calculation
+        // For lines with ANSI codes, character count != display width
+        // We need to use display width to get the correct visual width
+        let actualWidth = lines.map { Width.displayWidth(of: $0) }.max() ?? width
 
         return TerminalRenderer.Frame(
             lines: lines,
@@ -201,15 +214,32 @@ extension RuneCLI {
 
     /// Create a progress bar string
     private static func createProgressBar(value: Int, width: Int, label: String) -> String {
-        let barWidth = width - 8 // Account for label and percentage
-        let filledWidth = Int(Double(barWidth) * Double(value) / 100.0)
-        let emptyWidth = barWidth - filledWidth
+        // Use Transform component for dynamic progress bar generation
+        let transform = createProgressBarTransform(value: value, width: width, label: label)
+        let rect = FlexLayout.Rect(x: 0, y: 0, width: width, height: 1)
+        let lines = transform.render(in: rect)
+        return lines.first ?? ""
+    }
 
-        let filled = String(repeating: "█", count: filledWidth)
-        let empty = String(repeating: "░", count: emptyWidth)
-        let percentage = String(format: "%3d%%", value)
+    /// Create a Transform component for progress bar generation (RUNE-34)
+    private static func createProgressBarTransform(value: Int, width: Int, label: String) -> Transform {
+        return Transform(transform: { template in
+            let barWidth = width - 8 // Account for label and percentage
+            let filledWidth = Int(Double(barWidth) * Double(value) / 100.0)
+            let emptyWidth = barWidth - filledWidth
 
-        return "\(label): [\(filled)\(empty)] \(percentage)"
+            let filled = String(repeating: "█", count: filledWidth)
+            let empty = String(repeating: "░", count: emptyWidth)
+            let percentage = String(format: "%3d%%", value)
+
+            return template
+                .replacingOccurrences(of: "LABEL", with: label)
+                .replacingOccurrences(of: "FILLED", with: filled)
+                .replacingOccurrences(of: "EMPTY", with: empty)
+                .replacingOccurrences(of: "PERCENT", with: percentage)
+        }) {
+            Text("LABEL: [FILLEDEMPTY] PERCENT")
+        }
     }
 
     /// Border style for frames (legacy compatibility)

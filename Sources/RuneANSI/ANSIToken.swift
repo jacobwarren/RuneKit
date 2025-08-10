@@ -12,6 +12,14 @@
 /// - ``erase(_:_:)``: Screen and line clearing commands
 /// - ``osc(_:_:)``: Operating system commands (like title setting)
 /// - ``control(_:)``: Other escape sequences not covered above
+
+/// Terminator used in OSC sequences
+public enum OSCTerminator: Equatable {
+    case bel
+    case st
+}
+
+/// - ``oscExt(_:_::_:)``: OSC with explicit terminator preservation (BEL vs ST)
 public enum ANSIToken: Equatable {
     /// Plain text content without any ANSI codes
     ///
@@ -138,6 +146,14 @@ public enum ANSIToken: Equatable {
     /// ```swift
     /// let unknown = ANSIToken.control("\u{001B}[?25h") // Show cursor
     /// ```
+
+    /// Extended OSC token that preserves the original terminator style
+    /// - Parameters:
+    ///   - command: OSC command identifier (Ps)
+    ///   - data: OSC payload (Pt)
+    ///   - terminator: Terminator used in the original sequence (.bel or .st)
+    case oscExt(String, String, OSCTerminator)
+
     case control(String)
 }
 
@@ -223,6 +239,7 @@ public protocol ANSIEncoding {
     /// - Maintains exact formatting for round-trip compatibility
     ///
     /// ## Example
+
     /// ```swift
     /// let tokenizer = ANSITokenizer()
     /// let tokens: [ANSIToken] = [.sgr([31]), .text("Red"), .sgr([0])]

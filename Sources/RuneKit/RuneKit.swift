@@ -334,6 +334,17 @@ public protocol View {
     var body: Self.Body { get }
 }
 
+/// Views can optionally provide a stable identity to influence state preservation
+public protocol ViewIdentifiable {
+    /// A stable identity string for the view instance. When this changes between rerenders,
+    /// the renderer resets internal diff state to avoid incorrectly preserving UI state.
+    var viewIdentity: String? { get }
+}
+
+public extension ViewIdentifiable {
+    var viewIdentity: String? { nil }
+}
+
 /// Empty view type for leaf views
 public struct EmptyView: View {
     public var body: EmptyView { self }
@@ -345,24 +356,36 @@ extension Text: View {
     public typealias Body = EmptyView
     public var body: EmptyView { EmptyView() }
 }
+/// Default: no explicit identity
+extension Text: ViewIdentifiable {}
 
 /// Make Box conform to View protocol
 extension Box: View {
     public typealias Body = EmptyView
     public var body: EmptyView { EmptyView() }
 }
+extension Box: ViewIdentifiable {}
 
 /// Make Static conform to View protocol
 extension Static: View {
     public typealias Body = EmptyView
     public var body: EmptyView { EmptyView() }
 }
+extension Static: ViewIdentifiable {}
 
 /// Make Newline conform to View protocol
 extension Newline: View {
     public typealias Body = EmptyView
     public var body: EmptyView { EmptyView() }
 }
+extension Newline: ViewIdentifiable {}
+
+/// Make Transform conform to View protocol
+extension Transform: View {
+    public typealias Body = EmptyView
+    public var body: EmptyView { EmptyView() }
+}
+extension Transform: ViewIdentifiable {}
 
 /// Handle for controlling a running render session
 ///
@@ -372,8 +395,14 @@ public actor RenderHandle {
     /// The frame buffer handling rendering
     private let frameBuffer: FrameBuffer
 
+    /// Shadow component tree reconciler for lifecycle/state
+    let componentTree = ComponentTreeReconciler()
+
     /// Signal handler for graceful termination
     private var signalHandler: SignalHandler?
+
+    /// Whether the handle has been unmounted
+    private var isUnmounted = false
 
     /// Render options used for this session
     private let options: RenderOptions
@@ -381,11 +410,11 @@ public actor RenderHandle {
     /// Whether the render session is currently active
     public private(set) var isActive = true
 
-    /// Whether the handle has been unmounted
-    private var isUnmounted = false
-
     /// Continuations waiting for exit
     private var exitContinuations: [CheckedContinuation<Void, Never>] = []
+
+    /// Last rendered view identity (type + explicit identity if provided).
+    private var lastViewIdentity: String?
 
     // MARK: - Initialization
 
@@ -519,18 +548,53 @@ public actor RenderHandle {
     /// This provides programmatic control over the rendered content and supports
     /// dynamic UI updates similar to Ink's rerender functionality.
     ///
+    /// State preservation semantics:
+    /// - If the incoming view has the same identity as the previous render, preserve
+    ///   internal diff state for efficient updates.
+    /// - If identity changes, reset diff state to avoid stale UI.
+    ///
     /// - Parameter view: The new view to render
     public func rerender(_ view: some View) async {
-        // Convert view to frame and render
-        let frame = convertViewToFrame(view)
+        // Determine identity for state preservation
+        let typeName = String(describing: type(of: view))
+        let explicit = (view as? ViewIdentifiable)?.viewIdentity
+        let identity = [typeName, explicit].compactMap { $0 }.joined(separator: "#")
+        if lastViewIdentity != identity {
+            await frameBuffer.resetDiffState()
+            lastViewIdentity = identity
+            await componentTree.reset()
+        }
+        // Begin a logical frame for the componentTree
+        await componentTree.beginFrame(rootPath: identity)
+        let frame = convertViewToFrame(view, tree: componentTree)
+        await componentTree.endFrame()
         await frameBuffer.renderFrame(frame)
     }
+
+        /// Builder overload to construct the view inside the actor context
+        /// Avoids sending non-Sendable view values across actor boundaries
+        public func rerender(_ build: @escaping @Sendable () -> some View) async {
+            let v = build()
+            await rerender(v)
+        }
+
+        /// Schedule periodic rerenders until cancelled or unmounted
+        /// Returns a cancellation handle (Ticker) the caller can hold onto
+        @discardableResult
+        public func scheduleRerender(every interval: Duration, build: @escaping @Sendable () -> some View) -> Ticker {
+            let ticker = Ticker(every: interval) { [weak self] in
+                guard let self = self else { return }
+                await self.rerender(build)
+            }
+            return ticker
+        }
+
 
     /// Update the rendered view (for future programmatic updates)
     /// Note: This is a placeholder for future RUNE tickets
     public func update(_ view: some View) async {
         // Convert view to frame and render
-        let frame = convertViewToFrame(view)
+        let frame = convertViewToFrame(view, tree: componentTree)
         await frameBuffer.renderFrame(frame)
     }
 }
@@ -540,12 +604,23 @@ public actor RenderHandle {
 /// Convert a view to a renderable frame
 /// - Parameter view: The view to convert
 /// - Returns: TerminalRenderer.Frame ready for rendering
-private func convertViewToFrame(_ view: some View) -> TerminalRenderer.Frame {
+private func convertViewToFrame(_ view: some View, tree: ComponentTreeReconciler) -> TerminalRenderer.Frame {
     // Get terminal size for layout
     let terminalSize = getTerminalSize()
 
-    // Convert view to component
-    let component = convertViewToComponent(view)
+    // Build identity path root from type name + optional explicit identity
+    let typeName = String(describing: type(of: view))
+    let explicit = (view as? ViewIdentifiable)?.viewIdentity
+    let rootPath = [typeName, explicit].compactMap { $0 }.joined(separator: "#")
+
+    // Convert view to component within state context
+    let component: Component = RuntimeStateContext.$currentPath.withValue(rootPath) {
+        // During conversion, record child identity paths into the component tree
+        ComponentTreeBinding.bindDuringRender(tree: tree) {
+            // conversion does not emit nodes; children will record during render
+        }
+        return convertViewToComponent(view, currentPath: rootPath)
+    }
 
     // Create layout rectangle for the full terminal
     let layoutRect = FlexLayout.Rect(
@@ -555,8 +630,10 @@ private func convertViewToFrame(_ view: some View) -> TerminalRenderer.Frame {
         height: terminalSize.height,
     )
 
-    // Render component to lines
-    let lines = component.render(in: layoutRect)
+    // Render component to lines, recording identity paths for reconciler
+    let lines: [String] = ComponentTreeBinding.bindDuringRender(tree: tree) {
+        component.render(in: layoutRect)
+    }
 
     // Create frame
     return TerminalRenderer.Frame(
@@ -569,20 +646,27 @@ private func convertViewToFrame(_ view: some View) -> TerminalRenderer.Frame {
 /// Convert a View to a Component for rendering
 /// - Parameter view: The view to convert
 /// - Returns: Component that can be rendered
-private func convertViewToComponent(_ view: some View) -> Component {
-    // Handle different view types
+private func convertViewToComponent(_ view: some View, currentPath: String) -> Component {
+    // Handle different view types (leaf components just return themselves)
     if let textView = view as? Text {
-        textView
+        return textView
     } else if let boxView = view as? Box {
-        boxView
+        return boxView
     } else if let staticView = view as? Static {
-        staticView
+        return staticView
     } else if let newlineView = view as? Newline {
-        newlineView
-    } else {
-        // For composite views, we need to resolve the body
-        // This is a simplified implementation - a full implementation
-        // would recursively resolve the view hierarchy
+        return newlineView
+    } else if let transformView = view as? Transform {
+        return transformView
+    }
+
+    // For composite views, resolve the body and propagate identity path.
+    // In this minimal system, Body is EmptyView for our leaf components, so
+    // we fallback to a Text rendering of the view type for unknown composites.
+    let childTypeName = String(describing: type(of: view))
+    let explicit = (view as? ViewIdentifiable)?.viewIdentity
+    let childPath = [currentPath, childTypeName, explicit].compactMap { $0 }.joined(separator: "/")
+    return RuntimeStateContext.$currentPath.withValue(childPath) {
         Text("View: \(String(describing: type(of: view)))")
     }
 }
@@ -619,13 +703,21 @@ public func getTerminalSize() -> (width: Int, height: Int) {
 /// - Returns: RenderHandle for controlling the render session
 public func render(_ view: some View, options: RenderOptions = RenderOptions.fromEnvironment()) async -> RenderHandle {
     // Create render configuration from options
+    // Map RenderOptions to RenderConfiguration, honoring fpsCap for timing
+    let performance = RenderConfiguration.PerformanceTuning(
+        maxLinesForDiff: 1000,
+        minEfficiencyThreshold: 0.7,
+        maxFrameRate: options.fpsCap,
+        writeBufferSize: 8192
+    )
     let renderConfig = RenderConfiguration(
         optimizationMode: .automatic,
+        performance: performance,
         enableMetrics: false,
         enableDebugLogging: false,
         hideCursorDuringRender: true,
         useAlternateScreen: options.useAltScreen,
-        enableConsoleCapture: options.patchConsole,
+        enableConsoleCapture: options.patchConsole
     )
 
     // Create frame buffer with custom output
@@ -648,7 +740,7 @@ public func render(_ view: some View, options: RenderOptions = RenderOptions.fro
     }
 
     // Convert view to frame and render
-    let frame = convertViewToFrame(view)
+    let frame = convertViewToFrame(view, tree: handle.componentTree)
     await frameBuffer.renderFrame(frame)
 
     return handle

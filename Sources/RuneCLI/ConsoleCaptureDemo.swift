@@ -45,25 +45,16 @@ extension RuneCLI {
         print("Rendering application frame with console capture...")
         await frameBuffer.renderFrame(appFrame)
 
-        // Wait a moment for capture to initialize (reduced in CI)
-        let initSleepTime: UInt64 = ProcessInfo.processInfo.environment["CI"] != nil ? 50_000_000 : 500_000_000 // 0.05s in CI, 0.5s locally
-        try? await Task.sleep(nanoseconds: initSleepTime)
+        // Capture initialized, continue naturally
 
         print("Now printing some log messages - they should appear above the live region:")
 
         // Simulate application logs
         print("🔍 Application started")
-        let logSleepTime: UInt64 = ProcessInfo.processInfo.environment["CI"] != nil ? 10_000_000 : 300_000_000 // 0.01s in CI, 0.3s locally
-        try? await Task.sleep(nanoseconds: logSleepTime)
-
         print("📊 Processing data...")
-        try? await Task.sleep(nanoseconds: logSleepTime)
-
         print("⚠️ Warning: Low memory")
         // Simulate stderr output using a different approach for concurrency safety
         print("❌ Error: Connection failed")
-        try? await Task.sleep(nanoseconds: logSleepTime)
-
         print("✅ Recovery successful")
         print("📈 Performance metrics updated")
 
@@ -81,14 +72,8 @@ extension RuneCLI {
         let updatedLines = updatedBox.render(in: updatedRect)
         let updatedFrame = TerminalRenderer.Frame(lines: updatedLines, width: 22, height: updatedLines.count)
 
-        let updateSleepTime: UInt64 = ProcessInfo.processInfo.environment["CI"] != nil ? 20_000_000 : 500_000_000 // 0.02s in CI, 0.5s locally
-        try? await Task.sleep(nanoseconds: updateSleepTime)
         await frameBuffer.renderFrame(updatedFrame)
-
         print("🔄 Application state updated")
-
-        let finalSleepTime: UInt64 = ProcessInfo.processInfo.environment["CI"] != nil ? 50_000_000 : 1_000_000_000 // 0.05s in CI, 1s locally
-        try? await Task.sleep(nanoseconds: finalSleepTime)
 
         print("")
         print("Demo 1 complete. Notice how logs appeared above the live region!")
@@ -96,8 +81,7 @@ extension RuneCLI {
         // Clean up
         await frameBuffer.clear()
 
-        let cleanupSleepTime: UInt64 = ProcessInfo.processInfo.environment["CI"] != nil ? 20_000_000 : 500_000_000 // 0.02s in CI, 0.5s locally
-        try? await Task.sleep(nanoseconds: cleanupSleepTime)
+        // Cleanup completed naturally
     }
 
     /// Demo 2: Console capture disabled (default behavior)
@@ -127,8 +111,7 @@ extension RuneCLI {
         print("This print statement appears normally (not captured)")
         print("Console capture is disabled in this mode")
 
-        let normalSleepTime: UInt64 = ProcessInfo.processInfo.environment["CI"] != nil ? 50_000_000 : 1_000_000_000 // 0.05s in CI, 1s locally
-        try? await Task.sleep(nanoseconds: normalSleepTime)
+        // Normal mode demo completed naturally
 
         await normalFrameBuffer.clear()
     }

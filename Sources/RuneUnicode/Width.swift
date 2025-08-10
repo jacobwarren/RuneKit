@@ -23,17 +23,30 @@ private let kWcwidthAvailable = true
 private let kWcwidthAvailable = false
 #endif
 
+
+
+
+
+
 public enum Width {
     /// Calculate the display width of a string in terminal columns
     /// - Parameter string: The string to measure
     /// - Returns: Number of terminal columns the string will occupy
     public static func displayWidth(of string: String) -> Int {
+        // Fast path: no ANSI SGR sequences
+        if !string.contains("\u{001B}[") {
+            var totalWidth = 0
+            for cluster in string {
+                totalWidth += displayWidth(of: cluster)
+            }
+            return totalWidth
+        }
+        // Strip ANSI SGR sequences (ESC '[' ... 'm') before measuring
+        let stripped = Self.stripANSISGR(from: string)
         var totalWidth = 0
-
-        for cluster in string {
+        for cluster in stripped {
             totalWidth += displayWidth(of: cluster)
         }
-
         return totalWidth
     }
 
@@ -81,6 +94,27 @@ public enum Width {
         }
 
         return totalWidth
+    }
+
+
+    // Helper lives inside Width to keep access control simple
+    private static func stripANSISGR(from string: String) -> String {
+        var result = String.UnicodeScalarView()
+        var iter = string.unicodeScalars.makeIterator()
+        while let scalar = iter.next() {
+            if scalar.value == 0x1B { // ESC
+                if let bracket = iter.next(), bracket.value == 0x5B { // '['
+                    while let s = iter.next() { if s.value == 0x6D { break } }
+                    continue
+                } else {
+                    result.append(scalar)
+                    continue
+                }
+            } else {
+                result.append(scalar)
+            }
+        }
+        return String(result)
     }
 
     /// Calculate the display width of a single Unicode scalar (legacy method)

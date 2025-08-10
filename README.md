@@ -59,6 +59,17 @@ RuneKit/
 - **RuneCLI**: Example executable demonstrating functionality
 - Individual modules available as separate products for advanced use cases
 
+## Targets and Purpose
+
+- RuneANSI: ANSI tokenizer, SGR state machine, styled text spans, transforms
+- RuneUnicode: Unicode categories and normalization (utf8proc), width engine (wcwidth baseline + East Asian + emoji overrides)
+- RuneLayout: Yoga-backed flexbox mapping and rect calculations
+- RuneRenderer: Terminal grid, diff renderer, cursor/screen control
+- RuneComponents: UI building blocks (Text, Box, Static, Transform, etc.)
+- RuneKit: Umbrella module re-exporting the subsystems
+- RuneCLI: Executable with demos and acceptance showcases
+
+
 ## Quick Start
 
 ### Prerequisites
@@ -97,6 +108,16 @@ swift run RuneCLI
 ```bash
 swift test
 ```
+
+### Unicode Version
+
+RuneKit uses utf8proc for Unicode properties. You can query the active version at runtime:
+
+```swift
+let version = UnicodeCategories.unicodeVersion()
+print("Unicode version: \(version)")
+```
+
 
 ### Development Scripts
 
@@ -176,6 +197,40 @@ let normalized = UnicodeNormalization.normalize("é", form: .nfd)
 - watchOS 9.0+
 - visionOS 1.0+
 - Linux (Swift 6.1+)
+
+
+## Build a spinner in ~12 lines (no Spinner component)
+
+You can create animations using Transform + RenderHandle.scheduleRerender without any spinner-specific API:
+
+```swift
+import RuneKit
+
+let handle = await render(Box(children:
+    Static(["Loading demo"]),
+    Newline(count: 1),
+    Transform(timeAware: { _, t in
+        let frames = ["·", "✢", "✳", "∗", "✻", "✽"]
+        let idx = Int((t * 8.0).rounded(.down)) % frames.count
+        return "\(frames[idx]) Processing…"
+    }) { Text("") }
+))
+
+let ticker = await handle.scheduleRerender(every: .milliseconds(125)) {
+    Box(children:
+        Static(["Loading demo"]), Newline(count: 1),
+        Transform(timeAware: { _, t in
+            let frames = ["·", "✢", "✳", "∗", "✻", "✽"]
+            let idx = Int((t * 8.0).rounded(.down)) % frames.count
+            return "\(frames[idx]) Processing…"
+        }) { Text("") }
+    )
+}
+
+// ...later when done
+ticker.cancel()
+await handle.unmount()
+```
 
 ## Features
 

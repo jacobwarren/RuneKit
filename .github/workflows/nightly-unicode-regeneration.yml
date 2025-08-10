@@ -1,0 +1,41 @@
+name: Nightly Unicode Regeneration
+
+on:
+  schedule:
+    - cron: '0 3 * * *' # Daily at 03:00 UTC
+  workflow_dispatch:
+
+jobs:
+  regenerate-and-verify:
+    name: Regenerate Unicode Tables and Verify Drift
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Swift
+        uses: SwiftyLab/setup-swift@latest
+        with:
+          swift-version: '6.1'
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y libutf8proc-dev pkg-config curl
+
+      - name: Regenerate Unicode tables
+        run: swift scripts/generate_unicode_tables.swift
+
+      - name: Check for drift
+        run: |
+          if [[ -n "$(git status --porcelain Sources/RuneUnicode/Generated)" ]]; then
+            echo "❌ Generated Unicode tables drift detected."
+            echo "Run 'swift scripts/generate_unicode_tables.swift' locally and commit the results."
+            git --no-pager diff -- Sources/RuneUnicode/Generated || true
+            exit 1
+          else
+            echo "✅ Generated Unicode tables are up-to-date."
+          fi
+
+      - name: Run Unicode tests
+        run: swift test --filter RuneUnicodeTests
+

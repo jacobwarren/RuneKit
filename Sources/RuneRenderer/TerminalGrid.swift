@@ -1,4 +1,5 @@
 import Foundation
+import RuneANSI
 
 /// A 2D grid of terminal cells with efficient diff and rendering capabilities
 public struct TerminalGrid: Sendable, Equatable {
@@ -36,36 +37,68 @@ public struct TerminalGrid: Sendable, Equatable {
         self.width = width
         self.height = lines.count
 
+        // Parse each line with ANSI awareness so SGR sequences don't consume columns
+        let tokenizer = ANSITokenizer()
         self.cells = lines.map { line in
             var row: [TerminalCell] = []
             var columnIndex = 0
 
-            // Convert string to cells, handling wide characters properly
-            // Use String.SubSequence to iterate over grapheme clusters (visual characters)
-            for char in line {
-                let charString = String(char)
-                let cell = TerminalCell(content: charString)
+            // Tokenize the line once
+            let tokens = tokenizer.tokenize(line)
 
-                // Add the cell if it fits
+            // Maintain ANSI state and map to terminal attributes per grapheme
+            var sgrState = SGRStateMachine()
+
+            func appendCell(for char: Character) {
+                let charString = String(char)
+                let termAttrs = ANSIToTerminalBridge.toTerminalAttributes(sgrState.attributes)
+                let fg = ANSIToTerminalBridge.toTerminalColor(sgrState.attributes.color)
+                let bg = ANSIToTerminalBridge.toTerminalColor(sgrState.attributes.backgroundColor)
+                let cell = TerminalCell(
+                    content: charString,
+                    foreground: fg,
+                    background: bg,
+                    attributes: termAttrs
+                )
                 if columnIndex + cell.width <= width {
                     row.append(cell)
                     columnIndex += cell.width
-                } else {
-                    // Character doesn't fit, stop processing this line
+                }
+            }
+
+            for token in tokens {
+                switch token {
+                case .text(let content):
+                    for char in content { appendCell(for: char) }
+
+                case .sgr(let params):
+                    _ = sgrState.apply(params)
+
+                default:
+                    // Ignore cursor/erase/control at this stage for grid build
                     break
                 }
             }
 
-            // Pad with empty cells if needed
-            while row.count < width {
+            // Pad with empty cells by display columns (not by cell count)
+            while columnIndex < width {
                 row.append(.empty)
+                columnIndex += 1
             }
-
-            // Truncate if too long (shouldn't happen with the new logic, but safety check)
-            if row.count > width {
-                row = Array(row.prefix(width))
+            // Ensure row does not exceed target width by display columns
+            if columnIndex > width {
+                var adjusted: [TerminalCell] = []
+                var used = 0
+                for cell in row {
+                    if used + cell.width <= width {
+                        adjusted.append(cell)
+                        used += cell.width
+                    } else {
+                        break
+                    }
+                }
+                row = adjusted
             }
-
             return row
         }
 

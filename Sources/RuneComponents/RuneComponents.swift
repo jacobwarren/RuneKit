@@ -15,6 +15,8 @@
 /// - `Spacer`: Flexible space component for layout spacing
 /// - `Static`: Immutable text region for logs and headers
 /// - `Newline`: Convenience component for rendering N newlines
+/// - `Transform`: String transformation component with ANSI safety
+/// - `Transform`: ANSI/Unicode-safe last-mile string transform (with time-aware overload)
 /// - `BoxLayoutResult`: Layout calculation result
 ///
 /// ## Utilities

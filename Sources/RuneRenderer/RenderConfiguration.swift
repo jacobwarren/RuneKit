@@ -70,6 +70,10 @@ public struct RenderConfiguration: Sendable {
     /// Whether to capture stdout/stderr and display logs above live region
     public let enableConsoleCapture: Bool
 
+    /// Feature flag: allow public injection of OutputEncoder/CursorManager
+    public let enablePluggableIO: Bool
+
+
     // MARK: - Initialization
 
     public init(
@@ -79,7 +83,8 @@ public struct RenderConfiguration: Sendable {
         enableDebugLogging: Bool = false,
         hideCursorDuringRender: Bool = true,
         useAlternateScreen: Bool = false,
-        enableConsoleCapture: Bool = false
+        enableConsoleCapture: Bool = false,
+        enablePluggableIO: Bool = false
     ) {
         self.optimizationMode = optimizationMode
         self.performance = performance
@@ -88,13 +93,36 @@ public struct RenderConfiguration: Sendable {
         self.hideCursorDuringRender = hideCursorDuringRender
         self.useAlternateScreen = useAlternateScreen
         self.enableConsoleCapture = enableConsoleCapture
+        self.enablePluggableIO = enablePluggableIO
+    }
+
+    /// Backward-compatible initializer without the pluggable IO flag
+    public init(
+        optimizationMode: OptimizationMode = .lineDiff,
+        performance: PerformanceTuning = PerformanceTuning(),
+        enableMetrics: Bool = true,
+        enableDebugLogging: Bool = false,
+        hideCursorDuringRender: Bool = true,
+        useAlternateScreen: Bool = false,
+        enableConsoleCapture: Bool = false
+    ) {
+        self.init(
+            optimizationMode: optimizationMode,
+            performance: performance,
+            enableMetrics: enableMetrics,
+            enableDebugLogging: enableDebugLogging,
+            hideCursorDuringRender: hideCursorDuringRender,
+            useAlternateScreen: useAlternateScreen,
+            enableConsoleCapture: enableConsoleCapture,
+            enablePluggableIO: false
+        )
     }
 
     // MARK: - Predefined Configurations
 
     /// Default configuration optimized for most use cases
     /// Uses line-diff optimization with balanced performance settings
-    public static let `default` = RenderConfiguration()
+    public static let `default` = RenderConfiguration(enablePluggableIO: false)
 
     /// High-performance configuration for fast terminals
     /// Aggressive optimization settings for maximum throughput
