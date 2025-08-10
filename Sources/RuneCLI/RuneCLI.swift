@@ -418,7 +418,9 @@ struct RuneCLI {
             let handle = await render(LogView(), options: options)
             // Emit some logs that should appear above the live region
             print("Log: This is a stdout message")
-            fputs("Error: This is a stderr message\n", stderr)
+            if let data = "Error: This is a stderr message\n".data(using: .utf8) {
+                try? FileHandle.standardError.write(contentsOf: data)
+            }
             try? await Task.sleep(for: .milliseconds(300))
             await handle.clear()
             await handle.unmount()
