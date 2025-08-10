@@ -1,4 +1,6 @@
 import Foundation
+import RuneANSI
+import RuneUnicode
 
 /// LogLane manages the display of captured console logs above the live application region
 ///
@@ -242,32 +244,36 @@ public struct LogLane {
     ///   - prefixLength: Length of prefix for continuation lines
     /// - Returns: Array of wrapped lines
     private func wrapLine(_ line: String, width: Int, prefixLength: Int) -> [String] {
-        // If line fits within width, return as-is
-        if line.count <= width {
-            return [line]
-        }
+        // ANSI-aware wrapping by display columns (ignore ANSI when measuring)
+        if ANSISafeTruncation.displayWidthIgnoringANSI(line) <= width { return [line] }
 
         var wrappedLines: [String] = []
-        var remaining = line
+        var remainingStyled: StyledText = {
+            let tok = ANSITokenizer().tokenize(line)
+            return ANSISpanConverter().tokensToStyledText(tok)
+        }()
         let continuationPrefix = String(repeating: " ", count: prefixLength)
 
-        while !remaining.isEmpty {
+        while !remainingStyled.spans.isEmpty {
             let isFirstLine = wrappedLines.isEmpty
-            let availableWidth = isFirstLine ? width : width - prefixLength
-
-            if remaining.count <= availableWidth {
-                // Remaining content fits
-                let finalLine = isFirstLine ? remaining : continuationPrefix + remaining
-                wrappedLines.append(finalLine)
+            let availableWidth = isFirstLine ? width : max(0, width - prefixLength)
+            if availableWidth <= 0 {
+                // Nothing fits besides the continuation prefix; emit one line of prefix and stop
+                wrappedLines.append(continuationPrefix)
                 break
-            } else {
-                // Need to wrap
-                let cutIndex = remaining.index(remaining.startIndex, offsetBy: availableWidth)
-                let segment = String(remaining[..<cutIndex])
-                let wrappedLine = isFirstLine ? segment : continuationPrefix + segment
-                wrappedLines.append(wrappedLine)
-                remaining = String(remaining[cutIndex...])
             }
+
+            // Split styled text by display width to preserve SGR and grapheme integrity
+            let (headStyled, tailStyled) = remainingStyled.splitByDisplayWidth(at: availableWidth)
+
+            // Encode head back to ANSI string
+            let headEncoded = ANSITokenizer().encode(ANSISpanConverter().styledTextToTokens(headStyled))
+            let finalHead = isFirstLine ? headEncoded : (continuationPrefix + headEncoded)
+            wrappedLines.append(finalHead)
+
+            // Advance
+            if tailStyled.spans.isEmpty { break }
+            remainingStyled = tailStyled
         }
 
         return wrappedLines

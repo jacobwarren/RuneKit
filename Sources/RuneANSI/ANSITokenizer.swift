@@ -219,7 +219,8 @@ public struct ANSITokenizer: ANSITokenizing, ANSIEncoding {
                     input.index(currentIndex, offsetBy: 2)
                 }
 
-                return (.osc(command, data), nextIndex)
+                let terminator: OSCTerminator = (char == "\u{0007}") ? .bel : .st
+                return (.oscExt(command, data, terminator), nextIndex)
             } else if char == ";", !foundSeparator {
                 // First semicolon separates command from data
                 foundSeparator = true
@@ -266,7 +267,15 @@ public struct ANSITokenizer: ANSITokenizing, ANSIEncoding {
                 return "\u{001B}[\(mode)\(type)"
             }
         case let .osc(command, data):
+            // Legacy path: default to BEL terminator for backward compatibility
             return "\u{001B}]\(command);\(data)\u{0007}"
+        case let .oscExt(command, data, terminator):
+            switch terminator {
+            case .bel:
+                return "\u{001B}]\(command);\(data)\u{0007}"
+            case .st:
+                return "\u{001B}]\(command);\(data)\u{001B}\\"
+            }
         case let .control(sequence):
             return sequence
         }

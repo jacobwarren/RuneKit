@@ -86,8 +86,8 @@ public struct Text: Component {
         // Convert to ANSI tokens if styling is applied
         if attributes.isDefault {
             // No styling - use plain text with width constraint
-            // Use display width to prevent emoji clipping
-            let truncated = truncateToDisplayWidth(content, maxWidth: rect.width)
+            // Use display width to prevent emoji clipping (ANSI-safe)
+            let truncated = ANSISafeTruncation.truncateToDisplayWidth(content, maxWidth: rect.width)
             var lines = [truncated]
 
             // Fill remaining height with empty lines
@@ -98,8 +98,8 @@ public struct Text: Component {
             return lines
         } else {
             // Apply width constraint to the content first, then apply styling
-            // Use display width to prevent emoji clipping
-            let truncatedContent = truncateToDisplayWidth(content, maxWidth: rect.width)
+            // Use display width to prevent emoji clipping (ANSI-safe)
+            let truncatedContent = ANSISafeTruncation.truncateToDisplayWidth(content, maxWidth: rect.width)
             let truncatedSpan = TextSpan(text: truncatedContent, attributes: attributes)
             let truncatedStyledText = StyledText(spans: [truncatedSpan])
 

@@ -20,12 +20,17 @@ internal struct BoxRenderer {
     ///   - lines: The lines array to modify
     ///   - rect: The rectangle to draw the border in
     ///   - style: The border style to use
-    static func renderBorder(into lines: inout [String], rect: FlexLayout.Rect, style: Box.BorderStyle) {
+    ///   - color: Optional ANSI color to apply to border glyphs
+    static func renderBorder(into lines: inout [String], rect: FlexLayout.Rect, style: Box.BorderStyle, color: ANSIColor? = nil) {
         let borderChars = getBorderChars(for: style)
 
         // For simplicity, assume border is drawn at the start of the render area
         let width = rect.width
         let height = rect.height
+
+        let colorPrefix: String
+        if let color = color { colorPrefix = color.foregroundSequence } else { colorPrefix = "" }
+        let reset = colorPrefix.isEmpty ? "" : "\u{001B}[0m"
 
         // Gracefully handle dimensions too small for borders
         guard width >= 2 && height >= 1 else {
@@ -40,16 +45,14 @@ internal struct BoxRenderer {
 
         // Top border
         if height > 0 {
-            lines[0] = borderChars.topLeft +
-                      String(repeating: borderChars.horizontal, count: max(0, width - 2)) +
-                      borderChars.topRight
+            let middle = String(repeating: borderChars.horizontal, count: max(0, width - 2))
+            lines[0] = colorPrefix + borderChars.topLeft + middle + borderChars.topRight + reset
         }
 
         // Bottom border
         if height > 1 {
-            lines[height - 1] = borderChars.bottomLeft +
-                               String(repeating: borderChars.horizontal, count: max(0, width - 2)) +
-                               borderChars.bottomRight
+            let middle = String(repeating: borderChars.horizontal, count: max(0, width - 2))
+            lines[height - 1] = colorPrefix + borderChars.bottomLeft + middle + borderChars.bottomRight + reset
         }
 
         // Side borders (middle lines)
@@ -57,11 +60,9 @@ internal struct BoxRenderer {
             for y in 1..<(height - 1) {
                 if y < lines.count {
                     let existingLine = lines[y]
-                    
-                    // For middle lines, just add vertical borders to the existing content
-                    // The content area is already properly sized
+                    // Preserve middle content (after dropping borders if present)
                     let middleContent = String(existingLine.dropFirst().dropLast())
-                    lines[y] = borderChars.vertical + middleContent + borderChars.vertical
+                    lines[y] = colorPrefix + borderChars.vertical + reset + middleContent + colorPrefix + borderChars.vertical + reset
                 }
             }
         }
@@ -69,47 +70,32 @@ internal struct BoxRenderer {
 
     /// Adjust content to exactly match a target display width
     /// - Parameters:
-    ///   - content: The content to adjust
+    ///   - content: The content to adjust (may contain ANSI)
     ///   - targetWidth: The target display width
     /// - Returns: Content that has exactly the target display width
     static func adjustContentToDisplayWidth(_ content: String, targetWidth: Int) -> String {
-        let currentDisplayWidth = Width.displayWidth(of: content)
+        let currentDisplayWidth = ANSISafeTruncation.displayWidthIgnoringANSI(content)
 
         if currentDisplayWidth < targetWidth {
             // Pad with spaces to reach target display width
             let paddingNeeded = targetWidth - currentDisplayWidth
             return content + String(repeating: " ", count: paddingNeeded)
         } else if currentDisplayWidth > targetWidth {
-            // Truncate to fit target display width
-            return truncateToDisplayWidth(content, maxWidth: targetWidth)
+            // Truncate to fit target display width (ANSI-safe)
+            return ANSISafeTruncation.truncateToDisplayWidth(content, maxWidth: targetWidth)
         } else {
             // Already the correct display width
             return content
         }
     }
 
-    /// Truncate a string to fit within a specific display width
+    /// Truncate a string to fit within a specific display width (ANSI-safe)
     /// - Parameters:
-    ///   - text: The text to truncate
+    ///   - text: The text to truncate (may contain ANSI)
     ///   - maxWidth: The maximum display width allowed
     /// - Returns: The truncated text that fits within maxWidth display columns
     static func truncateToDisplayWidth(_ text: String, maxWidth: Int) -> String {
-        guard maxWidth > 0 else { return "" }
-
-        var result = ""
-        var currentWidth = 0
-
-        for char in text {
-            let charWidth = Width.displayWidth(of: String(char))
-            if currentWidth + charWidth <= maxWidth {
-                result.append(char)
-                currentWidth += charWidth
-            } else {
-                break
-            }
-        }
-
-        return result
+        ANSISafeTruncation.truncateToDisplayWidth(text, maxWidth: maxWidth)
     }
 
     /// Build a single border line
@@ -175,3 +161,4 @@ internal struct BoxRenderer {
         }
     }
 }
+

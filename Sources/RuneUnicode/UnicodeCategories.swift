@@ -278,20 +278,25 @@ public enum UnicodeCategories {
     /// // Returns: true
     /// ```
     public static func isEmojiScalar(_ scalar: Unicode.Scalar) -> Bool {
-        // Use a safer approach to avoid potential memory issues
-        // For now, use a simple range-based check for common emoji ranges
-        let value = scalar.value
-
-        // Common emoji ranges (simplified detection)
-        // This is a temporary fix to avoid utf8proc memory issues
-        return (value >= 0x1F600 && value <= 0x1F64F) || // Emoticons
-               (value >= 0x1F300 && value <= 0x1F5FF) || // Misc Symbols and Pictographs
-               (value >= 0x1F680 && value <= 0x1F6FF) || // Transport and Map
-               (value >= 0x1F1E6 && value <= 0x1F1FF) || // Regional Indicator Symbols
-               (value >= 0x2600 && value <= 0x26FF) ||   // Misc symbols
-               (value >= 0x2700 && value <= 0x27BF) ||   // Dingbats
-               (value == 0x1F44D) ||                     // 👍 (thumbs up)
-               (value == 0x2764)                         // ❤ (heart)
+        let cp = scalar.value
+        // Check generated Extended_Pictographic ranges first when available
+        if let ranges = EmojiWidth.Tables.extendedpictographicRanges as [(UInt32, UInt32)]? {
+            // Binary search over sorted, non-overlapping ranges
+            var low = 0
+            var high = ranges.count - 1
+            while low <= high {
+                let mid = (low + high) >> 1
+                let (start, end) = ranges[mid]
+                if cp < start {
+                    high = mid - 1
+                } else if cp > end {
+                    low = mid + 1
+                } else {
+                    return true
+                }
+            }
+        }
+        return false
     }
 }
 

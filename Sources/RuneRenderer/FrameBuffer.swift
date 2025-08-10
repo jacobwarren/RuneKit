@@ -4,6 +4,7 @@ import Glibc
 #else
 import Darwin
 #endif
+import RuneANSI
 
 /// Actor-based frame buffer with hybrid reconciler for optimal terminal rendering
 ///
@@ -56,9 +57,25 @@ public actor FrameBuffer {
         self.metrics = PerformanceMetrics()
         self.originalOutput = output
 
+        // When console capture is enabled, duplicate the output FD so renderer writes bypass the capture pipe.
+        // This prevents recursive self-capture and potential crashes when logs are rendered above the live region.
+        let effectiveOutput: FileHandle = {
+            guard configuration.enableConsoleCapture else { return output }
+            #if os(Linux)
+            let dupfd = Glibc.dup(output.fileDescriptor)
+            #else
+            let dupfd = Darwin.dup(output.fileDescriptor)
+            #endif
+            if dupfd >= 0 {
+                return FileHandle(fileDescriptor: dupfd, closeOnDealloc: true)
+            } else {
+                return output
+            }
+        }()
+
         // Create alternate screen buffer if enabled in configuration
         if configuration.useAlternateScreen {
-            self.alternateScreenBuffer = AlternateScreenBuffer(output: output)
+            self.alternateScreenBuffer = AlternateScreenBuffer(output: effectiveOutput)
         } else {
             self.alternateScreenBuffer = nil
         }
@@ -76,8 +93,15 @@ public actor FrameBuffer {
         self.logLane = LogLane(useColors: true)
 
         // Create the terminal renderer and hybrid reconciler
-        let renderer = TerminalRenderer(output: output)
-        self.reconciler = HybridReconciler(renderer: renderer, configuration: configuration)
+        if configuration.enablePluggableIO {
+            let encoder = FileHandleOutputEncoder(handle: effectiveOutput)
+            let cursor = ANSICursorManager(out: encoder)
+            let renderer = TerminalRenderer(output: effectiveOutput, encoder: encoder, cursor: cursor, configuration: configuration)
+            self.reconciler = HybridReconciler(renderer: renderer, configuration: configuration)
+        } else {
+            let renderer = TerminalRenderer(output: effectiveOutput)
+            self.reconciler = HybridReconciler(renderer: renderer, configuration: configuration)
+        }
     }
 
     /// Deinitializer ensures cursor is restored on cleanup
@@ -149,6 +173,12 @@ public actor FrameBuffer {
     /// - Returns: Current frame being displayed (if any)
     public func getCurrentFrame() async -> TerminalRenderer.Frame? {
         return await reconciler.getCurrentFrame()
+    }
+
+
+    /// Reset diff state at the reconciler level (used when view identity changes)
+    public func resetDiffState() async {
+        await reconciler.resetDiffState()
     }
 
     /// Reset performance metrics for testing
@@ -320,9 +350,18 @@ public actor FrameBuffer {
     /// - Parameter string: String to convert
     /// - Returns: Array of TerminalCells
     private func stringToCells(_ string: String) -> [TerminalCell] {
-        return string.map { char in
-            TerminalCell(content: String(char))
+        // ANSI-aware conversion to cells by grapheme cluster with SGR mapping
+        let tokenizer = ANSITokenizer()
+        let converter = ANSISpanConverter()
+        let styled = converter.tokensToStyledText(tokenizer.tokenize(string))
+        var cells: [TerminalCell] = []
+        for span in styled.spans {
+            let attrs = ANSIToTerminalBridge.toTerminalAttributes(span.attributes)
+            let fg = ANSIToTerminalBridge.toTerminalColor(span.attributes.color)
+            let bg = ANSIToTerminalBridge.toTerminalColor(span.attributes.backgroundColor)
+            for ch in span.text { cells.append(TerminalCell(content: String(ch), foreground: fg, background: bg, attributes: attrs)) }
         }
+        return cells
     }
 
     /// Create a combined frame with logs above the live region

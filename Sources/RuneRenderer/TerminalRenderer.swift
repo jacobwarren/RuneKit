@@ -35,6 +35,10 @@ public actor TerminalRenderer {
 
     /// Output handle for writing to terminal
     private let output: FileHandle
+    private let outEncoder: OutputEncoder?
+    private let cursorMgr: CursorManager?
+    /// Optional configuration for policy decisions (cursor, etc.)
+    private let configuration: RenderConfiguration?
 
     /// Current cursor position
     private var cursorRow: Int = 0
@@ -52,6 +56,23 @@ public actor TerminalRenderer {
 
     public init(output: FileHandle = .standardOutput) {
         self.output = output
+        self.outEncoder = nil
+        self.cursorMgr = nil
+        self.configuration = nil
+    }
+
+    /// New convenience initializer allowing pluggable abstractions (public when enabled)
+    public init(output: FileHandle = .standardOutput, encoder: OutputEncoder?, cursor: CursorManager?, configuration: RenderConfiguration = .default) {
+        self.output = output
+        self.configuration = configuration
+        // Feature flag: only honor injected encoder/cursor when enabled via configuration
+        if configuration.enablePluggableIO {
+            self.outEncoder = encoder
+            self.cursorMgr = cursor
+        } else {
+            self.outEncoder = nil
+            self.cursorMgr = nil
+        }
     }
 
     /// Legacy render method for Frame compatibility
@@ -72,8 +93,9 @@ public actor TerminalRenderer {
         let startTime = Date()
         var stats = RenderStats()
 
-        // Hide cursor during rendering for cleaner output
-        let shouldRestoreCursor = !cursorHidden
+        // Hide cursor during rendering for cleaner output if enabled by configuration
+        let policyHide = configuration?.hideCursorDuringRender ?? true
+        let shouldRestoreCursor = policyHide && !cursorHidden
         if shouldRestoreCursor {
             await hideCursor()
         }
@@ -88,8 +110,7 @@ public actor TerminalRenderer {
         case .deltaUpdate:
             stats = await renderDelta(grid, previousGrid: previousGrid)
         case .scrollOptimized:
-            // For now, fall back to delta update
-            stats = await renderDelta(grid, previousGrid: previousGrid)
+            stats = await renderScrollOptimized(grid, previousGrid: previousGrid)
         }
 
         // Update state
@@ -101,7 +122,7 @@ public actor TerminalRenderer {
         lastRenderTime = Date()
 
         // Restore cursor if we hid it
-        if shouldRestoreCursor && cursorHidden {
+        if policyHide && shouldRestoreCursor && cursorHidden {
             await showCursor()
         }
 
@@ -118,8 +139,9 @@ public actor TerminalRenderer {
         let startTime = Date()
         var stats = RenderStats()
 
-        // Hide cursor during rendering for cleaner output
-        let shouldRestoreCursor = !cursorHidden
+        // Hide cursor during rendering for cleaner output if enabled by configuration
+        let policyHide = configuration?.hideCursorDuringRender ?? true
+        let shouldRestoreCursor = policyHide && !cursorHidden
         if shouldRestoreCursor {
             await hideCursor()
         }
@@ -159,7 +181,7 @@ public actor TerminalRenderer {
         lastRenderTime = Date()
 
         // Restore cursor if we hid it
-        if shouldRestoreCursor && cursorHidden {
+        if policyHide && shouldRestoreCursor && cursorHidden {
             await showCursor()
         }
 
@@ -308,9 +330,9 @@ public actor TerminalRenderer {
                 output += sequence
             }
 
-            // Add newline (except for last row)
+            // Move to next line explicitly to avoid right-edge autowrap artifacts
             if row < grid.height - 1 {
-                output += "\n"
+                output += "\r\n"
             }
         }
 
@@ -327,6 +349,8 @@ public actor TerminalRenderer {
         // Update tracking
         previousLineCount = grid.height
         stats.linesChanged = grid.height
+        // Populate totalLines for consistent metrics
+        stats.totalLines = grid.height
 
         return stats
     }
@@ -343,12 +367,18 @@ public actor TerminalRenderer {
             return await renderInkStyle(grid)
         }
 
-        // Find changed lines
-        let changedLines = grid.changedLines(comparedTo: current)
+        // Find changed lines via differ (SimpleLineDiffer for now)
+        let changedLines = SimpleLineDiffer().diff(from: current, to: grid)
         stats.linesChanged = changedLines.count
 
         // If no changes, do nothing
         guard !changedLines.isEmpty else {
+            // Even if no changes, still restore cursor position per policy
+            let restoreCursorSequence = "\u{001B}[\(grid.height + 1);1H"
+            await writeSequence(restoreCursorSequence)
+            stats.bytesWritten += restoreCursorSequence.utf8.count
+            // Populate totalLines for accurate efficiency
+            stats.totalLines = grid.height
             return stats
         }
 
@@ -405,8 +435,87 @@ public actor TerminalRenderer {
         await writeSequence(restoreCursorSequence)
         stats.bytesWritten += restoreCursorSequence.utf8.count
 
+        // Populate totalLines for accurate efficiency
+        stats.totalLines = grid.height
+
         return stats
     }
+
+    /// Render using scroll-optimized updates when grid is an N-line shift
+    private func renderScrollOptimized(_ grid: TerminalGrid, previousGrid: TerminalGrid?) async -> RenderStats {
+        var stats = RenderStats()
+        stats.strategy = .scrollOptimized
+        guard let current = previousGrid else { return await renderInkStyle(grid) }
+        // Determine direction: try match of current shifted
+        let h = grid.height
+        // Detect largest n for down/up shift
+        func detectDownShift() -> Int {
+            var best = 0
+            if h > 1 {
+                for n in 1..<h {
+                    var ok = true
+                    for r in 0..<(h - n) {
+                        if grid.getRow(r)! != current.getRow(r + n)! { ok = false; break }
+                    }
+                    if ok { best = n; break }
+                }
+            }
+            return best
+        }
+        func detectUpShift() -> Int {
+            var best = 0
+            if h > 1 {
+                for n in 1..<h {
+                    var ok = true
+                    for r in n..<h {
+                        if grid.getRow(r)! != current.getRow(r - n)! { ok = false; break }
+                    }
+                    if ok { best = n; break }
+                }
+            }
+            return best
+        }
+        let nDown = detectDownShift()
+        if nDown > 0 {
+            // Scroll up by n: ESC[nS] moves the viewport up; new lines to render at bottom
+            let seq = "\u{001B}[\(nDown)S"
+            await writeSequence(seq); stats.bytesWritten += seq.utf8.count
+            for j in 0..<nDown {
+                let rowIndex = h - nDown + j
+                let move = "\u{001B}[\(rowIndex + 1);1H"
+                await writeSequence(move); stats.bytesWritten += move.utf8.count
+                if let row = grid.getRow(rowIndex) {
+                    let line = await renderRow(row, optimizeState: true)
+                    await writeSequence(line); stats.bytesWritten += line.utf8.count
+                }
+            }
+            let restore = "\u{001B}[\(h + 1);1H"
+            await writeSequence(restore); stats.bytesWritten += restore.utf8.count
+            stats.totalLines = h
+            return stats
+        }
+        let nUp = detectUpShift()
+        if nUp > 0 {
+            // Scroll down by n: ESC[nT]; new lines to render at top
+            let seq = "\u{001B}[\(nUp)T"
+            await writeSequence(seq); stats.bytesWritten += seq.utf8.count
+            for j in 0..<nUp {
+                let move = "\u{001B}[\(j + 1);1H"
+                await writeSequence(move); stats.bytesWritten += move.utf8.count
+                if let row = grid.getRow(j) {
+                    let line = await renderRow(row, optimizeState: true)
+                    await writeSequence(line); stats.bytesWritten += line.utf8.count
+                }
+            }
+            let restore = "\u{001B}[\(h + 1);1H"
+            await writeSequence(restore); stats.bytesWritten += restore.utf8.count
+            stats.totalLines = h
+            return stats
+        }
+        // Fallback
+        return await renderDelta(grid, previousGrid: previousGrid)
+    }
+
 
     /// Render a row of cells with SGR optimization
     private func renderRow(_ cells: [TerminalCell], optimizeState: Bool) async -> String {
@@ -438,6 +547,10 @@ public actor TerminalRenderer {
 
     /// Write a sequence to the output
     private func writeSequence(_ sequence: String) async {
+        if let out = outEncoder {
+            out.write(sequence)
+            return
+        }
         if let data = sequence.data(using: .utf8) {
             do {
                 try output.write(contentsOf: data)
@@ -462,11 +575,18 @@ public struct RenderStats: Sendable {
     public var linesChanged: Int = 0
     public var bytesWritten: Int = 0
     public var duration: TimeInterval = 0
+    /// Total lines in the frame (for accurate efficiency computation)
+    public var totalLines: Int? = nil
 
     public var efficiency: Double {
-        guard linesChanged > 0 else { return 1.0 }
-        // This would need total line count to calculate properly
-        // For now, return a simple metric
+        // If no changes, efficiency is perfect
+        if linesChanged == 0 { return 1.0 }
+        // Prefer accurate calculation when total is known
+        if let total = totalLines, total > 0 {
+            let e = 1.0 - (Double(linesChanged) / Double(total))
+            return max(0.0, min(1.0, e))
+        }
+        // Fallback heuristic by strategy
         return strategy == .deltaUpdate ? 0.8 : 0.0
     }
 }

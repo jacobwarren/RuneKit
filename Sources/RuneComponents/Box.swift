@@ -266,91 +266,14 @@ public struct Box: Component {
         self.children = childrenArray
     }
 
-    // MARK: - Convenience Initializers
+    // MARK: - Convenience Initializers (moved to BoxConvenience.swift)
 
-    /// Convenience initializer for simple padding
-    public init(
-        border: BorderStyle = .none,
-        padding: Float,
-        child: Component? = nil
-    ) {
-        self.init(
-            border: border,
-            borderColor: nil,
-            backgroundColor: nil,
-            paddingTop: padding,
-            paddingRight: padding,
-            paddingBottom: padding,
-            paddingLeft: padding,
-            child: child
-        )
-    }
+    // MARK: - Layout Calculation (moved to BoxLayoutAdapter.swift)
 
-    /// Convenience initializer for horizontal and vertical padding
-    public init(
-        border: BorderStyle = .none,
-        paddingHorizontal: Float = 0,
-        paddingVertical: Float = 0,
-        child: Component? = nil
-    ) {
-        self.init(
-            border: border,
-            borderColor: nil,
-            backgroundColor: nil,
-            paddingTop: paddingVertical,
-            paddingRight: paddingHorizontal,
-            paddingBottom: paddingVertical,
-            paddingLeft: paddingHorizontal,
-            child: child
-        )
-    }
+    // calculateLayout_core removed; use extension in BoxLayoutAdapter.swift
 
-    /// Convenience initializer for flex row layout
-    public static func row(
-        justifyContent: JustifyContent = .flexStart,
-        alignItems: AlignItems = .stretch,
-        alignSelf: AlignSelf = .auto,
-        gap: Float = 0,
-        child: Component? = nil
-    ) -> Box {
-        return Box(
-            borderColor: nil,
-            backgroundColor: nil,
-            flexDirection: .row,
-            justifyContent: justifyContent,
-            alignItems: alignItems,
-            alignSelf: alignSelf,
-            columnGap: gap,
-            child: child
-        )
-    }
+    /* Moved: calculateLayout body is now in BoxLayoutAdapter.swift
 
-    /// Convenience initializer for flex column layout
-    public static func column(
-        justifyContent: JustifyContent = .flexStart,
-        alignItems: AlignItems = .stretch,
-        alignSelf: AlignSelf = .auto,
-        gap: Float = 0,
-        child: Component? = nil
-    ) -> Box {
-        return Box(
-            borderColor: nil,
-            backgroundColor: nil,
-            flexDirection: .column,
-            justifyContent: justifyContent,
-            alignItems: alignItems,
-            alignSelf: alignSelf,
-            rowGap: gap,
-            child: child
-        )
-    }
-
-    // MARK: - Layout Calculation
-
-    /// Calculate layout for this box within the given container rectangle
-    /// - Parameter containerRect: The container rectangle to layout within
-    /// - Returns: Layout result with calculated rectangles
-    public func calculateLayout(in containerRect: FlexLayout.Rect) -> BoxLayoutResult {
         // Create Yoga node for this box
         let boxNode = YogaNode()
 
@@ -541,107 +464,23 @@ public struct Box: Component {
             containerRect: containerRect,
             childRects: childRects
         )
-    }
+    */
 
-    public func render(in rect: FlexLayout.Rect) -> [String] {
-        guard rect.height > 0, rect.width > 0 else {
-            return []
-        }
-
-        // Calculate content area (accounting for border and padding)
-        let borderWidth = borderStyle != .none ? 1 : 0
-        let contentX = borderWidth + Int(paddingLeft)
-        let contentY = borderWidth + Int(paddingTop)
-        let contentWidth = max(0, rect.width - 2 * borderWidth - Int(paddingLeft) - Int(paddingRight))
-        let contentHeight = max(0, rect.height - 2 * borderWidth - Int(paddingTop) - Int(paddingBottom))
-
-        // Start with empty lines - only fill with spaces if we have borders
-        var lines: [String]
-        if borderStyle != .none {
-            lines = Array(repeating: String(repeating: " ", count: rect.width), count: rect.height)
-            // Render border first so content can be placed within it
-            BoxRenderer.renderBorder(into: &lines, rect: rect, style: borderStyle)
-        } else {
-            lines = Array(repeating: "", count: rect.height)
-        }
-
-        // Render children content if present
-        if contentWidth > 0 && contentHeight > 0 {
-            // Get all children (either from children array or single child)
-            let allChildren: [Component] = children.isEmpty ? (child.map { [$0] } ?? []) : children
-
-            if !allChildren.isEmpty {
-                if allChildren.count == 1 {
-                    // For single child, render directly with simple positioning
-                    let childComponent = allChildren[0]
-                    let childRect = FlexLayout.Rect(x: 0, y: 0, width: contentWidth, height: contentHeight)
-                    let childLines = childComponent.render(in: childRect)
-
-                    // Place child content within the content area
-                    for (lineIndex, childLine) in childLines.enumerated() {
-                        let lineY = contentY + lineIndex
-                        if lineY >= 0 && lineY < lines.count {
-                            let startX = contentX
-                            // Use display width instead of character count for proper emoji handling
-                            let childDisplayWidth = Width.displayWidth(of: childLine)
-                            let endX = min(startX + childDisplayWidth, rect.width)
-                            if startX < rect.width && endX > startX {
-                                if borderStyle != .none {
-                                    // With borders, we need to maintain the full-width line
-                                    let prefix = String(lines[lineY].prefix(startX))
-                                    let content = String(childLine.prefix(endX - startX))
-                                    // Use display width for suffix calculation to handle emoji properly
-                                    let contentDisplayWidth = Width.displayWidth(of: content)
-                                    let suffix = String(lines[lineY].dropFirst(startX + contentDisplayWidth))
+    // MARK: - Rendering (moved to BoxRendering.swift)
 
 
+    /// Truncate a string to fit within a specific display width while preserving ANSI sequences
+    ///
+    /// This function safely truncates text that may contain ANSI escape sequences by:
+    /// 1. Tokenizing the input to separate ANSI codes from text
+    /// 2. Truncating only the visible text content by display width
+    /// 3. Preserving all ANSI formatting codes
+    ///
+    /// - Parameters:
+    ///   - text: The text to truncate (may contain ANSI codes)
+    ///   - maxWidth: The maximum display width allowed
+    /// - Returns: The truncated text that fits within maxWidth display columns
+    // MARK: - Private helpers (moved to ANSISafeTruncation)
+    // Truncation helpers moved to RuneANSI.ANSISafeTruncation
 
-                                    lines[lineY] = prefix + content + suffix
-                                } else {
-                                    // Without borders, just place the content with appropriate padding
-                                    let padding = String(repeating: " ", count: startX)
-                                    lines[lineY] = padding + String(childLine.prefix(endX - startX))
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    // For multiple children, use layout calculation
-                    let layout = calculateLayout(in: rect)
-
-                    // Render each child in its calculated position
-                    for (index, childComponent) in allChildren.enumerated() {
-                        if index < layout.childRects.count {
-                            let childRect = layout.childRects[index]
-                            let childLines = childComponent.render(in: childRect)
-
-                            // Place child content within the content area
-                            for (lineIndex, childLine) in childLines.enumerated() {
-                                let lineY = contentY + childRect.y + lineIndex
-                                if lineY >= 0 && lineY < lines.count {
-                                    let startX = contentX + childRect.x
-                                    let endX = min(startX + childLine.count, rect.width)
-                                    if startX < rect.width && endX > startX {
-                                        if borderStyle != .none {
-                                            // With borders, we need to maintain the full-width line
-                                            let prefix = String(lines[lineY].prefix(startX))
-                                            let content = String(childLine.prefix(endX - startX))
-                                            let suffix = String(lines[lineY].dropFirst(startX + content.count))
-                                            lines[lineY] = prefix + content + suffix
-                                        } else {
-                                            // Without borders, just place the content with appropriate padding
-                                            let padding = String(repeating: " ", count: startX)
-                                            lines[lineY] = padding + String(childLine.prefix(endX - startX))
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return lines
-    }
 }

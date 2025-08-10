@@ -79,23 +79,5 @@ public struct Static: Component {
 ///   - maxWidth: Maximum display width in terminal columns
 /// - Returns: Truncated string that fits within the width
 private func truncateToDisplayWidth(_ text: String, maxWidth: Int) -> String {
-    guard maxWidth > 0 else { return "" }
-
-    var result = ""
-    var currentWidth = 0
-
-    for character in text {
-        let charString = String(character)
-        let charWidth = Width.displayWidth(of: charString)
-
-        // Check if adding this character would exceed the width
-        if currentWidth + charWidth > maxWidth {
-            break
-        }
-
-        result.append(character)
-        currentWidth += charWidth
-    }
-
-    return result
+    ANSISafeTruncation.truncateToDisplayWidth(text, maxWidth: maxWidth)
 }

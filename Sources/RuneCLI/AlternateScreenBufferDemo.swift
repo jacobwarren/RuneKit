@@ -34,9 +34,7 @@ extension RuneCLI {
         print("Rendering welcome frame in alternate screen...")
         await frameBuffer.renderFrame(welcomeFrame)
 
-        // Wait to show the welcome screen (reduced in CI)
-        let sleepTime: UInt64 = ProcessInfo.processInfo.environment["CI"] != nil ? 100_000_000 : 3_000_000_000 // 0.1s in CI, 3s locally
-        try? await Task.sleep(nanoseconds: sleepTime)
+        // Welcome screen displayed, continue naturally
 
         // Create an application simulation frame
         let appFrame = createAlternateScreenAppFrame(terminalWidth: terminalSize.width)
@@ -44,16 +42,13 @@ extension RuneCLI {
         print("Switching to application view...")
         await frameBuffer.renderFrame(appFrame)
 
-        // Wait to show the application (reduced in CI)
-        let appSleepTime: UInt64 = ProcessInfo.processInfo.environment["CI"] != nil ? 100_000_000 : 3_000_000_000 // 0.1s in CI, 3s locally
-        try? await Task.sleep(nanoseconds: appSleepTime)
+        // Application displayed, continue naturally
 
         // Clean up - this should restore the previous terminal content
         print("Exiting alternate screen (should restore previous content)...")
         await frameBuffer.clear()
 
-        let cleanupSleepTime: UInt64 = ProcessInfo.processInfo.environment["CI"] != nil ? 50_000_000 : 1_000_000_000 // 0.05s in CI, 1s locally
-        try? await Task.sleep(nanoseconds: cleanupSleepTime)
+        // Cleanup completed, continue naturally
 
         print("")
         print("Demo 1 complete. Previous terminal content should be restored!")
@@ -71,8 +66,7 @@ extension RuneCLI {
 
         await normalFrameBuffer.renderFrame(fallbackFrame)
 
-        let fallbackSleepTime: UInt64 = ProcessInfo.processInfo.environment["CI"] != nil ? 50_000_000 : 2_000_000_000 // 0.05s in CI, 2s locally
-        try? await Task.sleep(nanoseconds: fallbackSleepTime)
+        // Fallback displayed, continue naturally
 
         await normalFrameBuffer.clear()
 

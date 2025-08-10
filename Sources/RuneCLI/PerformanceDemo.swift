@@ -1,5 +1,6 @@
 import Foundation
 import RuneRenderer
+import RuneComponents
 
 /// Performance demonstration functions
 extension RuneCLI {
@@ -54,8 +55,7 @@ extension RuneCLI {
         let metricsFrame = createFinalResultsFrame(terminalWidth: 80, metrics: finalMetrics)
         await frameBuffer.renderFrame(metricsFrame)
 
-        let readSleepTime: UInt64 = ProcessInfo.processInfo.environment["CI"] != nil ? 100_000_000 : 3_000_000_000 // 0.1s in CI, 3s locally
-        try? await Task.sleep(nanoseconds: readSleepTime)
+        // Let users read the results naturally without artificial timeout
 
         await frameBuffer.clear()
 
@@ -69,8 +69,7 @@ extension RuneCLI {
         print("• Reducing quality temporarily under load")
         print("• Maintaining terminal responsiveness")
 
-        // Give time for system to settle before next demo
-        try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+        // System settled, continue to next demo
     }
 
     /// Live demonstration of frame buffer with actual terminal rendering
@@ -84,22 +83,22 @@ extension RuneCLI {
         print("• Proper cleanup and restoration")
         print("")
 
-        print("Starting live rendering in 3 seconds...")
-        try? await Task.sleep(nanoseconds: 3_000_000_000) // 3 seconds
+        print("Starting live rendering...")
+        // Start immediately without artificial delay
 
         let frameBuffer = FrameBuffer()
 
-        // Animation frames with consistent width
-        let loadingContents = ["Loading...", "Loading.", "Loading..", "Loading..."]
-        let loadingFrames = loadingContents.map { content in
-            createBoxFrame(content: content)
+        // Animation frames using Transform component (RUNE-34)
+        let loadingFrames = createTransformBasedLoadingFrames().map { transform in
+            createBoxFrameWithTransform(transform: transform)
         }
 
         // Animate loading for 2 cycles (reduced for demo)
+        let frameDescriptions = ["Loading...", "Loading.", "Loading..", "Loading..."]
         for cycle in 0..<2 {
             for (index, frame) in loadingFrames.enumerated() {
                 await frameBuffer.renderFrame(frame)
-                print("  → Rendered frame \(cycle * 4 + index + 1): \(loadingContents[index])")
+                print("  → Rendered frame \(cycle * 4 + index + 1): \(frameDescriptions[index]) (using Transform)")
                 let frameSleepTime: UInt64 = ProcessInfo.processInfo.environment["CI"] != nil ? 50_000_000 : 800_000_000 // 0.05s in CI, 0.8s locally
                 try? await Task.sleep(nanoseconds: frameSleepTime)
             }
@@ -110,9 +109,7 @@ extension RuneCLI {
         await frameBuffer.renderFrame(completeFrame)
         print("  → Rendered final frame: Complete! ✅")
 
-        // Wait to show final result (reduced in CI)
-        let finalSleepTime: UInt64 = ProcessInfo.processInfo.environment["CI"] != nil ? 50_000_000 : 2_000_000_000 // 0.05s in CI, 2s locally
-        try? await Task.sleep(nanoseconds: finalSleepTime)
+        // Final result displayed, continue naturally
 
         // Clean up
         await frameBuffer.clear()
@@ -138,7 +135,19 @@ extension RuneCLI {
         print("• Cursor is hidden during rendering and restored afterward")
         print("• ANSI escape sequences handle all positioning and clearing")
 
-        // Give time for user to read results before next demo
-        try? await Task.sleep(nanoseconds: 3_000_000_000) // 3 seconds
+        // Results displayed, continue to next demo
+    }
+
+    /// Create Transform-based loading frames for animation
+    private static func createTransformBasedLoadingFrames() -> [Transform] {
+        let dotPatterns = ["...", ".", "..", "..."]
+
+        return dotPatterns.map { dots in
+            Transform(transform: { text in
+                text.replacingOccurrences(of: "...", with: dots)
+            }) {
+                Text("Loading...", color: .blue, bold: true)
+            }
+        }
     }
 }

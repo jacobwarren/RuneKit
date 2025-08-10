@@ -34,6 +34,7 @@ import Foundation
 enum Config {
     static let unicodeVersion = "15.1.0"
     static let baseURL = "https://www.unicode.org/Public/\(unicodeVersion)/ucd/"
+    static let emojiDir = "emoji/"
     static let outputDir = "Sources/RuneUnicode/Generated"
 
     static let dataFiles = [
@@ -154,7 +155,8 @@ class UnicodeTableGenerator {
     private func downloadAndParseEmojiData() throws -> [UnicodeRange] {
         print("📥 Downloading emoji-data.txt...")
 
-        let url = URL(string: Config.baseURL + "emoji-data.txt")!
+        // emoji-data.txt is in ucd/emoji/ per Unicode directory structure
+        let url = URL(string: Config.baseURL + Config.emojiDir + "emoji-data.txt")!
         let data = try Data(contentsOf: url)
         let content = String(data: data, encoding: .utf8)!
 

@@ -5,7 +5,7 @@ import Foundation
 
 /// Cross-platform helper functions to handle Yoga enum initialization differences
 /// between macOS (Int32, optional) and Linux (UInt32, non-optional) versions
-private extension YGDirection {
+internal extension YGDirection {
     static func create(rawValue: Int) -> YGDirection {
         #if os(macOS)
         return YGDirection(rawValue: Int32(rawValue))!
@@ -15,7 +15,7 @@ private extension YGDirection {
     }
 }
 
-private extension YGFlexDirection {
+internal extension YGFlexDirection {
     static func create(rawValue: Int) -> YGFlexDirection {
         #if os(macOS)
         return YGFlexDirection(rawValue: Int32(rawValue))!
@@ -25,7 +25,7 @@ private extension YGFlexDirection {
     }
 }
 
-private extension YGJustify {
+internal extension YGJustify {
     static func create(rawValue: Int) -> YGJustify {
         #if os(macOS)
         return YGJustify(rawValue: Int32(rawValue))!
@@ -35,7 +35,7 @@ private extension YGJustify {
     }
 }
 
-private extension YGAlign {
+internal extension YGAlign {
     static func create(rawValue: Int) -> YGAlign {
         #if os(macOS)
         return YGAlign(rawValue: Int32(rawValue))!
@@ -45,7 +45,7 @@ private extension YGAlign {
     }
 }
 
-private extension YGEdge {
+internal extension YGEdge {
     static func create(rawValue: Int) -> YGEdge {
         #if os(macOS)
         return YGEdge(rawValue: Int32(rawValue))!
@@ -55,7 +55,7 @@ private extension YGEdge {
     }
 }
 
-private extension YGGutter {
+internal extension YGGutter {
     static func create(rawValue: Int) -> YGGutter {
         #if os(macOS)
         return YGGutter(rawValue: Int32(rawValue))!
@@ -319,6 +319,8 @@ public enum YogaFlexDirection {
         case .columnReverse: return YGFlexDirection.create(rawValue: 1) // YGFlexDirectionColumnReverse
         }
     }
+    // For tests
+    internal static func create(rawValue: Int) -> YGFlexDirection { YGFlexDirection.create(rawValue: rawValue) }
 }
 
 /// Justify content enumeration
@@ -340,6 +342,8 @@ public enum JustifyContent: Sendable {
         case .spaceEvenly: return YGJustify.create(rawValue: 5) // YGJustifySpaceEvenly
         }
     }
+    // For tests
+    internal static func create(rawValue: Int) -> YGJustify { YGJustify.create(rawValue: rawValue) }
 }
 
 /// Align items enumeration
@@ -359,6 +363,8 @@ public enum AlignItems: Sendable {
         case .baseline: return YGAlign.create(rawValue: 5) // YGAlignBaseline
         }
     }
+    // For tests
+    internal static func create(rawValue: Int) -> YGAlign { YGAlign.create(rawValue: rawValue) }
 }
 
 /// Align self enumeration for individual item alignment
@@ -380,6 +386,8 @@ public enum AlignSelf: Sendable {
         case .baseline: return YGAlign.create(rawValue: 5) // YGAlignBaseline
         }
     }
+    // For tests
+    internal static func create(rawValue: Int) -> YGAlign { YGAlign.create(rawValue: rawValue) }
 }
 
 /// Flex wrap enumeration
@@ -395,6 +403,8 @@ public enum FlexWrap {
         case .wrapReverse: return YGWrap.create(rawValue: 2) // YGWrapWrapReverse
         }
     }
+    // For tests
+    internal static func create(rawValue: Int) -> YGWrap { YGWrap.create(rawValue: rawValue) }
 }
 
 /// Dimension type for width/height values

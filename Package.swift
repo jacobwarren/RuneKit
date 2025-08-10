@@ -103,6 +103,13 @@ let package = Package(
             ]
         ),
 
+        // Shared test support (pure Swift utilities for tests)
+        .target(
+            name: "TestSupport",
+            dependencies: [],
+            path: "Sources/TestSupport"
+        ),
+
         // CLI executable
         .executableTarget(
             name: "RuneCLI",
@@ -124,11 +131,11 @@ let package = Package(
         ),
         .testTarget(
             name: "RuneRendererTests",
-            dependencies: ["RuneRenderer"]
+            dependencies: ["RuneRenderer", "TestSupport"]
         ),
         .testTarget(
             name: "RuneComponentsTests",
-            dependencies: ["RuneComponents"]
+            dependencies: ["RuneComponents", "TestSupport"]
         ),
         .testTarget(
             name: "RuneKitTests",
