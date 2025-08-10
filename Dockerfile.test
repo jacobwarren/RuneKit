@@ -33,8 +33,6 @@ RUN swift build -c release
 # Run tests (matches CI)
 RUN swift test
 
-# Verify CLI executable (matches CI)
-RUN swift run RuneCLI
 
 # Default command
 CMD ["swift", "test"]

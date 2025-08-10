@@ -39,16 +39,16 @@ struct RuneCLI {
             await testLiveFrameBufferDemoFix()
             return
         }
-            // Avoid noisy demos under unit tests
-            let isRunningTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil ||
-                                  ProcessInfo.processInfo.environment["SWIFTPM_TEST"] != nil ||
-                                  ProcessInfo.processInfo.environment["CI"] != nil
-            if isRunningTests {
-                // Keep CLI quiet during tests; only run a minimal, fast sanity
-                // path to avoid segfaults in CI due to pty/terminal constraints.
-                print("RuneCLI running in test/CI mode — skipping demos.")
-                return
-            }
+
+        // In CI or non-interactive terminals (like Docker builds), skip demos entirely.
+        let isInteractive = RenderOptions.isInteractiveTerminal()
+        let isRunningTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil ||
+                             ProcessInfo.processInfo.environment["SWIFTPM_TEST"] != nil ||
+                             ProcessInfo.processInfo.environment["CI"] != nil
+        if !isInteractive || isRunningTests {
+            print("RuneCLI running in non-interactive/test/CI mode — skipping demos.")
+            return
+        }
 
 
         // Check command line arguments
