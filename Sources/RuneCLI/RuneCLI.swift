@@ -55,9 +55,13 @@ struct RuneCLI {
         if args.count > 1 {
             switch args[1] {
             case "spinner":
-                await spinnerDemo()
+                await hooksSpinnerDemo()
             case "exact-spinner":
                 await exactSpinnerDemo()
+            case "hooks-spinner":
+                await hooksSpinnerDemo()
+            case "hooks-simple-spinner":
+                await hooksSimpleSpinnerDemo()
             case "comprehensive":
                 await comprehensiveComponentDemo()
             case "components":
@@ -74,8 +78,20 @@ struct RuneCLI {
 
     // Shared demo render options: own the terminal outside CI (Ink-like behavior)
     static var demoOptions: RenderOptions {
-        // Use TTY and CI-aware defaults to avoid aborts in non-interactive contexts
-        RenderOptions.fromEnvironment()
+        // Force demos to use the main screen buffer (no alternate screen)
+        let base = RenderOptions.fromEnvironment()
+        return RenderOptions(
+            stdout: base.stdout,
+            stdin: base.stdin,
+            stderr: base.stderr,
+            exitOnCtrlC: base.exitOnCtrlC,
+            patchConsole: base.patchConsole,
+            useAltScreen: false,
+            enableRawMode: base.enableRawMode,
+            enableBracketedPaste: base.enableBracketedPaste,
+            fpsCap: base.fpsCap,
+            terminalProfile: base.terminalProfile
+        )
     }
 
     // Run through RUNE-13 to RUNE-18 ticket demos sequentially
@@ -195,6 +211,7 @@ struct RuneCLI {
         await fb.renderFrame(progressFrame(3))
         await fb.waitForPendingUpdates()
         await fb.clear()
+        await fb.shutdown()
 
         print("✅ RUNE-31 demo complete\n")
     }
@@ -381,6 +398,7 @@ struct RuneCLI {
         await fb.waitForPendingUpdates()
         // Ensure cursor restored on clear
         await fb.clear()
+        await fb.shutdown()
         print("✅ RUNE-20 demo complete\n")
     }
 
@@ -402,6 +420,7 @@ struct RuneCLI {
         // Pull renderer metrics snapshot
         print("  Render mode: lineDiff; metrics collected (bytes/lines via RenderStats/metrics)")
         await fb.clear()
+        await fb.shutdown()
         print("✅ RUNE-21 demo complete\n")
     }
 
@@ -415,7 +434,7 @@ struct RuneCLI {
         ) } }
         let handle = await render(
             AltView(),
-            options: RenderOptions(exitOnCtrlC: false, patchConsole: false, useAltScreen: true),
+            options: RenderOptions(exitOnCtrlC: false, patchConsole: false, useAltScreen: false),
         )
         print("  Entered alternate screen; showing content briefly...")
         try? await Task.sleep(for: .milliseconds(500))
@@ -758,6 +777,7 @@ struct RuneCLI {
 
         // Clear the frame buffer
         await frameBuffer.clear()
+        await frameBuffer.shutdown()
 
         print("")
         print("✅ Test completed!")

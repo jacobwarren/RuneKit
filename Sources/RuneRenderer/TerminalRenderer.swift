@@ -112,10 +112,9 @@ public actor TerminalRenderer {
             await hideCursor()
         }
 
-        // Use the provided strategy
+        // Use the provided strategy regardless of screen buffer; strategy determiner
+        // and higher-level policies decide between full redraw, delta, or scroll-optimized.
         stats.strategy = strategy
-
-        // Render based on strategy
         switch strategy {
         case .fullRedraw:
             stats = await renderInkStyle(grid)
@@ -299,8 +298,7 @@ public actor TerminalRenderer {
         var stats = RenderStats()
         stats.strategy = .fullRedraw
 
-        // Disable autowrap during render to prevent right-edge wrap artifacts
-        await disableAutowrapIfNeeded()
+        // Avoid toggling autowrap; render with explicit line clearing and cursor moves
 
         // For the first render, just clear screen and start fresh
         if previousLineCount == 0 {
@@ -360,8 +358,6 @@ public actor TerminalRenderer {
         stats.linesChanged = grid.height
         stats.totalLines = grid.height
 
-        // Re-enable autowrap if we disabled it
-        await enableAutowrapIfNeeded()
 
         return stats
     }
@@ -371,8 +367,7 @@ public actor TerminalRenderer {
         var stats = RenderStats()
         stats.strategy = .deltaUpdate
 
-        // Disable autowrap during delta updates as well for consistency
-        await disableAutowrapIfNeeded()
+        // Avoid autowrap toggling; relative updates handle EOL hygiene explicitly
 
         // Use provided previous grid or fall back to currentGrid
         let current = previousGrid ?? currentGrid
@@ -380,7 +375,6 @@ public actor TerminalRenderer {
             // No previous grid - fall back to full redraw
             let statsFromFull = await renderInkStyle(grid)
             // renderInkStyle re-enables autowrap; ensure our local flag is reset
-            await enableAutowrapIfNeeded()
             return statsFromFull
         }
 
@@ -458,7 +452,6 @@ public actor TerminalRenderer {
         // Populate totalLines for accurate efficiency
         stats.totalLines = grid.height
 
-        await enableAutowrapIfNeeded()
         return stats
     }
 

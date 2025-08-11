@@ -146,14 +146,10 @@ public struct Transform: Component {
             return Array(repeating: "", count: rect.height)
         }
 
-        // Apply transformation to each line individually
-        // Skip transformation for empty lines to avoid unwanted content
+        // Apply transformation to each line individually, even for empty lines.
+        // This allows time-aware transforms to generate content (e.g., spinners) from empty children.
         let transformedLines = childLines.map { line in
-            if line.isEmpty {
-                line // Don't transform empty lines
-            } else {
-                TransformANSISafety.applySafely(to: line, transform: transformFunction)
-            }
+            TransformANSISafety.applySafely(to: line, transform: transformFunction)
         }
 
         // Ensure we return exactly the expected number of lines

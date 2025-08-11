@@ -205,7 +205,7 @@ public struct RenderOptions: Sendable {
             return RenderOptions(
                 exitOnCtrlC: true,
                 patchConsole: true,
-                useAltScreen: true,
+                useAltScreen: false, // default to main buffer like Ink
                 enableRawMode: true,
                 enableBracketedPaste: true,
                 fpsCap: 60.0,
@@ -355,7 +355,7 @@ public actor SignalHandler {
 /// where views describe what they should look like rather than how to render them.
 public protocol View {
     /// The type of view representing the body of this view
-    associatedtype Body
+    associatedtype Body: View
 
     /// The content and behavior of the view
     var body: Self.Body { get }
@@ -451,6 +451,22 @@ public actor RenderHandle {
     /// Last rendered view identity (type + explicit identity if provided).
     private var lastViewIdentity: String?
 
+    /// Root rebuilder for hook-driven rerenders (captures last provided view)
+    private var rootRebuilder: (() async -> Void)?
+
+    /// Stable build-context path for hooks executed during the builder phase
+    /// Ensures useRef/useMemo keys are consistent across rerenders for this handle
+    private let buildContextPath: String = {
+        let uuid = UUID().uuidString
+        return "build#" + uuid
+    }()
+
+    /// Effect state: id -> (depsToken, cleanup)
+    private var effects: [String: (deps: String?, cleanup: (() -> Void)?)] = [:]
+
+    /// Helper invoked from requestRerender to avoid capturing non-Sendable state
+    private func rerenderUsingRoot() async { await rootRebuilder?() }
+
     // MARK: - Initialization
 
     /// Initialize render handle with frame buffer and options
@@ -479,6 +495,9 @@ public actor RenderHandle {
 
         // Clear the frame buffer
         await frameBuffer.clear()
+
+        // Run effect cleanups
+        runAllEffectCleanups()
 
         isActive = false
     }
@@ -510,6 +529,10 @@ public actor RenderHandle {
 
         // Clear the frame buffer and restore terminal state
         await frameBuffer.clear()
+
+        // Run effect cleanups and clear
+        runAllEffectCleanups()
+        effects.removeAll()
 
         // Resolve all pending waitUntilExit continuations
         let continuationsToResume = exitContinuations
@@ -603,6 +626,8 @@ public actor RenderHandle {
     ///
     /// - Parameter view: The new view to render
     public func rerender(_ view: some View) async {
+
+
         // Determine identity for state preservation
         let typeName = String(describing: type(of: view))
         let explicit = (view as? ViewIdentifiable)?.viewIdentity
@@ -612,18 +637,117 @@ public actor RenderHandle {
             lastViewIdentity = identity
             await componentTree.reset()
         }
-        // Begin a logical frame for the componentTree
-        await componentTree.beginFrame(rootPath: identity)
-        let frame = convertViewToFrame(view, tree: componentTree, terminalProfile: options.terminalProfile)
-        await componentTree.endFrame()
+
+        // Collect effects registered during this render
+        let box = EffectCollectorBox()
+        let frame: TerminalRenderer.Frame = await RuntimeStateContext.$effectCollector.withValue({ id, deps, effect in
+            box.add(id: id, deps: deps, effect: effect)
+        }, operation: {
+            // Begin a logical frame for the componentTree
+            await componentTree.beginFrame(rootPath: identity)
+            let f = convertViewToFrame(view, tree: componentTree, terminalProfile: options.terminalProfile)
+            await componentTree.endFrame()
+            return f
+        })
+        let collected = box.snapshot()
+
+        // Render the frame
         await frameBuffer.renderFrame(frame)
+
+        // Commit effects after frame commit
+        await commitEffects(collected)
     }
 
-    /// Builder overload to construct the view inside the actor context
-    /// Avoids sending non-Sendable view values across actor boundaries
+    // MARK: - Effects commit/cleanup
+    private func commitEffects(_ specs: [(id: String, deps: String?, effect: @Sendable () async -> (() -> Void)?)]) async {
+        // Build lookup of new specs
+        var newMap: [String: (String?, @Sendable () async -> (() -> Void)?)] = [:]
+        for s in specs { newMap[s.id] = (s.deps, s.effect) }
+
+        // Clean up effects that disappeared
+        for (id, entry) in effects where newMap[id] == nil {
+            entry.cleanup?()
+            effects.removeValue(forKey: id)
+        }
+
+        // For existing/new effects, run if deps changed, first mount, or if depsToken == nil (run every commit)
+        for (id, pair) in newMap {
+            let (depsToken, effect) = pair
+            let prev = effects[id]
+            let needsRun = prev == nil || depsToken == nil || prev?.deps != depsToken
+            if needsRun {
+                // Run previous cleanup if any
+                prev?.cleanup?()
+                // Give any scheduled tasks inside cleanup a chance to run (non-blocking)
+                await Task.yield()
+                // Bind requestRerender and currentPath for this effect invocation
+                let parts = id.split(separator: ":", maxSplits: 1, omittingEmptySubsequences: false)
+                let path = parts.first.map(String.init) ?? RuntimeStateContext.currentPath
+                let cleanup = await RuntimeStateContext.$currentPath.withValue(path) {
+                    await RuntimeStateContext.$requestRerender.withValue({ [weak self] in
+                        guard let self else { return }
+                        Task { await self.rerenderUsingRoot() }
+                    }, operation: {
+                        await effect()
+                    })
+                }
+                effects[id] = (deps: depsToken, cleanup: cleanup)
+            } else {
+                // Preserve existing
+                effects[id] = prev
+            }
+        }
+    }
+
+    private func runAllEffectCleanups() {
+        for (_, entry) in effects { entry.cleanup?() }
+        // Ensure that a depsToken of nil (no deps) is treated as always-change,
+        // while a concrete token runs only when it differs from previous.
+
+    }
+
+    /// Builder overload to construct the view and render within the same actor context
+    /// Ensures hooks (useEffect) registered during build are captured and committed.
     public func rerender(_ build: @escaping @Sendable () -> some View) async {
-        let builtView = build()
-        await rerender(builtView)
+        // Update root rebuilder to capture latest builder for hook-driven rerenders
+        rootRebuilder = { [weak self] in
+            guard let self else { return }
+            await self.rerender(build)
+        }
+
+        // Collect effects during both build and render passes
+        let box = EffectCollectorBox()
+        let frame: TerminalRenderer.Frame = await RuntimeStateContext.$effectCollector.withValue({ id, deps, effect in
+            box.add(id: id, deps: deps, effect: effect)
+        }, operation: {
+            // Build the view inside the effectCollector context so HooksRuntime.useEffect during build is recorded
+            // Bind currentPath to a per-handle stable buildContextPath so hooks (useRef/useMemo) within build
+            // use a stable path across rerenders, independent of lastViewIdentity.
+            let view = RuntimeStateContext.$currentPath.withValue(self.buildContextPath) {
+                build()
+            }
+
+            // Determine identity for state preservation
+            let typeName = String(describing: type(of: view))
+            let explicit = (view as? ViewIdentifiable)?.viewIdentity
+            let identity = [typeName, explicit].compactMap(\.self).joined(separator: "#")
+            if lastViewIdentity != identity {
+                await frameBuffer.resetDiffState()
+                lastViewIdentity = identity
+                await componentTree.reset()
+            }
+
+            // Convert and render to a frame
+            await componentTree.beginFrame(rootPath: identity)
+            let f = convertViewToFrame(view, tree: componentTree, terminalProfile: options.terminalProfile)
+            await componentTree.endFrame()
+            return f
+        })
+
+        await frameBuffer.renderFrame(frame)
+
+        // Commit collected effects
+        await commitEffects(box.snapshot())
     }
 
     /// Schedule periodic rerenders until cancelled or unmounted
@@ -632,13 +756,13 @@ public actor RenderHandle {
     public func scheduleRerender(every interval: Duration, build: @escaping @Sendable () -> some View) -> Ticker {
         let ticker = Ticker(every: interval) { [weak self] in
             guard let self else { return }
-            await rerender(build)
+            await self.rerender(build())
         }
         return ticker
     }
 
     // MARK: - Testing hook to inject input
-    public func _testing_processInput(bytes: [UInt8]) async {
+    public func testingProcessInput(bytes: [UInt8]) async {
         await inputManager?.process(bytes: bytes)
     }
 
@@ -649,7 +773,19 @@ public actor RenderHandle {
         let frame = convertViewToFrame(view, tree: componentTree, terminalProfile: options.terminalProfile)
         await frameBuffer.renderFrame(frame)
     }
+
+    }
+
+// MARK: - Internal test hook
+extension RuneKit {
+    /// Convert a View into Frame synchronously for tests
+    static func convertForTesting(_ view: some View) async -> TerminalRenderer.Frame {
+        // Use ephemeral tree and default profile; no side effects
+        let tree = ComponentTreeReconciler()
+        return convertViewToFrame(view, tree: tree, terminalProfile: .xterm256)
+    }
 }
+
 
 // MARK: - View to Component Conversion
 
@@ -719,14 +855,18 @@ private func convertViewToComponent(_ view: some View, currentPath: String) -> C
     }
 
     // For composite views, resolve the body and propagate identity path.
-    // In this minimal system, Body is EmptyView for our leaf components, so
-    // we fallback to a Text rendering of the view type for unknown composites.
+    // Instead of emitting a placeholder, evaluate `body` generically and recurse.
     let childTypeName = String(describing: type(of: view))
     let explicit = (view as? ViewIdentifiable)?.viewIdentity
     let childPath = [currentPath, childTypeName, explicit].compactMap(\.self).joined(separator: "/")
-    return RuntimeStateContext.$currentPath.withValue(childPath) {
-        Text("View: \(String(describing: type(of: view)))")
+
+    func resolveComposite<V: View>(_ v: V, path: String) -> Component {
+        RuntimeStateContext.$currentPath.withValue(path) {
+            convertViewToComponent(v.body, currentPath: path)
+        }
     }
+
+    return resolveComposite(view, path: childPath)
 }
 
 /// Get terminal size with fallback

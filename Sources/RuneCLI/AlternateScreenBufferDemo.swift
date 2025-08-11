@@ -47,6 +47,7 @@ extension RuneCLI {
         // Clean up - this should restore the previous terminal content
         print("Exiting alternate screen (should restore previous content)...")
         await frameBuffer.clear()
+        await frameBuffer.shutdown()
 
         // Cleanup completed, continue naturally
 
@@ -69,6 +70,7 @@ extension RuneCLI {
         // Fallback displayed, continue naturally
 
         await normalFrameBuffer.clear()
+        await normalFrameBuffer.shutdown()
 
         print("")
         print("Demo 2 complete. This rendered normally without alternate screen.")

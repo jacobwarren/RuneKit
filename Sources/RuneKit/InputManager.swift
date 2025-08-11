@@ -165,80 +165,89 @@ public actor InputManager {
     // Decode as many complete events as possible from buffer
     private func decodeFromBuffer() async {
         while !buffer.isEmpty {
-            if isInBracketedPaste {
-                if let endRange = searchCSI(param: "201~", in: buffer) {
-                    // collect up to start of end marker
-                    let endStart = endRange.lowerBound
-                    pasteBuffer.append(contentsOf: buffer[..<endStart])
-                    buffer.removeFirst(endRange.upperBound)
-                    let text = String(decoding: pasteBuffer, as: UTF8.self)
-                    pasteBuffer.removeAll(keepingCapacity: true)
-                    isInBracketedPaste = false
-                    await emit(.paste(text))
-                    continue
-                } else {
-                    // append all and wait for more
-                    pasteBuffer.append(contentsOf: buffer)
-                    buffer.removeAll(keepingCapacity: true)
-                    break
-                }
-            }
-
-            // Ctrl-C / Ctrl-D immediate bytes
-            if let b = buffer.first, (b == 0x03 || b == 0x04) {
-                let ctrl = b == 0x03 ? KeyEvent.ctrlC : KeyEvent.ctrlD
-                buffer.removeFirst()
-                await emit(ctrl)
-                continue
-            }
-
-            // Bracketed paste start CSI 200~
-            if let startRange = searchCSI(param: "200~", in: buffer) {
-                // Enter paste mode and drop the start marker
-                isInBracketedPaste = true
-                pasteBuffer.removeAll(keepingCapacity: true)
-                buffer.removeFirst(startRange.upperBound)
-                continue
-            }
-
-            // ESC-based sequences (CSI or SS3)
-            guard buffer.first == 0x1B else {
-                // Consume a single byte we don't recognize
-                buffer.removeFirst()
-                continue
-            }
-            // If we only have ESC so far, wait for more bytes
-            if buffer.count < 2 { break }
-
-            let second = buffer[1]
-            if buffer.count >= 3 {
-                if second == 0x5B { // '[', CSI
-                    if let (consumed, event) = parseCSI(buffer) {
-                        buffer.removeFirst(consumed)
-                        if let ev = event { await emit(ev) }
-                        continue
-                    } else {
-                        // Incomplete CSI, wait for more
-                        break
-                    }
-                } else if second == 0x4F { // 'O', SS3
-                    if let (consumed, event) = parseSS3(buffer) {
-                        buffer.removeFirst(consumed)
-                        if let ev = event { await emit(ev) }
-                        continue
-                    } else {
-                        break
-                    }
-                }
-            } else {
-                // We have ESC followed by a single byte; if it's '[' or 'O', it's likely a
-                // CSI/SS3 sequence in progress — wait for more data instead of consuming.
-                if second == 0x5B || second == 0x4F { break }
-            }
-
-            // Unknown ESC sequence, consume ESC only
+            if await handleBracketedPasteIfNeeded() { continue }
+            if await handleImmediateControlIfNeeded() { continue }
+            if await handlePasteStartIfNeeded() { continue }
+            if await handleEscapedSequencesIfNeeded() { continue }
+            // Fallback: if ESC may start a sequence, wait for more; otherwise consume one byte
+            if buffer.first == 0x1B { break }
             buffer.removeFirst()
         }
+    }
+
+    // Split helpers to reduce cyclomatic complexity
+    private func handleBracketedPasteIfNeeded() async -> Bool {
+        if isInBracketedPaste {
+            if let endRange = searchCSI(param: "201~", in: buffer) {
+                let endStart = endRange.lowerBound
+                pasteBuffer.append(contentsOf: buffer[..<endStart])
+                buffer.removeFirst(endRange.upperBound)
+                let text = String(decoding: pasteBuffer, as: UTF8.self)
+                pasteBuffer.removeAll(keepingCapacity: true)
+                isInBracketedPaste = false
+                await emit(.paste(text))
+                return true
+            } else {
+                pasteBuffer.append(contentsOf: buffer)
+                buffer.removeAll(keepingCapacity: true)
+                return true // wait for more
+            }
+        }
+        return false
+    }
+
+    private func handleImmediateControlIfNeeded() async -> Bool {
+        if let first = buffer.first, (first == 0x03 || first == 0x04) {
+            let ctrl = first == 0x03 ? KeyEvent.ctrlC : KeyEvent.ctrlD
+            buffer.removeFirst()
+            await emit(ctrl)
+            return true
+        }
+        return false
+    }
+
+    private func handlePasteStartIfNeeded() async -> Bool {
+        if let startRange = searchCSI(param: "200~", in: buffer) {
+            isInBracketedPaste = true
+            pasteBuffer.removeAll(keepingCapacity: true)
+            buffer.removeFirst(startRange.upperBound)
+            return true
+        }
+        return false
+    }
+
+    private func handleEscapedSequencesIfNeeded() async -> Bool {
+        guard let first = buffer.first, first == 0x1B else { return false }
+        if buffer.count < 2 { return false }
+        let second = buffer[1]
+        if buffer.count >= 3 {
+            if second == 0x5B { // '[', CSI
+                if let (consumed, event) = parseCSI(buffer) {
+                    buffer.removeFirst(consumed)
+                    if let ev = event { await emit(ev) }
+                    return true
+                } else {
+                    // Incomplete CSI, wait for more
+                    return false
+                }
+            } else if second == 0x4F { // 'O', SS3
+                if let (consumed, event) = parseSS3(buffer) {
+                    buffer.removeFirst(consumed)
+                    if let ev = event { await emit(ev) }
+                    return true
+                } else {
+                    return false
+                }
+            }
+        } else {
+            // We have ESC followed by a single byte; if it's '[' or 'O', it's likely a
+            // CSI/SS3 sequence in progress — wait for more data instead of consuming.
+            if second == 0x5B || second == 0x4F { return false }
+        }
+
+        // Unknown ESC sequence, consume ESC only
+        buffer.removeFirst()
+        return true
     }
 
     // Parse CSI sequences like ESC [ 1 ; 5 A or ESC [ 5 ~
@@ -266,53 +275,67 @@ public actor InputManager {
     }
 
     private func mapCSI(params: [Int], final: UInt8) -> KeyEvent? {
-        func mods(from code: Int) -> KeyModifiers {
-            // xterm: 1+shift(1)+alt(2)+ctrl(4)
-            let m = code - 1
-            var out: KeyModifiers = []
-            if (m & 1) != 0 { out.insert(.shift) }
-            if (m & 2) != 0 { out.insert(.alt) }
-            if (m & 4) != 0 { out.insert(.ctrl) }
-            return out
-        }
-
         switch final {
-        case 0x41: // A Up
-            if let last = params.last, params.count >= 2 { return .key(kind: .up, modifiers: mods(from: last)) }
-            return .arrowUp
-        case 0x42: // B Down
-            if let last = params.last, params.count >= 2 { return .key(kind: .down, modifiers: mods(from: last)) }
-            return .arrowDown
-        case 0x43: // C Right
-            if let last = params.last, params.count >= 2 { return .key(kind: .right, modifiers: mods(from: last)) }
-            return .arrowRight
-        case 0x44: // D Left
-            if let last = params.last, params.count >= 2 { return .key(kind: .left, modifiers: mods(from: last)) }
-            return .arrowLeft
+        case 0x41, 0x42, 0x43, 0x44: // Arrows A..D
+            return mapArrow(final: final, params: params)
         case 0x48: // H Home
-            let m = params.count >= 2 ? mods(from: params.last!) : []
+            let m = params.count >= 2 ? modsFrom(code: params.last!) : []
             return .key(kind: .home, modifiers: m)
         case 0x46: // F End
-            let m = params.count >= 2 ? mods(from: params.last!) : []
+            let m = params.count >= 2 ? modsFrom(code: params.last!) : []
             return .key(kind: .end, modifiers: m)
-        case 0x7E: // ~ family: PageUp/Down, F-keys with numbers
-            guard let code = params.first else { return nil }
-            let m = params.count >= 2 ? mods(from: params.last!) : []
-            switch code {
-            case 5: return .key(kind: .pageUp, modifiers: m)
-            case 6: return .key(kind: .pageDown, modifiers: m)
-            case 15: return .key(kind: .function(5), modifiers: m)
-            case 17: return .key(kind: .function(6), modifiers: m)
-            case 18: return .key(kind: .function(7), modifiers: m)
-            case 19: return .key(kind: .function(8), modifiers: m)
-            case 20: return .key(kind: .function(9), modifiers: m)
-            case 21: return .key(kind: .function(10), modifiers: m)
-            case 23: return .key(kind: .function(11), modifiers: m)
-            case 24: return .key(kind: .function(12), modifiers: m)
-            default: return nil
-            }
+        case 0x7E: // ~ family
+            return mapTildeFamily(params: params)
         default:
             return nil
+        }
+    }
+
+    private func modsFrom(code: Int) -> KeyModifiers {
+        // xterm: 1+shift(1)+alt(2)+ctrl(4)
+        let m = code - 1
+        var out: KeyModifiers = []
+        if (m & 1) != 0 { out.insert(.shift) }
+        if (m & 2) != 0 { out.insert(.alt) }
+        if (m & 4) != 0 { out.insert(.ctrl) }
+        return out
+    }
+
+    private func mapArrow(final: UInt8, params: [Int]) -> KeyEvent? {
+        if let last = params.last, params.count >= 2 {
+            let mods = modsFrom(code: last)
+            switch final {
+            case 0x41: return .key(kind: .up, modifiers: mods)
+            case 0x42: return .key(kind: .down, modifiers: mods)
+            case 0x43: return .key(kind: .right, modifiers: mods)
+            case 0x44: return .key(kind: .left, modifiers: mods)
+            default: return nil
+            }
+        }
+        switch final {
+        case 0x41: return .arrowUp
+        case 0x42: return .arrowDown
+        case 0x43: return .arrowRight
+        case 0x44: return .arrowLeft
+        default: return nil
+        }
+    }
+
+    private func mapTildeFamily(params: [Int]) -> KeyEvent? {
+        guard let code = params.first else { return nil }
+        let m = params.count >= 2 ? modsFrom(code: params.last!) : []
+        switch code {
+        case 5: return .key(kind: .pageUp, modifiers: m)
+        case 6: return .key(kind: .pageDown, modifiers: m)
+        case 15: return .key(kind: .function(5), modifiers: m)
+        case 17: return .key(kind: .function(6), modifiers: m)
+        case 18: return .key(kind: .function(7), modifiers: m)
+        case 19: return .key(kind: .function(8), modifiers: m)
+        case 20: return .key(kind: .function(9), modifiers: m)
+        case 21: return .key(kind: .function(10), modifiers: m)
+        case 23: return .key(kind: .function(11), modifiers: m)
+        case 24: return .key(kind: .function(12), modifiers: m)
+        default: return nil
         }
     }
 
