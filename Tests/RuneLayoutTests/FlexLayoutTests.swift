@@ -1,6 +1,6 @@
 import Testing
-@testable import RuneLayout
 @testable import RuneComponents
+@testable import RuneLayout
 
 /// Tests for flexbox layout functionality following TDD principles
 struct FlexLayoutTests {
@@ -127,7 +127,7 @@ struct FlexLayoutTests {
             paddingRight: 2,
             paddingBottom: 1,
             paddingLeft: 2,
-            child: Text("Content")
+            child: Text("Content"),
         )
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 10)
 
@@ -151,7 +151,7 @@ struct FlexLayoutTests {
             marginRight: 1,
             marginBottom: 2,
             marginLeft: 1,
-            child: Text("Content")
+            child: Text("Content"),
         )
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 10)
 
@@ -172,12 +172,12 @@ struct FlexLayoutTests {
         let children = [
             Text("First"),
             Text("Second"),
-            Text("Third")
+            Text("Third"),
         ]
         let box = Box(
             flexDirection: .row,
             columnGap: 2,
-            childrenArray: children
+            childrenArray: children,
         )
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 30, height: 5)
 
@@ -189,9 +189,9 @@ struct FlexLayoutTests {
         // Text intrinsic sizes: "First"=5, "Second"=6, "Third"=5
         // With 2-column gaps: 5 + 2 + 6 + 2 + 5 = 20 total width
         let expectedChildRects = [
-            FlexLayout.Rect(x: 0, y: 0, width: 5, height: 1),  // "First"
-            FlexLayout.Rect(x: 7, y: 0, width: 6, height: 1),  // "Second" (5 + 2 gap)
-            FlexLayout.Rect(x: 15, y: 0, width: 5, height: 1)  // "Third" (7 + 6 + 2 gap)
+            FlexLayout.Rect(x: 0, y: 0, width: 5, height: 1), // "First"
+            FlexLayout.Rect(x: 7, y: 0, width: 6, height: 1), // "Second" (5 + 2 gap)
+            FlexLayout.Rect(x: 15, y: 0, width: 5, height: 1), // "Third" (7 + 6 + 2 gap)
         ]
         #expect(layout.childRects == expectedChildRects, "Children should be spaced with column gap")
     }
@@ -202,12 +202,12 @@ struct FlexLayoutTests {
         let children = [
             Text("First"),
             Text("Second"),
-            Text("Third")
+            Text("Third"),
         ]
         let box = Box(
             flexDirection: .column,
             rowGap: 1,
-            childrenArray: children
+            childrenArray: children,
         )
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 15)
 
@@ -219,9 +219,9 @@ struct FlexLayoutTests {
         // Text intrinsic sizes: all have height=1, width="First"=5, "Second"=6, "Third"=5
         // With 1-row gaps: 1 + 1 + 1 + 1 + 1 = 5 total height
         let expectedChildRects = [
-            FlexLayout.Rect(x: 0, y: 0, width: 5, height: 1),  // "First"
-            FlexLayout.Rect(x: 0, y: 2, width: 6, height: 1),  // "Second" (1 + 1 gap)
-            FlexLayout.Rect(x: 0, y: 4, width: 5, height: 1)   // "Third" (2 + 1 + 1 gap)
+            FlexLayout.Rect(x: 0, y: 0, width: 5, height: 1), // "First"
+            FlexLayout.Rect(x: 0, y: 2, width: 6, height: 1), // "Second" (1 + 1 gap)
+            FlexLayout.Rect(x: 0, y: 4, width: 5, height: 1), // "Third" (2 + 1 + 1 gap)
         ]
         #expect(layout.childRects == expectedChildRects, "Children should be spaced with row gap")
     }
@@ -232,7 +232,7 @@ struct FlexLayoutTests {
         let box = Box(
             width: .points(15),
             height: .points(8),
-            child: Text("Fixed")
+            child: Text("Fixed"),
         )
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 30, height: 20)
 
@@ -252,7 +252,7 @@ struct FlexLayoutTests {
         let box = Box(
             width: .percent(50),
             height: .percent(75),
-            child: Text("Percent")
+            child: Text("Percent"),
         )
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 12)
 

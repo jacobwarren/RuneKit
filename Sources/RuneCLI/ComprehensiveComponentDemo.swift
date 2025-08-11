@@ -1,38 +1,36 @@
-import RuneKit
+import Foundation
+import RuneANSI
 import RuneComponents
+import RuneKit
 import RuneLayout
 import RuneRenderer
-import RuneANSI
-import Foundation
 
 private enum DemoEnv {
     static var options: RenderOptions {
         // Use TTY/CI aware defaults to avoid aborts in non-interactive contexts
-        return RenderOptions.fromEnvironment()
+        RenderOptions.fromEnvironment()
     }
 }
-
 
 /// Comprehensive demonstration of ALL RuneKit components working together
 /// This demo showcases proper nesting, integration, and real-world usage patterns
 public enum ComprehensiveComponentDemo {
-
     public static func run() async {
         // Build intro view inside the component tree (no interleaved prints)
         let intro = Box(
             border: .rounded,
             paddingTop: 1, paddingRight: 2, paddingBottom: 1, paddingLeft: 2,
             children:
-                Static([
-                    "🚀 Comprehensive RuneKit Component Integration Demo",
-                    "This demo showcases ALL components working together in realistic scenarios:",
-                    "• Text with full styling capabilities",
-                    "• Box with borders, padding, and layout",
-                    "• Static for immutable headers and logs",
-                    "• Newline for consistent spacing",
-                    "• Spacer for flexible layouts",
-                    "• Transform for dynamic content modification",
-                ])
+            Static([
+                "🚀 Comprehensive RuneKit Component Integration Demo",
+                "This demo showcases ALL components working together in realistic scenarios:",
+                "• Text with full styling capabilities",
+                "• Box with borders, padding, and layout",
+                "• Static for immutable headers and logs",
+                "• Newline for consistent spacing",
+                "• Spacer for flexible layouts",
+                "• Transform for dynamic content modification",
+            ]),
         )
 
         let options = DemoEnv.options
@@ -72,7 +70,6 @@ public enum ComprehensiveComponentDemo {
         print("All RuneKit components working together seamlessly! 🎉")
     }
 
-
     /// Demo 6: Animated spinner using Transform + Ticker (no Spinner component)
     private static func demonstrateSpinnerAndDynamicTransform() async {
         print("🎬 Demo 6: Animated Transform-driven spinner")
@@ -87,16 +84,18 @@ public enum ComprehensiveComponentDemo {
                 border: .single,
                 paddingTop: 1, paddingRight: 2, paddingBottom: 1, paddingLeft: 2,
                 children:
-                    Static(["🎬 Demo 6: Animated spinner built with Transform + Ticker" ,
-                            "===================================================="]),
-                    Newline(count: 1),
-                    Transform(timeAware: { _, t in
-                        let frames = ["·", "✢", "✳", "∗", "✻", "✽"]
-                        let idx = Int(((t - start) * 8.0).rounded(.down)) % frames.count
-                        return "\(frames[idx]) Processing… (esc to interrupt)"
-                    }) { Text("") }
+                Static([
+                    "🎬 Demo 6: Animated spinner built with Transform + Ticker",
+                    "====================================================",
+                ]),
+                Newline(count: 1),
+                Transform(timeAware: { _, t in
+                    let frames = ["·", "✢", "✳", "∗", "✻", "✽"]
+                    let idx = Int(((t - start) * 8.0).rounded(.down)) % frames.count
+                    return "\(frames[idx]) Processing… (esc to interrupt)"
+                }) { Text("") },
             ),
-            options: options
+            options: options,
         )
 
         // Animate for ~3 seconds using a cooperative loop
@@ -107,14 +106,16 @@ public enum ComprehensiveComponentDemo {
                     border: .single,
                     paddingTop: 1, paddingRight: 2, paddingBottom: 1, paddingLeft: 2,
                     children:
-                        Static(["🎬 Demo 6: Animated spinner built with Transform + Ticker" ,
-                                "===================================================="]),
-                        Newline(count: 1),
-                        Transform(timeAware: { _, t in
-                            let frames = ["·", "✢", "✳", "∗", "✻", "✽"]
-                            let idx = Int(((t - start) * 8.0).rounded(.down)) % frames.count
-                            return "\(frames[idx]) Processing… (esc to interrupt)"
-                        }) { Text("") }
+                    Static([
+                        "🎬 Demo 6: Animated spinner built with Transform + Ticker",
+                        "====================================================",
+                    ]),
+                    Newline(count: 1),
+                    Transform(timeAware: { _, t in
+                        let frames = ["·", "✢", "✳", "∗", "✻", "✽"]
+                        let idx = Int(((t - start) * 8.0).rounded(.down)) % frames.count
+                        return "\(frames[idx]) Processing… (esc to interrupt)"
+                    }) { Text("") },
                 )
             }
             try? await Task.sleep(for: .milliseconds(125))
@@ -137,9 +138,9 @@ public enum ComprehensiveComponentDemo {
             paddingBottom: 1,
             paddingLeft: 2,
             children:
-                Static(["🔧 Demo 1: Simple Component Integration"]),
-                Newline(count: 1),
-                Text("🎯 Welcome to RuneKit!", color: .cyan, bold: true)
+            Static(["🔧 Demo 1: Simple Component Integration"]),
+            Newline(count: 1),
+            Text("🎯 Welcome to RuneKit!", color: .cyan, bold: true),
         )
 
         let options = DemoEnv.options
@@ -159,9 +160,9 @@ public enum ComprehensiveComponentDemo {
             paddingBottom: 1,
             paddingLeft: 2,
             children:
-                Static(["🎨 Demo 2: Text Styling Showcase"]),
-                Newline(count: 1),
-                Text("Text Styling Examples", color: .white, bold: true)
+            Static(["🎨 Demo 2: Text Styling Showcase"]),
+            Newline(count: 1),
+            Text("Text Styling Examples", color: .white, bold: true),
         )
 
         let options = DemoEnv.options
@@ -180,9 +181,9 @@ public enum ComprehensiveComponentDemo {
             paddingBottom: 1,
             paddingLeft: 2,
             children:
-                Static(["📦 Demo 3: Box Layout Patterns"]),
-                Newline(count: 1),
-                Text("📦 Box Layout Demo", color: .green, bold: true)
+            Static(["📦 Demo 3: Box Layout Patterns"]),
+            Newline(count: 1),
+            Text("📦 Box Layout Demo", color: .green, bold: true),
         )
 
         let options = DemoEnv.options
@@ -202,9 +203,12 @@ public enum ComprehensiveComponentDemo {
             paddingBottom: 1,
             paddingLeft: 2,
             children:
-                Static(["🔄 Demo 4: Transform Capabilities"]),
-                Newline(count: 1),
-                Transform(transform: { $0.uppercased() }, child: Text("Transform Demo: Making Text Uppercase", color: .magenta, bold: true))
+            Static(["🔄 Demo 4: Transform Capabilities"]),
+            Newline(count: 1),
+            Transform(
+                transform: { $0.uppercased() },
+                child: Text("Transform Demo: Making Text Uppercase", color: .magenta, bold: true),
+            ),
         )
 
         let options = DemoEnv.options
@@ -224,11 +228,11 @@ public enum ComprehensiveComponentDemo {
             paddingBottom: 1,
             paddingLeft: 3,
             children:
-                Static(["🚀 Demo 5: Complete Application Example"]),
-                Newline(count: 1),
-                Transform(transform: { "🎯 " + $0.uppercased() + " 🎯" }) {
-                    Text("RuneKit Complete Demo", color: .cyan, bold: true)
-                }
+            Static(["🚀 Demo 5: Complete Application Example"]),
+            Newline(count: 1),
+            Transform(transform: { "🎯 " + $0.uppercased() + " 🎯" }) {
+                Text("RuneKit Complete Demo", color: .cyan, bold: true)
+            },
         )
 
         let options = DemoEnv.options
@@ -249,19 +253,19 @@ public enum ComprehensiveComponentDemo {
         await handle.clear()
         await handle.unmount()
     }
-
 }
 
 extension ComprehensiveComponentDemo {
     // MARK: - View Builders for Single-Session Flow
+
     private static func simpleIntegrationView() -> Box {
         Box(
             border: .single,
             paddingTop: 1, paddingRight: 2, paddingBottom: 1, paddingLeft: 2,
             children:
-                Static(["🔧 Demo 1: Simple Component Integration"]),
-                Newline(count: 1),
-                Text("🎯 Welcome to RuneKit!", color: .cyan, bold: true)
+            Static(["🔧 Demo 1: Simple Component Integration"]),
+            Newline(count: 1),
+            Text("🎯 Welcome to RuneKit!", color: .cyan, bold: true),
         )
     }
 
@@ -270,9 +274,9 @@ extension ComprehensiveComponentDemo {
             border: .double,
             paddingTop: 1, paddingRight: 2, paddingBottom: 1, paddingLeft: 2,
             children:
-                Static(["🎨 Demo 2: Text Styling Showcase"]),
-                Newline(count: 1),
-                Text("Text Styling Examples", color: .white, bold: true)
+            Static(["🎨 Demo 2: Text Styling Showcase"]),
+            Newline(count: 1),
+            Text("Text Styling Examples", color: .white, bold: true),
         )
     }
 
@@ -281,9 +285,9 @@ extension ComprehensiveComponentDemo {
             border: .rounded,
             paddingTop: 1, paddingRight: 2, paddingBottom: 1, paddingLeft: 2,
             children:
-                Static(["📦 Demo 3: Box Layout Patterns"]),
-                Newline(count: 1),
-                Text("📦 Box Layout Demo", color: .green, bold: true)
+            Static(["📦 Demo 3: Box Layout Patterns"]),
+            Newline(count: 1),
+            Text("📦 Box Layout Demo", color: .green, bold: true),
         )
     }
 
@@ -292,9 +296,12 @@ extension ComprehensiveComponentDemo {
             border: .single,
             paddingTop: 1, paddingRight: 2, paddingBottom: 1, paddingLeft: 2,
             children:
-                Static(["🔄 Demo 4: Transform Capabilities"]),
-                Newline(count: 1),
-                Transform(transform: { $0.uppercased() }, child: Text("Transform Demo: Making Text Uppercase", color: .magenta, bold: true))
+            Static(["🔄 Demo 4: Transform Capabilities"]),
+            Newline(count: 1),
+            Transform(
+                transform: { $0.uppercased() },
+                child: Text("Transform Demo: Making Text Uppercase", color: .magenta, bold: true),
+            ),
         )
     }
 
@@ -303,11 +310,11 @@ extension ComprehensiveComponentDemo {
             border: .double,
             paddingTop: 1, paddingRight: 3, paddingBottom: 1, paddingLeft: 3,
             children:
-                Static(["🚀 Demo 5: Complete Application Example"]),
-                Newline(count: 1),
-                Transform(transform: { "🎯 " + $0.uppercased() + " 🎯" }) {
-                    Text("RuneKit Complete Demo", color: .cyan, bold: true)
-                }
+            Static(["🚀 Demo 5: Complete Application Example"]),
+            Newline(count: 1),
+            Transform(transform: { "🎯 " + $0.uppercased() + " 🎯" }) {
+                Text("RuneKit Complete Demo", color: .cyan, bold: true)
+            },
         )
     }
 
@@ -316,21 +323,26 @@ extension ComprehensiveComponentDemo {
             border: .single,
             paddingTop: 1, paddingRight: 2, paddingBottom: 1, paddingLeft: 2,
             children:
-                Static(["🎬 Demo 6: Animated spinner built with Transform + Ticker" ,
-                        "===================================================="]),
-                Newline(count: 1),
-                Transform(timeAware: { _, t in
-                    let frames = ["·", "✢", "✳", "∗", "✻", "✽"]
-                    let idx = Int((t * 8.0).rounded(.down)) % frames.count
-                    return "\(frames[idx]) Processing… (esc to interrupt)"
-                }) { Text("") }
+            Static([
+                "🎬 Demo 6: Animated spinner built with Transform + Ticker",
+                "====================================================",
+            ]),
+            Newline(count: 1),
+            Transform(timeAware: { _, t in
+                let frames = ["·", "✢", "✳", "∗", "✻", "✽"]
+                let idx = Int((t * 8.0).rounded(.down)) % frames.count
+                return "\(frames[idx]) Processing… (esc to interrupt)"
+            }) { Text("") },
         )
     }
 
     private static func allComponentsInRoundedBoxView() -> Box {
-        let header = Static(["🧩 Demo 7: All Core Components in One Rounded Box",
-                             "=================================================",
-                             "RuneKit Components", "All Together Now ➕"])
+        let header = Static([
+            "🧩 Demo 7: All Core Components in One Rounded Box",
+            "=================================================",
+            "RuneKit Components",
+            "All Together Now ➕",
+        ])
         let innerTransformed = Transform(transform: { input in
             "✨ " + input.uppercased() + " ✨"
         }) {
@@ -341,14 +353,12 @@ extension ComprehensiveComponentDemo {
             backgroundColor: .black,
             paddingTop: 1, paddingRight: 2, paddingBottom: 1, paddingLeft: 2,
             children:
-                header,
-                Newline(count: 1),
-                Text("This is a Text component", color: .cyan),
-                Spacer(),
-                innerTransformed,
-                Newline(count: 1)
+            header,
+            Newline(count: 1),
+            Text("This is a Text component", color: .cyan),
+            Spacer(),
+            innerTransformed,
+            Newline(count: 1),
         )
     }
-
 }
-

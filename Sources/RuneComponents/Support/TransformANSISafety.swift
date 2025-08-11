@@ -20,7 +20,7 @@ enum TransformANSISafety {
         let tokenizer = ANSITokenizer()
         let tokens = tokenizer.tokenize(input)
         let transformed = tokens.map { token -> ANSIToken in
-            if case let .text(s) = token { return .text(transform(s)) }
+            if case let .text(segment) = token { return .text(transform(segment)) }
             return token
         }
         return tokenizer.encode(transformed)
@@ -35,7 +35,7 @@ enum TransformANSISafety {
     static func applySafely(
         to input: String,
         time: TimeInterval,
-        transform: (String, TimeInterval) -> String
+        transform: (String, TimeInterval) -> String,
     ) -> String {
         // Fast path: no ANSI sequences
         if !input.contains("\u{001B}[") {
@@ -44,10 +44,9 @@ enum TransformANSISafety {
         let tokenizer = ANSITokenizer()
         let tokens = tokenizer.tokenize(input)
         let transformed = tokens.map { token -> ANSIToken in
-            if case let .text(s) = token { return .text(transform(s, time)) }
+            if case let .text(segment) = token { return .text(transform(segment, time)) }
             return token
         }
         return tokenizer.encode(transformed)
     }
 }
-

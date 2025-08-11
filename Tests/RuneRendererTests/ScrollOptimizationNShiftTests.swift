@@ -53,4 +53,3 @@ struct ScrollOptimizationNShiftTests {
         #expect(output.contains("\u{001B}[2;1H"))
     }
 }
-

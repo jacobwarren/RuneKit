@@ -132,7 +132,7 @@ public enum StyledTextExample {
             inverse: true,
             strikethrough: true,
             dim: true,
-            )
+        )
 
         let span = TextSpan(text: "All attributes", attributes: allAttributes)
         let styledText = StyledText(spans: [span])

@@ -28,7 +28,7 @@ public struct TerminalCell: Sendable, Equatable, Hashable {
         content: String = " ",
         foreground: TerminalColor? = nil,
         background: TerminalColor? = nil,
-        attributes: TerminalAttributes = .none
+        attributes: TerminalAttributes = .none,
     ) {
         self.content = content
         self.foreground = foreground
@@ -37,10 +37,10 @@ public struct TerminalCell: Sendable, Equatable, Hashable {
 
         // Calculate width using Unicode width rules
         if content.isEmpty {
-            self.width = 0
+            width = 0
         } else {
             // Use RuneUnicode for proper grapheme cluster width calculation
-            self.width = max(1, Width.displayWidth(of: content))
+            width = max(1, Width.displayWidth(of: content))
         }
     }
 
@@ -49,7 +49,7 @@ public struct TerminalCell: Sendable, Equatable, Hashable {
 
     /// Check if this cell is effectively empty (space with no attributes)
     public var isEmpty: Bool {
-        return content.trimmingCharacters(in: .whitespaces).isEmpty &&
+        content.trimmingCharacters(in: .whitespaces).isEmpty &&
             foreground == nil &&
             background == nil &&
             attributes == .none
@@ -98,38 +98,38 @@ public struct TerminalCell: Sendable, Equatable, Hashable {
 
 /// Represents terminal colors (ANSI or RGB)
 public enum TerminalColor: Sendable, Equatable, Hashable {
-    case ansi(UInt8)           // 0-255 ANSI colors
-    case rgb(UInt8, UInt8, UInt8)  // 24-bit RGB
+    case ansi(UInt8) // 0-255 ANSI colors
+    case rgb(UInt8, UInt8, UInt8) // 24-bit RGB
 
     /// ANSI escape sequence for foreground color
     public var foregroundSequence: String {
         switch self {
-        case .ansi(let code):
+        case let .ansi(code):
             if code < 8 {
-                return "\u{001B}[\(30 + code)m"
+                "\u{001B}[\(30 + code)m"
             } else if code < 16 {
-                return "\u{001B}[\(90 + code - 8)m"
+                "\u{001B}[\(90 + code - 8)m"
             } else {
-                return "\u{001B}[38;5;\(code)m"
+                "\u{001B}[38;5;\(code)m"
             }
         case let .rgb(red, green, blue):
-            return "\u{001B}[38;2;\(red);\(green);\(blue)m"
+            "\u{001B}[38;2;\(red);\(green);\(blue)m"
         }
     }
 
     /// ANSI escape sequence for background color
     public var backgroundSequence: String {
         switch self {
-        case .ansi(let code):
+        case let .ansi(code):
             if code < 8 {
-                return "\u{001B}[\(40 + code)m"
+                "\u{001B}[\(40 + code)m"
             } else if code < 16 {
-                return "\u{001B}[\(100 + code - 8)m"
+                "\u{001B}[\(100 + code - 8)m"
             } else {
-                return "\u{001B}[48;5;\(code)m"
+                "\u{001B}[48;5;\(code)m"
             }
         case let .rgb(red, green, blue):
-            return "\u{001B}[48;2;\(red);\(green);\(blue)m"
+            "\u{001B}[48;2;\(red);\(green);\(blue)m"
         }
     }
 
@@ -178,12 +178,12 @@ public struct TerminalAttributes: OptionSet, Sendable, Equatable, Hashable {
         // If we need to remove any attributes, reset all and reapply
         let removed = previous.subtracting(self)
         if !removed.isEmpty {
-            sequence += "\u{001B}[0m"  // Reset all
+            sequence += "\u{001B}[0m" // Reset all
             // Now apply all current attributes
-            sequence += self.enableSequence
+            sequence += enableSequence
         } else {
             // Only add new attributes
-            let added = self.subtracting(previous)
+            let added = subtracting(previous)
             sequence += added.enableSequence
         }
 
@@ -215,7 +215,7 @@ public struct TerminalState: Sendable, Equatable {
     public init(
         foreground: TerminalColor? = nil,
         background: TerminalColor? = nil,
-        attributes: TerminalAttributes = .none
+        attributes: TerminalAttributes = .none,
     ) {
         self.foreground = foreground
         self.background = background

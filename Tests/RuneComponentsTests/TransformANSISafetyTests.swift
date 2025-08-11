@@ -1,7 +1,7 @@
-import Testing
 import Foundation
-@testable import RuneComponents
+import Testing
 @testable import RuneANSI
+@testable import RuneComponents
 
 struct TransformANSISafetyTests {
     @Test("Plain text uppercase is applied directly")
@@ -18,13 +18,13 @@ struct TransformANSISafetyTests {
         let output = TransformANSISafety.applySafely(to: input) { $0.uppercased() }
         let tokens = ANSITokenizer().tokenize(output)
         let expected: [ANSIToken] = [
-            .sgr([1,31]),
+            .sgr([1, 31]),
             .text("ERROR:"),
             .sgr([0]),
             .text(" "),
             .sgr([33]),
             .text("WARNING"),
-            .sgr([0])
+            .sgr([0]),
         ]
         #expect(tokens == expected)
     }
@@ -34,7 +34,7 @@ struct TransformANSISafetyTests {
         let input = "spin"
         let time: TimeInterval = 123.0
         let output = TransformANSISafety.applySafely(to: input, time: time) { s, t in
-            return "T\(Int(t)):" + s
+            "T\(Int(t)):" + s
         }
         #expect(output == "T123:spin")
     }
@@ -45,15 +45,14 @@ struct TransformANSISafetyTests {
         let input = "\u{001B}[32mgo\u{001B}[0m"
         let time: TimeInterval = 42.0
         let output = TransformANSISafety.applySafely(to: input, time: time) { s, t in
-            return "T\(Int(t))_" + s.uppercased()
+            "T\(Int(t))_" + s.uppercased()
         }
         let tokens = ANSITokenizer().tokenize(output)
         let expected: [ANSIToken] = [
             .sgr([32]),
             .text("T42_GO"),
-            .sgr([0])
+            .sgr([0]),
         ]
         #expect(tokens == expected)
     }
 }
-

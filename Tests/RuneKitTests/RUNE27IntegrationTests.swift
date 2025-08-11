@@ -1,7 +1,7 @@
 import Foundation
 import Testing
-@testable import RuneKit
 @testable import RuneComponents
+@testable import RuneKit
 @testable import RuneLayout
 @testable import RuneRenderer
 
@@ -24,7 +24,7 @@ struct RUNE27IntegrationTests {
             paddingLeft: 2,
             marginTop: 1,
             marginLeft: 1,
-            child: Text("Integration Test")
+            child: Text("Integration Test"),
         )
 
         // Act - Test View protocol conformance
@@ -46,7 +46,7 @@ struct RUNE27IntegrationTests {
         let box = Box(
             flexDirection: .row,
             columnGap: 1,
-            children: Text("Left"), Text("Right")
+            children: Text("Left"), Text("Right"),
         )
 
         // Use default options to avoid file handle issues
@@ -57,7 +57,7 @@ struct RUNE27IntegrationTests {
             exitOnCtrlC: false,
             patchConsole: false,
             useAltScreen: false,
-            fpsCap: 60
+            fpsCap: 60,
         )
 
         // Act - Test full render pipeline
@@ -67,7 +67,7 @@ struct RUNE27IntegrationTests {
         let newBox = Box(
             flexDirection: .column,
             rowGap: 1,
-            children: Text("Top"), Text("Bottom")
+            children: Text("Top"), Text("Bottom"),
         )
         await handle.rerender(newBox)
 
@@ -86,13 +86,13 @@ struct RUNE27IntegrationTests {
         let box = Box(
             paddingTop: 2,
             paddingLeft: 3,
-            children: Text("Frame Buffer Test"), Text("Second Line")
+            children: Text("Frame Buffer Test"), Text("Second Line"),
         )
 
         let config = RenderConfiguration(
             optimizationMode: .automatic,
             enableMetrics: false,
-            enableDebugLogging: false
+            enableDebugLogging: false,
         )
         let frameBuffer = FrameBuffer(output: FileHandle.standardOutput, configuration: config)
 
@@ -104,7 +104,7 @@ struct RUNE27IntegrationTests {
         let frame = TerminalRenderer.Frame(
             lines: lines,
             width: terminalSize.width,
-            height: lines.count
+            height: lines.count,
         )
 
         await frameBuffer.renderFrame(frame)
@@ -125,7 +125,7 @@ struct RUNE27IntegrationTests {
             paddingRight: 2,
             paddingBottom: 1,
             paddingLeft: 2,
-            child: Text("Content")
+            child: Text("Content"),
         )
 
         let rect = FlexLayout.Rect(x: 0, y: 0, width: 15, height: 5)
@@ -172,7 +172,7 @@ struct RUNE27IntegrationTests {
         let config = RenderConfiguration(
             optimizationMode: .automatic,
             enableMetrics: false,
-            enableDebugLogging: false
+            enableDebugLogging: false,
         )
         let frameBuffer = FrameBuffer(output: FileHandle.standardOutput, configuration: config)
 
@@ -180,14 +180,14 @@ struct RUNE27IntegrationTests {
         let box1 = Box(
             flexDirection: .column,
             rowGap: 1,
-            children: Text("Line 1"), Text("Line 2"), Text("Line 3")
+            children: Text("Line 1"), Text("Line 2"), Text("Line 3"),
         )
 
         // Create modified box (small change)
         let box2 = Box(
             flexDirection: .column,
             rowGap: 1,
-            children: Text("Line 1"), Text("Line 2 Modified"), Text("Line 3")
+            children: Text("Line 1"), Text("Line 2 Modified"), Text("Line 3"),
         )
 
         let terminalSize = (width: 30, height: 10)
@@ -219,7 +219,7 @@ struct RUNE27IntegrationTests {
         let boxComponent = Box(
             paddingTop: 1,
             paddingLeft: 2,
-            child: textComponent
+            child: textComponent,
         )
 
         // Act - Test Component protocol methods
@@ -246,7 +246,7 @@ struct RUNE27IntegrationTests {
             paddingLeft: 1,
             marginTop: 2,
             marginLeft: 3,
-            children: Text("A"), Text("B")
+            children: Text("A"), Text("B"),
         )
 
         let containerRect = FlexLayout.Rect(x: 10, y: 20, width: 30, height: 15)
@@ -280,7 +280,7 @@ struct RUNE27IntegrationTests {
             paddingTop: 2,
             paddingLeft: 3,
             rowGap: 1,
-            children: Text("Platform Test 1"), Text("Platform Test 2"), Text("Platform Test 3")
+            children: Text("Platform Test 1"), Text("Platform Test 2"), Text("Platform Test 3"),
         )
 
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 40, height: 20)
@@ -327,7 +327,7 @@ struct RUNE27IntegrationTests {
             return Box(child: Text("Leaf \(depth)"))
         }
 
-        let children = (0..<childrenPerLevel).map { _ in
+        let children = (0 ..< childrenPerLevel).map { _ in
             createDeepNestedBox(depth: depth - 1, childrenPerLevel: childrenPerLevel)
         }
 
@@ -337,7 +337,7 @@ struct RUNE27IntegrationTests {
             paddingLeft: 1,
             rowGap: 1,
             columnGap: 1,
-            childrenArray: children
+            childrenArray: children,
         )
     }
 }

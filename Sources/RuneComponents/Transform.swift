@@ -1,5 +1,5 @@
-import RuneLayout
 import Foundation
+import RuneLayout
 
 @_exported import RuneANSI
 @_exported import RuneUnicode
@@ -76,7 +76,7 @@ public struct Transform: Component {
     ///   - transform: Function that takes a string and returns a transformed string
     ///   - child: The child component to render and transform
     public init(transform: @escaping (String) -> String, @ComponentBuilder child: () -> Component) {
-        self.transformFunction = transform
+        transformFunction = transform
         self.child = child()
     }
 
@@ -86,7 +86,7 @@ public struct Transform: Component {
     ///   - transform: Function that takes a string and returns a transformed string
     ///   - child: The child component to render and transform
     public init(transform: @escaping (String) -> String, child: Component) {
-        self.transformFunction = transform
+        transformFunction = transform
         self.child = child
     }
 
@@ -95,8 +95,11 @@ public struct Transform: Component {
     /// - Parameters:
     ///   - transform: Function that takes (string, currentTime) and returns a transformed string
     ///   - child: The child component to render and transform
-    public init(timeAware transform: @escaping (String, TimeInterval) -> String, @ComponentBuilder child: () -> Component) {
-        self.transformFunction = { input in
+    public init(
+        timeAware transform: @escaping (String, TimeInterval) -> String,
+        @ComponentBuilder child: () -> Component,
+    ) {
+        transformFunction = { input in
             let now = Date().timeIntervalSince1970
             return TransformANSISafety.applySafely(to: input, time: now, transform: transform)
         }
@@ -108,7 +111,7 @@ public struct Transform: Component {
     ///   - transform: Function that takes (string, currentTime) and returns a transformed string
     ///   - child: The child component to render and transform
     public init(timeAware transform: @escaping (String, TimeInterval) -> String, child: Component) {
-        self.transformFunction = { input in
+        transformFunction = { input in
             let now = Date().timeIntervalSince1970
             return TransformANSISafety.applySafely(to: input, time: now, transform: transform)
         }
@@ -127,7 +130,7 @@ public struct Transform: Component {
     /// - Returns: Array of transformed strings representing the rendered content
     public func render(in rect: FlexLayout.Rect) -> [String] {
         // Handle zero dimensions early
-        guard rect.width > 0 && rect.height > 0 else {
+        guard rect.width > 0, rect.height > 0 else {
             return []
         }
 
@@ -147,9 +150,9 @@ public struct Transform: Component {
         // Skip transformation for empty lines to avoid unwanted content
         let transformedLines = childLines.map { line in
             if line.isEmpty {
-                return line // Don't transform empty lines
+                line // Don't transform empty lines
             } else {
-                return TransformANSISafety.applySafely(to: line, transform: transformFunction)
+                TransformANSISafety.applySafely(to: line, transform: transformFunction)
             }
         }
 
@@ -162,8 +165,6 @@ public struct Transform: Component {
             return Array(transformedLines.prefix(rect.height))
         }
     }
-
-
 
     /// Apply transformation safely, preserving ANSI sequences
     ///

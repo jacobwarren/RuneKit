@@ -44,7 +44,7 @@ struct SGRParameterProcessor {
         parameters: [Int],
         index: Int,
         to attributes: TextAttributes,
-        ) -> (attributes: TextAttributes, nextIndex: Int) {
+    ) -> (attributes: TextAttributes, nextIndex: Int) {
         let newAttributes = attributes
         let nextIndex = index + 1
 
@@ -155,7 +155,7 @@ struct SGRParameterProcessor {
         parameters: [Int],
         index: Int,
         to attributes: TextAttributes,
-        ) -> (attributes: TextAttributes, nextIndex: Int)? {
+    ) -> (attributes: TextAttributes, nextIndex: Int)? {
         // Handle foreground colors
         if let result = applyForegroundColor(param, parameters: parameters, index: index, to: attributes) {
             return result
@@ -181,7 +181,7 @@ struct SGRParameterProcessor {
         parameters: [Int],
         index: Int,
         to attributes: TextAttributes,
-        ) -> (attributes: TextAttributes, nextIndex: Int)? {
+    ) -> (attributes: TextAttributes, nextIndex: Int)? {
         var newAttributes = attributes
         var nextIndex = index + 1
 
@@ -189,9 +189,11 @@ struct SGRParameterProcessor {
         case 30 ... 37:
             newAttributes.color = basicColor(from: param - 30)
         case 38:
-            if let color = parseExtendedColor(parameters, startingAt: index) {
-                newAttributes.color = color.color
-                nextIndex = color.nextIndex
+            if let res = parseExtendedColor(parameters, startingAt: index) {
+                nextIndex = res.nextIndex
+                if let parsed = res.color {
+                    newAttributes.color = parsed
+                }
             }
         case 39:
             newAttributes.color = nil
@@ -216,7 +218,7 @@ struct SGRParameterProcessor {
         parameters: [Int],
         index: Int,
         to attributes: TextAttributes,
-        ) -> (attributes: TextAttributes, nextIndex: Int)? {
+    ) -> (attributes: TextAttributes, nextIndex: Int)? {
         var newAttributes = attributes
         var nextIndex = index + 1
 
@@ -224,9 +226,11 @@ struct SGRParameterProcessor {
         case 40 ... 47:
             newAttributes.backgroundColor = basicColor(from: param - 40)
         case 48:
-            if let color = parseExtendedColor(parameters, startingAt: index) {
-                newAttributes.backgroundColor = color.color
-                nextIndex = color.nextIndex
+            if let res = parseExtendedColor(parameters, startingAt: index) {
+                nextIndex = res.nextIndex
+                if let parsed = res.color {
+                    newAttributes.backgroundColor = parsed
+                }
             }
         case 49:
             newAttributes.backgroundColor = nil
@@ -248,25 +252,35 @@ struct SGRParameterProcessor {
     private func parseExtendedColor(
         _ parameters: [Int],
         startingAt startIndex: Int,
-        ) -> (color: ANSIColor, nextIndex: Int)? {
+    ) -> (color: ANSIColor?, nextIndex: Int)? {
         guard startIndex + 1 < parameters.count else { return nil }
 
         let colorType = parameters[startIndex + 1]
 
         switch colorType {
         case 5:
-            // 256-color palette
+            // 256-color palette: 38;5;idx or 48;5;idx
             guard startIndex + 2 < parameters.count else { return nil }
             let colorIndex = parameters[startIndex + 2]
-            return (color: .color256(colorIndex), nextIndex: startIndex + 3)
+            let nextIndex = startIndex + 3
+            // Validate index range [0, 255]; if invalid, consume parameters but return nil color
+            guard (0 ... 255).contains(colorIndex) else {
+                return (color: nil, nextIndex: nextIndex)
+            }
+            return (color: .color256(colorIndex), nextIndex: nextIndex)
 
         case 2:
-            // RGB color
+            // RGB color: 38;2;r;g;b or 48;2;r;g;b
             guard startIndex + 4 < parameters.count else { return nil }
             let red = parameters[startIndex + 2]
             let green = parameters[startIndex + 3]
             let blue = parameters[startIndex + 4]
-            return (color: .rgb(red, green, blue), nextIndex: startIndex + 5)
+            let nextIndex = startIndex + 5
+            // Validate components in [0, 255]; if invalid, consume parameters but return nil color
+            guard (0 ... 255).contains(red), (0 ... 255).contains(green), (0 ... 255).contains(blue) else {
+                return (color: nil, nextIndex: nextIndex)
+            }
+            return (color: .rgb(red, green, blue), nextIndex: nextIndex)
 
         default:
             return nil

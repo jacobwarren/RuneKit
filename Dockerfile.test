@@ -1,5 +1,7 @@
 # Dockerfile for testing RuneKit on Linux (similar to GitHub Actions)
 FROM swift:6.1
+ENV CI=1
+
 
 # Set working directory
 WORKDIR /workspace

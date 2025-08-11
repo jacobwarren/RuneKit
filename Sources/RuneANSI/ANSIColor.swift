@@ -7,7 +7,7 @@
 ///
 /// This enum covers all standard ANSI color representations including
 /// basic 16 colors, 256-color palette, and full RGB colors.
-public enum ANSIColor: Equatable, Hashable {
+public enum ANSIColor: Equatable, Hashable, Sendable {
     /// Basic ANSI colors (30-37 for foreground, 40-47 for background)
     case black
     case red

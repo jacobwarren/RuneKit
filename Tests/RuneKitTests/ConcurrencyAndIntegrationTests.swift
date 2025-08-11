@@ -18,7 +18,7 @@ struct ConcurrencyAndIntegrationTests {
         // Act - perform multiple operations concurrently
         await withTaskGroup(of: Void.self) { group in
             // Multiple rerender operations
-            for i in 0..<5 {
+            for i in 0 ..< 5 {
                 group.addTask {
                     let view = MockView(content: "Concurrent content \(i)")
                     await handle.rerender(view)
@@ -26,14 +26,14 @@ struct ConcurrencyAndIntegrationTests {
             }
 
             // Multiple clear operations
-            for _ in 0..<3 {
+            for _ in 0 ..< 3 {
                 group.addTask {
                     await handle.clear()
                 }
             }
 
             // Check status operations
-            for _ in 0..<3 {
+            for _ in 0 ..< 3 {
                 group.addTask {
                     _ = await handle.isActive
                 }
@@ -61,7 +61,7 @@ struct ConcurrencyAndIntegrationTests {
         // Act - perform operations concurrently with unmount
         await withTaskGroup(of: Void.self) { group in
             // Start some rerender operations
-            for i in 0..<3 {
+            for i in 0 ..< 3 {
                 group.addTask {
                     let view = MockView(content: "Content before unmount \(i)")
                     await handle.rerender(view)
@@ -75,7 +75,7 @@ struct ConcurrencyAndIntegrationTests {
             }
 
             // Try more operations after unmount starts
-            for i in 0..<2 {
+            for i in 0 ..< 2 {
                 group.addTask {
                     try? await Task.sleep(nanoseconds: 2_000_000) // 2ms delay
                     let view = MockView(content: "Content after unmount \(i)")
@@ -103,7 +103,7 @@ struct ConcurrencyAndIntegrationTests {
         let handle = RenderHandle(frameBuffer: frameBuffer, signalHandler: nil, options: options)
 
         // Act - start multiple waitUntilExit calls
-        let waitTasks = (0..<5).map { _ in
+        let waitTasks = (0 ..< 5).map { _ in
             Task {
                 await handle.waitUntilExit()
                 return true

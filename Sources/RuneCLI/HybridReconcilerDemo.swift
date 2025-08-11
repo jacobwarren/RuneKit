@@ -30,36 +30,36 @@ extension RuneCLI {
             cpuUsage: 40,
             ramUsage: 20,
             diskUsage: 30,
-            netUsage: 15
+            netUsage: 15,
         )
 
         let frame2 = createSystemMonitorFrame(
             terminalWidth: terminalSize.width,
-            cpuUsage: 99,  // Dramatic change to make it obvious
+            cpuUsage: 99, // Dramatic change to make it obvious
             ramUsage: 20,
             diskUsage: 30,
-            netUsage: 15
+            netUsage: 15,
         )
 
         // Render initial frame using hybrid reconciler
         await frameBuffer.renderFrame(frame1)
-        try? await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds to see initial frame
+        try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds to see initial frame
 
         // Update frame - hybrid reconciler will automatically choose optimal strategy
         await frameBuffer.renderFrame(frame2)
-        try? await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds to see frame update
+        try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds to see frame update
 
         // Create a third frame with more changes
         let frame3 = createSystemMonitorFrame(
             terminalWidth: terminalSize.width,
-            cpuUsage: 85,  // Changed again
-            ramUsage: 40,  // RAM also changed
+            cpuUsage: 85, // Changed again
+            ramUsage: 40, // RAM also changed
             diskUsage: 30,
-            netUsage: 25   // Network also changed
+            netUsage: 25, // Network also changed
         )
 
         await frameBuffer.renderFrame(frame3)
-        try? await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds to see frame update
+        try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds to see frame update
 
         // Create a frame with massive changes (should trigger full redraw)
         let frame4 = createSystemMonitorFrame(
@@ -68,11 +68,11 @@ extension RuneCLI {
             ramUsage: 30,
             diskUsage: 40,
             netUsage: 10,
-            style: .double  // Different border style
+            style: .double, // Different border style
         )
 
         await frameBuffer.renderFrame(frame4)
-        try? await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds to see frame update
+        try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds to see frame update
 
         await frameBuffer.clear()
 

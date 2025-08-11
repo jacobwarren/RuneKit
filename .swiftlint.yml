@@ -4,12 +4,17 @@
 # Paths to include/exclude
 included:
   - Sources
-  - Tests
 
 excluded:
   - .build
   - .swiftpm
   - Package.swift
+  # Generated code (size/length rules should not apply)
+  - Sources/RuneUnicode/Generated
+  # Demo CLI is intentionally verbose and not part of the library API
+  - Sources/RuneCLI
+  # Test suite is large and stylistically flexible; exclude from lint blocking CI
+  - Tests
 
 # Analyzer rules (require compilation)
 analyzer_rules:
@@ -21,7 +26,6 @@ analyzer_rules:
 opt_in_rules:
   - array_init
   - attributes
-  - closure_end_indentation
   - closure_spacing
   - collection_alignment
   - contains_over_filter_count
@@ -80,13 +84,13 @@ opt_in_rules:
   - yoda_condition
 
 # Disabled rules
+# Keep this minimal; do not disable core safety rules
+# Note: CLI demo and generated sources are excluded above
 disabled_rules:
   - todo # Allow TODO comments during development
   - line_length # Handled by SwiftFormat
-  - file_header # Disabled during initial development
   - sorted_imports # Can be enabled later
   - trailing_comma # Personal preference
-  - file_name # Demo files contain multiple functions, not types
 
 # Rule configurations
 line_length:

@@ -31,36 +31,40 @@ public actor HybridReconciler {
     private var queueDepth = 0
     private let maxQueueDepth = 5
     private var droppedFrames = 0
-    private var qualityController = AdaptiveQualityController()  // manages adaptive quality
+    private var qualityController = AdaptiveQualityController() // manages adaptive quality
 
     /// Configuration for rendering behavior
     private let configuration: RenderConfiguration
     private let differ: TerminalDiffer
 
-    public init(renderer: TerminalRenderer, configuration: RenderConfiguration, differ: TerminalDiffer = SimpleLineDiffer()) {
+    public init(
+        renderer: TerminalRenderer,
+        configuration: RenderConfiguration,
+        differ: TerminalDiffer = SimpleLineDiffer(),
+    ) {
         self.renderer = renderer
         self.configuration = configuration
         self.differ = differ
-        self.legacyMetrics = PerformanceMetrics()
-        self.metricsRecorder = RenderMetricsRecorder(thresholds: adaptiveThresholds, legacyMetrics: legacyMetrics)
-        self.strategyDeterminer = StrategyDeterminer(configuration: configuration, adaptiveThresholds: adaptiveThresholds)
+        legacyMetrics = PerformanceMetrics()
+        metricsRecorder = RenderMetricsRecorder(thresholds: adaptiveThresholds, legacyMetrics: legacyMetrics)
+        strategyDeterminer = StrategyDeterminer(configuration: configuration, adaptiveThresholds: adaptiveThresholds)
         // Derive timing from configuration
         let fps = max(1.0, configuration.performance.maxFrameRate)
-        self.maxUpdateRate = 1.0 / fps
+        maxUpdateRate = 1.0 / fps
         // Choose a coalescing window as a fraction of frame interval (e.g., ~1/2 frame)
-        self.coalescingWindow = max(0.0, (1.0 / fps) * 0.5)
+        coalescingWindow = max(0.0, (1.0 / fps) * 0.5)
         Task { [weak self] in
-            guard let s = self else { return }
-            await s.metricsRecorder.updateProviders(
-                droppedFramesProvider: { [weak s] in
-                    guard let strong = s else { return 0 }
+            guard let strongSelf = self else { return }
+            await strongSelf.metricsRecorder.updateProviders(
+                droppedFramesProvider: { [weak strongSelf] in
+                    guard let strong = strongSelf else { return 0 }
                     return await strong.droppedFrames
                 },
-                currentGridHeightProvider: { [weak s] in
-                    guard let strong = s else { return 0 }
+                currentGridHeightProvider: { [weak strongSelf] in
+                    guard let strong = strongSelf else { return 0 }
                     guard let grid = await strong.currentGrid else { return 0 }
                     return grid.height
-                }
+                },
             )
         }
     }
@@ -121,7 +125,7 @@ public actor HybridReconciler {
             queueDepth -= 1
 
             // Reduce quality temporarily to catch up
-            qualityController.reduceQualityOnBackpressure(current: await getAdaptiveQuality())
+            await qualityController.reduceQualityOnBackpressure(current: getAdaptiveQuality())
             return
         }
 
@@ -139,7 +143,7 @@ public actor HybridReconciler {
             updateTask?.cancel()
 
             // Schedule a new update task with coalescing window
-            let window = coalescingWindow  // Capture the value
+            let window = coalescingWindow // Capture the value
             updateTask = Task { [weak self] in
                 try? await Task.sleep(nanoseconds: UInt64(window * 1_000_000_000))
                 await self?.performCoalescedUpdate()
@@ -160,7 +164,7 @@ public actor HybridReconciler {
                 guard let strong = self else { return 0 }
                 let grid = await strong.currentGrid
                 return grid?.height ?? 0
-            }
+            },
         )
         await metricsRecorder.record(stats)
         fullRedrawPolicy.updateCounters(afterFullRedrawAt: Date())
@@ -196,7 +200,6 @@ public actor HybridReconciler {
         queueDepth = 0
     }
 
-
     /// Restore cursor on cleanup
     public func restoreCursor() async {
         await renderer.showCursor()
@@ -212,7 +215,7 @@ public actor HybridReconciler {
     /// Get legacy performance history for test compatibility
     /// - Returns: Array of legacy performance counters
     public func getLegacyPerformanceHistory() async -> [PerformanceMetrics.Counters] {
-        return await legacyMetrics.getHistory()
+        await legacyMetrics.getHistory()
     }
 
     /// Reset performance metrics for testing
@@ -239,7 +242,7 @@ public actor HybridReconciler {
     private func performCoalescedUpdate() async {
         guard let grid = pendingUpdate else { return }
         pendingUpdate = nil
-        updateTask = nil  // Clear the task reference
+        updateTask = nil // Clear the task reference
         await performRender(grid)
         lastUpdateTime = Date()
     }
@@ -277,22 +280,22 @@ public actor HybridReconciler {
     /// Get performance metrics
     public func getPerformanceMetrics() async -> HybridPerformanceMetrics {
         let averageEfficiency = await metricsRecorder.getAverages()
-        return HybridPerformanceMetrics(
+        return await HybridPerformanceMetrics(
             averageEfficiency: averageEfficiency,
             totalRenders: 0, // TODO: expose if needed from metricsRecorder
             framesSinceFullRedraw: 0, // could derive from fullRedrawPolicy if exposed
             adaptiveThresholds: adaptiveThresholds,
             droppedFrames: droppedFrames,
             currentQueueDepth: queueDepth,
-            adaptiveQuality: await getAdaptiveQuality(),
+            adaptiveQuality: getAdaptiveQuality(),
             maxUpdateRate: maxUpdateRate,
-            coalescingWindow: coalescingWindow
+            coalescingWindow: coalescingWindow,
         )
     }
 
     /// Legacy applyAdaptiveQuality retained for compatibility (now delegates to controller)
     private func applyAdaptiveQuality(_ grid: TerminalGrid) async -> TerminalGrid {
-        return await qualityController.apply(to: grid)
+        await qualityController.apply(to: grid)
     }
 
     // MARK: - Private Methods
@@ -302,8 +305,11 @@ public actor HybridReconciler {
         let startTime = Date()
 
         // Enhanced periodic full redraw logic
-        let _ = fullRedrawPolicy.snapshot() // maintain local variables removed
-        let forceFullRedraw = fullRedrawPolicy.shouldForceFullRedraw(now: startTime, adaptiveQuality: await getAdaptiveQuality())
+        _ = fullRedrawPolicy.snapshot() // maintain local variables removed
+        let forceFullRedraw = await fullRedrawPolicy.shouldForceFullRedraw(
+            now: startTime,
+            adaptiveQuality: getAdaptiveQuality(),
+        )
 
         // Apply adaptive quality - reduce grid resolution if under pressure
         let processedGrid = await qualityController.apply(to: grid)
@@ -313,7 +319,7 @@ public actor HybridReconciler {
         let strategy = await strategyDeterminer.determineStrategy(
             newGrid: processedGrid,
             currentGrid: currentGrid,
-            forceFullRedraw: forceFullRedraw
+            forceFullRedraw: forceFullRedraw,
         )
 
         // Render using the chosen strategy
@@ -337,7 +343,7 @@ public actor HybridReconciler {
                 guard let strong = self else { return 0 }
                 let grid = await strong.currentGrid
                 return grid?.height ?? 0
-            }
+            },
         )
         await metricsRecorder.record(stats)
         adaptiveThresholds = await metricsRecorder.getThresholds()
@@ -350,7 +356,7 @@ public actor HybridReconciler {
     /// Get current adaptive quality value (for tests/metrics)
     private func getAdaptiveQuality() async -> Double {
         // AdaptiveQualityController exposes state synchronously; wrap for actor context
-        return await withCheckedContinuation { continuation in
+        await withCheckedContinuation { continuation in
             continuation.resume(returning: self.qualityController.adaptiveQuality)
         }
     }
@@ -359,41 +365,44 @@ public actor HybridReconciler {
     private func determineOptimalStrategy(
         newGrid: TerminalGrid,
         currentGrid: TerminalGrid?,
-        forceFullRedraw: Bool
+        forceFullRedraw: Bool,
     ) async -> RenderingStrategy { // Backwards-compat shim
-        return await strategyDeterminer.determineStrategy(newGrid: newGrid, currentGrid: currentGrid, forceFullRedraw: forceFullRedraw)
+        await strategyDeterminer.determineStrategy(
+            newGrid: newGrid,
+            currentGrid: currentGrid,
+            forceFullRedraw: forceFullRedraw,
+        )
     }
 
     /// Estimate bytes needed for full redraw
     private func estimateFullRedrawBytes(grid: TerminalGrid) -> Int {
         // Rough estimate: each cell is ~1-3 bytes on average
-        return grid.width * grid.height * 2
+        grid.width * grid.height * 2
     }
 
     /// Estimate bytes needed for delta update
     private func estimateDeltaBytes(changedLines: [Int], grid: TerminalGrid) -> Int {
         // Cursor movement + line clearing + content
-        let cursorMovementBytes = changedLines.count * 10  // Rough estimate
+        let cursorMovementBytes = changedLines.count * 10 // Rough estimate
         let contentBytes = changedLines.count * grid.width * 2
         return cursorMovementBytes + contentBytes
     }
 
     /// Detect scroll patterns (simplified)
-    private func detectScrollPattern(newGrid: TerminalGrid, currentGrid: TerminalGrid) async -> Bool {
+    private func detectScrollPattern(newGrid _: TerminalGrid, currentGrid _: TerminalGrid) async -> Bool {
         // TODO: Implement sophisticated scroll detection
         // For now, return false
-        return false
+        false
     }
-
 }
 
 /// Adaptive thresholds for strategy selection
 public struct AdaptiveThresholds: Sendable {
     /// Minimum bytes saved percentage to use delta update
-    public var deltaThreshold: Double = 0.3
+    public var deltaThreshold = 0.3
 
     /// Maximum change percentage for delta update
-    public var maxChangePercentage: Double = 0.5
+    public var maxChangePercentage = 0.5
 }
 
 /// Comprehensive performance metrics

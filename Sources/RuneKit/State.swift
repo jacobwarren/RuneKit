@@ -16,15 +16,15 @@ public final class StateRegistry: @unchecked Sendable {
             if let dict = storage[path], let value = dict[key] as? T {
                 return value
             }
-            let v = initial()
+            let initialValue = initial()
             var dict = storage[path] ?? [:]
-            dict[key] = v
+            dict[key] = initialValue
             storage[path] = dict
-            return v
+            return initialValue
         }
     }
 
-    public func set<T>(path: String, key: String, value: T) {
+    public func set(path: String, key: String, value: some Any) {
         queue.sync {
             var dict = storage[path] ?? [:]
             dict[key] = value
@@ -48,7 +48,7 @@ public struct State<T> {
 
     public init(_ key: String, initial: @autoclosure @escaping () -> T) {
         self.key = key
-        self.initialProvider = initial
+        initialProvider = initial
     }
 
     public var wrappedValue: T {
@@ -62,5 +62,3 @@ public struct State<T> {
         }
     }
 }
-
-

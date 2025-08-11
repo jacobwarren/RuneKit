@@ -17,4 +17,3 @@ public enum TestEnv {
     /// True when either CI or test harness is detected
     public static var isTestOrCI: Bool { isCI || isUnderTestHarness }
 }
-

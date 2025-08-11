@@ -52,7 +52,7 @@ public struct TextAttributes: Equatable, Hashable {
         inverse: Bool = false,
         strikethrough: Bool = false,
         dim: Bool = false,
-        ) {
+    ) {
         self.color = color
         self.backgroundColor = backgroundColor
         self.bold = bold

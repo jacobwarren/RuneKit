@@ -30,11 +30,10 @@ public struct StateObject<ObjectType: AnyObject> {
     private var instance: ObjectType
 
     public init(_ key: String, create: () -> ObjectType) {
-        self.identityPath = RuntimeStateContext.currentPath
+        identityPath = RuntimeStateContext.currentPath
         self.key = key
-        self.instance = StateObjectStore.shared.object(path: identityPath, key: key, create: create)
+        instance = StateObjectStore.shared.object(path: identityPath, key: key, create: create)
     }
 
     public var wrappedValue: ObjectType { instance }
 }
-

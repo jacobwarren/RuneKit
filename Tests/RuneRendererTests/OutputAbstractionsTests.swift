@@ -31,4 +31,3 @@ struct OutputAbstractionsTests {
         #expect(s.contains("\u{001B}[G"))
     }
 }
-

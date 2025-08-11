@@ -1,6 +1,6 @@
 import Testing
-@testable import RuneLayout
 @testable import RuneComponents
+@testable import RuneLayout
 
 /// Tests for advanced flex layout features (RUNE-28)
 /// Covers min/max constraints, wrapping, and overflow clipping
@@ -15,7 +15,7 @@ struct FlexAdvancedLayoutTests {
             height: .points(20),
             flexShrink: 1,
             minWidth: .points(60),
-            child: Text("Child 1")
+            child: Text("Child 1"),
         )
 
         let child2 = Box(
@@ -23,14 +23,14 @@ struct FlexAdvancedLayoutTests {
             height: .points(20),
             flexShrink: 1,
             minWidth: .points(40),
-            child: Text("Child 2")
+            child: Text("Child 2"),
         )
 
         let container = Box(
             flexDirection: .row,
             width: .points(120),
             height: .points(50),
-            children: child1, child2
+            children: child1, child2,
         )
 
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 120, height: 50)
@@ -60,7 +60,7 @@ struct FlexAdvancedLayoutTests {
             height: .points(20),
             flexGrow: 1,
             maxWidth: .points(80),
-            child: Text("Child 1")
+            child: Text("Child 1"),
         )
 
         let child2 = Box(
@@ -68,14 +68,14 @@ struct FlexAdvancedLayoutTests {
             height: .points(20),
             flexGrow: 1,
             maxWidth: .points(120),
-            child: Text("Child 2")
+            child: Text("Child 2"),
         )
 
         let container = Box(
             flexDirection: .row,
             width: .points(300),
             height: .points(50),
-            children: child1, child2
+            children: child1, child2,
         )
 
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 300, height: 50)
@@ -104,7 +104,7 @@ struct FlexAdvancedLayoutTests {
             flexGrow: 1,
             minHeight: .points(20),
             maxHeight: .points(60),
-            child: Text("Child 1")
+            child: Text("Child 1"),
         )
 
         let child2 = Box(
@@ -113,14 +113,14 @@ struct FlexAdvancedLayoutTests {
             flexGrow: 2,
             minHeight: .points(40),
             maxHeight: .points(100),
-            child: Text("Child 2")
+            child: Text("Child 2"),
         )
 
         let container = Box(
             flexDirection: .column,
             width: .points(100),
             height: .points(200),
-            children: child1, child2
+            children: child1, child2,
         )
 
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 100, height: 200)
@@ -148,19 +148,19 @@ struct FlexAdvancedLayoutTests {
         let child1 = Box(
             width: .points(80),
             height: .points(20),
-            child: Text("Child 1")
+            child: Text("Child 1"),
         )
 
         let child2 = Box(
             width: .points(80),
             height: .points(20),
-            child: Text("Child 2")
+            child: Text("Child 2"),
         )
 
         let child3 = Box(
             width: .points(80),
             height: .points(20),
-            child: Text("Child 3")
+            child: Text("Child 3"),
         )
 
         let container = Box(
@@ -168,7 +168,7 @@ struct FlexAdvancedLayoutTests {
             width: .points(150),
             height: .points(100),
             flexWrap: .wrap,
-            children: child1, child2, child3
+            children: child1, child2, child3,
         )
 
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 150, height: 100)
@@ -189,7 +189,10 @@ struct FlexAdvancedLayoutTests {
 
         #expect(child1Rect.y == 0, "Child 1 should be on first line")
         #expect(child2Rect.y > child1Rect.y, "Child 2 should wrap to next line")
-        #expect(child3Rect.y > child2Rect.y, "Child 3 should wrap to next line (since child2 + child3 > container width)")
+        #expect(
+            child3Rect.y > child2Rect.y,
+            "Child 3 should wrap to next line (since child2 + child3 > container width)",
+        )
     }
 
     @Test("Flex wrap respects emoji-safe width boundaries")
@@ -198,13 +201,13 @@ struct FlexAdvancedLayoutTests {
         let emojiChild = Box(
             width: .points(4), // 2 emoji characters = 4 terminal columns
             height: .points(20),
-            child: Text("👨‍👩‍👧‍👦🎉") // Family emoji + party emoji
+            child: Text("👨‍👩‍👧‍👦🎉"), // Family emoji + party emoji
         )
 
         let textChild = Box(
             width: .points(10),
             height: .points(20),
-            child: Text("Hello")
+            child: Text("Hello"),
         )
 
         let container = Box(
@@ -212,7 +215,7 @@ struct FlexAdvancedLayoutTests {
             width: .points(12), // Just enough for emoji but not both
             height: .points(100),
             flexWrap: .wrap,
-            children: emojiChild, textChild
+            children: emojiChild, textChild,
         )
 
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 12, height: 100)
@@ -240,7 +243,7 @@ struct FlexAdvancedLayoutTests {
         let wideChild = Box(
             width: .points(200), // Much wider than container
             height: .points(20),
-            child: Text("This is a very long text that should be clipped")
+            child: Text("This is a very long text that should be clipped"),
         )
 
         let container = Box(
@@ -248,7 +251,7 @@ struct FlexAdvancedLayoutTests {
             width: .points(100),
             height: .points(50),
             flexWrap: .wrap,
-            children: wideChild
+            children: wideChild,
         )
 
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 100, height: 50)
@@ -263,8 +266,10 @@ struct FlexAdvancedLayoutTests {
 
         // Child should be clipped to container width
         #expect(childRect.width <= 100, "Child width should be clipped to container")
-        #expect(childRect.x + childRect.width <= layout.contentRect.x + layout.contentRect.width,
-               "Child should not extend beyond container bounds")
+        #expect(
+            childRect.x + childRect.width <= layout.contentRect.x + layout.contentRect.width,
+            "Child should not extend beyond container bounds",
+        )
     }
 
     @Test("Vertical overflow is clipped in wrapped layout")
@@ -273,7 +278,7 @@ struct FlexAdvancedLayoutTests {
         let tallChild = Box(
             width: .points(50),
             height: .points(200), // Much taller than container
-            child: Text("Tall content")
+            child: Text("Tall content"),
         )
 
         let container = Box(
@@ -281,7 +286,7 @@ struct FlexAdvancedLayoutTests {
             width: .points(100),
             height: .points(50),
             flexWrap: .wrap,
-            children: tallChild
+            children: tallChild,
         )
 
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 100, height: 50)
@@ -296,7 +301,9 @@ struct FlexAdvancedLayoutTests {
 
         // Child should be clipped to container height
         #expect(childRect.height <= 50, "Child height should be clipped to container")
-        #expect(childRect.y + childRect.height <= layout.contentRect.y + layout.contentRect.height,
-               "Child should not extend beyond container bounds")
+        #expect(
+            childRect.y + childRect.height <= layout.contentRect.y + layout.contentRect.height,
+            "Child should not extend beyond container bounds",
+        )
     }
 }

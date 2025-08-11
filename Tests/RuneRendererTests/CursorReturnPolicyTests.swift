@@ -30,4 +30,3 @@ struct CursorReturnPolicyTests {
         #expect(output.contains("\u{001B}[4;1H"))
     }
 }
-

@@ -261,3 +261,41 @@ Core functionality is implemented following strict TDD principles. The library p
 ## License
 
 See LICENSE file for details.
+
+
+## Text styles: parity with Ink (RUNE-35)
+
+Text supports the following style props, mirroring Ink:
+- color (16/256/truecolor)
+- backgroundColor (16/256/truecolor)
+- bold, italic, underline, strikethrough, inverse, dim
+
+Examples:
+
+```swift
+// 16-color
+Text("Warning", color: .yellow, bold: true)
+
+// 256-color
+Text("Accent", color: .color256(196))
+
+// Truecolor (RGB)
+Text("Brand", color: .rgb(255, 128, 0))
+
+// Combined with background and effects
+Text(
+  "Highlight",
+  color: .black,
+  backgroundColor: .brightYellow,
+  bold: true, underline: true, inverse: true
+)
+```
+
+Behavioral guarantees:
+- Nested/overlapping styles are preserved via spans → tokens → renderer pipeline.
+- Inverse (7) is emitted alongside explicit foreground/background when specified; no unexpected suppression.
+- Invalid color values fail gracefully:
+  - 256-color indices outside 0...255 are ignored (no SGR emitted) while continuing to render text.
+  - Truecolor components outside 0...255 are ignored (no SGR emitted) while continuing to render text.
+
+See tests in Tests/RuneANSITests and Tests/RuneComponentsTests for the style matrix coverage and edge cases.

@@ -11,7 +11,7 @@ public struct FullRedrawPolicy: Sendable {
         framesSinceFullRedraw: Int = 0,
         lastFullRedrawTime: Date = .distantPast,
         maxFramesBetweenFullRedraws: Int = 100,
-        maxTimeBetweenFullRedraws: TimeInterval = 30.0
+        maxTimeBetweenFullRedraws: TimeInterval = 30.0,
     ) {
         self.framesSinceFullRedraw = framesSinceFullRedraw
         self.lastFullRedrawTime = lastFullRedrawTime
@@ -29,12 +29,11 @@ public struct FullRedrawPolicy: Sendable {
     public func shouldForceFullRedraw(now: Date, adaptiveQuality: Double) -> Bool {
         let timeSinceLast = now.timeIntervalSince(lastFullRedrawTime)
         return framesSinceFullRedraw >= maxFramesBetweenFullRedraws ||
-               timeSinceLast >= maxTimeBetweenFullRedraws ||
-               adaptiveQuality < 0.7
+            timeSinceLast >= maxTimeBetweenFullRedraws ||
+            adaptiveQuality < 0.7
     }
 
     public func snapshot() -> (framesSince: Int, lastTime: Date) {
         (framesSinceFullRedraw, lastFullRedrawTime)
     }
 }
-

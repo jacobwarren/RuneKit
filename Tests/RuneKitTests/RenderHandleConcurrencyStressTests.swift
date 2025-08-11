@@ -9,15 +9,15 @@ final class RenderHandleConcurrencyStressTests: XCTestCase {
 
         // Launch concurrent tasks performing operations in random order
         await withTaskGroup(of: Void.self) { group in
-            for i in 0..<10 {
+            for i in 0 ..< 10 {
                 group.addTask {
                     await handle.rerender(V1(n: i))
                 }
             }
-            for _ in 0..<5 {
+            for _ in 0 ..< 5 {
                 group.addTask { await handle.clear() }
             }
-            for _ in 0..<3 {
+            for _ in 0 ..< 3 {
                 group.addTask { await handle.unmount() }
             }
         }
@@ -29,8 +29,10 @@ final class RenderHandleConcurrencyStressTests: XCTestCase {
     func testIdentityChangeResetsDiffState() async {
         let options = RenderOptions(exitOnCtrlC: false, patchConsole: false, useAltScreen: false, fpsCap: 60)
 
-        struct ViewA: View, ViewIdentifiable { let id: String; var viewIdentity: String? { id }; var body: some View { Text("A") } }
-        struct ViewB: View, ViewIdentifiable { let id: String; var viewIdentity: String? { id }; var body: some View { Text("B") } }
+        struct ViewA: View,
+            ViewIdentifiable { let id: String; var viewIdentity: String? { id }; var body: some View { Text("A") } }
+        struct ViewB: View,
+            ViewIdentifiable { let id: String; var viewIdentity: String? { id }; var body: some View { Text("B") } }
 
         let handle = await render(ViewA(id: "x"), options: options)
         // same identity – should not reset
@@ -44,4 +46,3 @@ final class RenderHandleConcurrencyStressTests: XCTestCase {
         await handle.waitUntilExit()
     }
 }
-

@@ -43,7 +43,7 @@ public struct Static: Component {
     /// Initialize with a single line of static content
     /// - Parameter line: The static text line to display
     public init(_ line: String) {
-        self.lines = [line]
+        lines = [line]
     }
 
     /// Initialize with multiple lines of static content

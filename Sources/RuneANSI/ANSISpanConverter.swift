@@ -11,8 +11,15 @@
 public struct ANSISpanConverter {
     private let sgrProcessor = SGRParameterProcessor()
     private let sgrGenerator = SGRParameterGenerator()
+    private let profile: TerminalProfile
 
-    public init() {}
+    public init(profile: TerminalProfile = .trueColor) {
+        self.profile = profile
+    }
+
+    public init() {
+        profile = .trueColor
+    }
 
     /// Convert ANSI tokens to styled text
     ///
@@ -69,27 +76,23 @@ public struct ANSISpanConverter {
     public func styledTextToTokens(_ styledText: StyledText) -> [ANSIToken] {
         guard !styledText.spans.isEmpty else { return [] }
 
+        // Minimal diffing with attribute-level generator + small cache
         var tokens: [ANSIToken] = []
-        var needsReset = false
+        var previousAttributes = TextAttributes()
+        var diffGen = SGRDiffGenerator()
+        diffGen.profile = profile
 
         for span in styledText.spans {
-            // Generate SGR token for this span's attributes if they're not default
-            if !span.attributes.isDefault {
-                let sgrParameters = sgrGenerator.attributesToSGRParameters(span.attributes)
-                if !sgrParameters.isEmpty {
-                    tokens.append(.sgr(sgrParameters))
-                    needsReset = true
-                }
+            let attrs = span.attributes
+            if attrs != previousAttributes {
+                let diff = diffGen.diff(from: previousAttributes, to: attrs)
+                if !diff.isEmpty { tokens.append(.sgr(diff)) }
+                previousAttributes = attrs
             }
-
-            // Add the text content
-            if !span.text.isEmpty {
-                tokens.append(.text(span.text))
-            }
+            if !span.text.isEmpty { tokens.append(.text(span.text)) }
         }
 
-        // Add reset if we applied any styling
-        if needsReset {
+        if !previousAttributes.isDefault {
             tokens.append(.sgr([0]))
         }
 

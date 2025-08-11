@@ -25,7 +25,7 @@ public enum ANSISafeTruncation {
 
         for token in tokens {
             switch token {
-            case .text(let content):
+            case let .text(content):
                 let remaining = maxWidth - currentWidth
                 if remaining <= 0 { break }
                 let truncatedContent = truncateSimple(content, maxWidth: remaining)
@@ -51,10 +51,10 @@ public enum ANSISafeTruncation {
         var result = ""
         var currentWidth = 0
         for ch in text {
-            let w = Width.displayWidth(of: String(ch))
-            if currentWidth + w <= maxWidth {
+            let charWidth = Width.displayWidth(of: String(ch))
+            if currentWidth + charWidth <= maxWidth {
                 result.append(ch)
-                currentWidth += w
+                currentWidth += charWidth
             } else {
                 break
             }
@@ -75,4 +75,3 @@ public enum ANSISafeTruncation {
         return Width.displayWidth(of: styled.plainText)
     }
 }
-

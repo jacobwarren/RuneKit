@@ -1,10 +1,10 @@
 import Foundation
 import Testing
-@testable import RuneLayout
 @testable import RuneComponents
+@testable import RuneLayout
 
 /// Integration tests between Box layout system and FlexLayout system (RUNE-27)
-/// 
+///
 /// These tests ensure that the new Box.calculateLayout() method integrates properly
 /// with the existing FlexLayout.calculateLayout() system and maintains backward compatibility.
 struct BoxFlexLayoutIntegrationTests {
@@ -16,14 +16,14 @@ struct BoxFlexLayoutIntegrationTests {
         let children = [
             FlexLayout.Size(width: 5, height: 2),
             FlexLayout.Size(width: 7, height: 3),
-            FlexLayout.Size(width: 4, height: 1)
+            FlexLayout.Size(width: 4, height: 1),
         ]
         let containerSize = FlexLayout.Size(width: 20, height: 10)
 
         // Act - FlexLayout defaults to row direction
         let rects = FlexLayout.calculateLayout(
             children: children,
-            containerSize: containerSize
+            containerSize: containerSize,
         )
 
         // Assert - children should be laid out horizontally (row)
@@ -38,7 +38,7 @@ struct BoxFlexLayoutIntegrationTests {
         // Arrange - use row direction to match FlexLayout default
         let box = Box(
             flexDirection: .row,
-            children: Text("First"), Text("Second"), Text("Third")
+            children: Text("First"), Text("Second"), Text("Third"),
         )
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 10)
 
@@ -49,11 +49,11 @@ struct BoxFlexLayoutIntegrationTests {
         let flexChildren = [
             FlexLayout.Size(width: 5, height: 1),
             FlexLayout.Size(width: 6, height: 1),
-            FlexLayout.Size(width: 5, height: 1)
+            FlexLayout.Size(width: 5, height: 1),
         ]
         let flexRects = FlexLayout.calculateLayout(
             children: flexChildren,
-            containerSize: FlexLayout.Size(width: 20, height: 10)
+            containerSize: FlexLayout.Size(width: 20, height: 10),
         )
 
         // Assert
@@ -71,13 +71,13 @@ struct BoxFlexLayoutIntegrationTests {
     @Test("Box layout integrates with Text component sizing")
     func boxLayoutWithTextComponentSizing() {
         // Arrange
-        let text1 = Text("Hello")      // Should be 5x1
-        let text2 = Text("World!")     // Should be 6x1
+        let text1 = Text("Hello") // Should be 5x1
+        let text2 = Text("World!") // Should be 6x1
 
         let box = Box(
             flexDirection: .row,
             columnGap: 1,
-            children: text1, text2
+            children: text1, text2,
         )
         let containerRect = FlexLayout.Rect(x: 10, y: 5, width: 30, height: 8)
 
@@ -86,8 +86,8 @@ struct BoxFlexLayoutIntegrationTests {
 
         // Assert
         let expectedChildRects = [
-            FlexLayout.Rect(x: 0, y: 0, width: 5, height: 1),  // "Hello"
-            FlexLayout.Rect(x: 6, y: 0, width: 6, height: 1)   // "World!" (5 + 1 gap)
+            FlexLayout.Rect(x: 0, y: 0, width: 5, height: 1), // "Hello"
+            FlexLayout.Rect(x: 6, y: 0, width: 6, height: 1), // "World!" (5 + 1 gap)
         ]
         #expect(layout.childRects == expectedChildRects, "Text components sized correctly")
         #expect(layout.boxRect == containerRect, "Box fills container when no margin")
@@ -99,17 +99,17 @@ struct BoxFlexLayoutIntegrationTests {
         // Arrange
         let innerBox1 = Box(
             flexDirection: .column,
-            children: Text("A"), Text("B")  // 1x1 each, total 1x2
+            children: Text("A"), Text("B"), // 1x1 each, total 1x2
         )
         let innerBox2 = Box(
             flexDirection: .column,
-            children: Text("C"), Text("D"), Text("E")  // 1x1 each, total 1x3
+            children: Text("C"), Text("D"), Text("E"), // 1x1 each, total 1x3
         )
 
         let outerBox = Box(
             flexDirection: .row,
             columnGap: 2,
-            children: innerBox1, innerBox2
+            children: innerBox1, innerBox2,
         )
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 10)
 
@@ -119,24 +119,24 @@ struct BoxFlexLayoutIntegrationTests {
         // Assert
         // Inner boxes should be positioned with gap
         let expectedChildRects = [
-            FlexLayout.Rect(x: 0, y: 0, width: 1, height: 2),  // innerBox1
-            FlexLayout.Rect(x: 3, y: 0, width: 1, height: 3)   // innerBox2 (1 + 2 gap)
+            FlexLayout.Rect(x: 0, y: 0, width: 1, height: 2), // innerBox1
+            FlexLayout.Rect(x: 3, y: 0, width: 1, height: 3), // innerBox2 (1 + 2 gap)
         ]
         #expect(layout.childRects == expectedChildRects, "Nested boxes positioned correctly")
 
         // Test nested layout calculation
         let innerLayout1 = innerBox1.calculateLayout(in: expectedChildRects[0])
         let expectedInnerRects1 = [
-            FlexLayout.Rect(x: 0, y: 0, width: 1, height: 1),  // "A"
-            FlexLayout.Rect(x: 0, y: 1, width: 1, height: 1)   // "B"
+            FlexLayout.Rect(x: 0, y: 0, width: 1, height: 1), // "A"
+            FlexLayout.Rect(x: 0, y: 1, width: 1, height: 1), // "B"
         ]
         #expect(innerLayout1.childRects == expectedInnerRects1, "First nested box children correct")
 
         let innerLayout2 = innerBox2.calculateLayout(in: expectedChildRects[1])
         let expectedInnerRects2 = [
-            FlexLayout.Rect(x: 0, y: 0, width: 1, height: 1),  // "C"
-            FlexLayout.Rect(x: 0, y: 1, width: 1, height: 1),  // "D"
-            FlexLayout.Rect(x: 0, y: 2, width: 1, height: 1)   // "E"
+            FlexLayout.Rect(x: 0, y: 0, width: 1, height: 1), // "C"
+            FlexLayout.Rect(x: 0, y: 1, width: 1, height: 1), // "D"
+            FlexLayout.Rect(x: 0, y: 2, width: 1, height: 1), // "E"
         ]
         #expect(innerLayout2.childRects == expectedInnerRects2, "Second nested box children correct")
     }
@@ -151,7 +151,7 @@ struct BoxFlexLayoutIntegrationTests {
             paddingLeft: 1,
             marginTop: 2,
             marginLeft: 3,
-            child: Text("Test")
+            child: Text("Test"),
         )
         let containerRect = FlexLayout.Rect(x: 10, y: 20, width: 15, height: 8)
 
@@ -160,11 +160,11 @@ struct BoxFlexLayoutIntegrationTests {
 
         // Assert
         // Box should be positioned with margin relative to container
-        let expectedBoxRect = FlexLayout.Rect(x: 13, y: 22, width: 12, height: 6)  // container + margin
+        let expectedBoxRect = FlexLayout.Rect(x: 13, y: 22, width: 12, height: 6) // container + margin
         #expect(layout.boxRect == expectedBoxRect, "Box positioned with margin offset")
 
         // Content should be positioned with padding relative to box
-        let expectedContentRect = FlexLayout.Rect(x: 14, y: 23, width: 11, height: 5)  // box + padding
+        let expectedContentRect = FlexLayout.Rect(x: 14, y: 23, width: 11, height: 5) // box + padding
         #expect(layout.contentRect == expectedContentRect, "Content positioned with padding offset")
 
         // Container should be preserved
@@ -198,12 +198,12 @@ struct BoxFlexLayoutIntegrationTests {
 
         // Create many boxes to test performance
         var layouts: [BoxLayoutResult] = []
-        for i in 0..<100 {
+        for i in 0 ..< 100 {
             let box = Box(
                 flexDirection: i % 2 == 0 ? .row : .column,
                 paddingTop: Float(i % 3),
                 paddingLeft: Float(i % 4),
-                children: Text("Item \(i)"), Text("Child \(i)")
+                children: Text("Item \(i)"), Text("Child \(i)"),
             )
             let containerRect = FlexLayout.Rect(x: i, y: i, width: 20, height: 10)
 
@@ -250,7 +250,7 @@ struct BoxFlexLayoutIntegrationTests {
         let box = Box(
             paddingTop: 2,
             paddingLeft: 3,
-            child: Text("Immutable")
+            child: Text("Immutable"),
         )
 
         // Act

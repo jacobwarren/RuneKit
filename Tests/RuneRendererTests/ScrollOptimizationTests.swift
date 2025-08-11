@@ -25,6 +25,3 @@ struct ScrollOptimizationTests {
         #expect(output.contains("\u{001B}[3;1H")) // moved to last line to draw
     }
 }
-
-
-

@@ -26,4 +26,3 @@ struct StrategyDeterminerTests {
         #expect(s == .deltaUpdate || s == .scrollOptimized)
     }
 }
-

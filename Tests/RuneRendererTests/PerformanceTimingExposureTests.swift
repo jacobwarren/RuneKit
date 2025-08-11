@@ -9,10 +9,10 @@ struct PerformanceTimingExposureTests {
         let pipe1 = Pipe()
         let pipe2 = Pipe()
         let cfg60 = RenderConfiguration(
-            performance: RenderConfiguration.PerformanceTuning(maxFrameRate: 60.0)
+            performance: RenderConfiguration.PerformanceTuning(maxFrameRate: 60.0),
         )
         let cfg30 = RenderConfiguration(
-            performance: RenderConfiguration.PerformanceTuning(maxFrameRate: 30.0)
+            performance: RenderConfiguration.PerformanceTuning(maxFrameRate: 30.0),
         )
 
         let fb60 = FrameBuffer(output: pipe1.fileHandleForWriting, configuration: cfg60)
@@ -31,4 +31,3 @@ struct PerformanceTimingExposureTests {
         pipe2.fileHandleForWriting.closeFile()
     }
 }
-

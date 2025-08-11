@@ -16,7 +16,12 @@ struct HybridReconcilerPolicyTests {
 
     @Test("FullRedrawPolicy triggers by time/frames/quality")
     func fullRedrawPolicy() {
-        var policy = FullRedrawPolicy(framesSinceFullRedraw: 99, lastFullRedrawTime: Date().addingTimeInterval(-1), maxFramesBetweenFullRedraws: 100, maxTimeBetweenFullRedraws: 30)
+        var policy = FullRedrawPolicy(
+            framesSinceFullRedraw: 99,
+            lastFullRedrawTime: Date().addingTimeInterval(-1),
+            maxFramesBetweenFullRedraws: 100,
+            maxTimeBetweenFullRedraws: 30,
+        )
         #expect(!policy.shouldForceFullRedraw(now: Date(), adaptiveQuality: 1.0))
         policy.incrementFrames()
         #expect(policy.shouldForceFullRedraw(now: Date(), adaptiveQuality: 1.0))
@@ -53,4 +58,3 @@ struct HybridReconcilerPolicyTests {
         #expect(out.width == grid.width && out.height == grid.height)
     }
 }
-

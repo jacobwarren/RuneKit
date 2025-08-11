@@ -30,7 +30,7 @@ struct AlignmentWrapMatrixTests {
                             rowGap: 1,
                             columnGap: 2,
                             flexWrap: wrap,
-                            children: makeChild("A"), makeChild("B"), makeChild("C"), makeChild("D")
+                            children: makeChild("A"), makeChild("B"), makeChild("C"), makeChild("D"),
                         )
                         let result = layout(b, width: 24, height: 8)
 
@@ -43,18 +43,19 @@ struct AlignmentWrapMatrixTests {
                         }
 
                         // - With wrap enabled in row direction at constrained widths, we expect >1 row
-                        if wrap != .noWrap && dir == .row {
+                        if wrap != .noWrap, dir == .row {
                             // Heuristic: total desired width of 4 children + gaps exceeds container -> wraps
-                            let shouldWrap = (4*5 + 3*2) > result.contentRect.width
+                            let shouldWrap = (4 * 5 + 3 * 2) > result.contentRect.width
                             if shouldWrap {
                                 // Y positions for children should not all be identical
-                                let ys = Set(result.childRects.map { $0.y })
+                                let ys = Set(result.childRects.map(\.y))
                                 #expect(ys.count > 1)
                             }
                         }
 
-                        // - With justifyContent space-between in row and no wrap, first child at x=0, last aligned to end
-                        if wrap == .noWrap && dir == .row && justify == .spaceBetween {
+                        // - With justifyContent space-between in row and no wrap, first child at x=0, last aligned to
+                        // end
+                        if wrap == .noWrap, dir == .row, justify == .spaceBetween {
                             if result.childRects.count >= 2 {
                                 #expect(result.childRects.first?.x == 0)
                                 let last = result.childRects.last!
@@ -67,4 +68,3 @@ struct AlignmentWrapMatrixTests {
         }
     }
 }
-

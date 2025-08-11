@@ -1,9 +1,9 @@
-import RuneLayout
 import RuneANSI
+import RuneLayout
 import RuneUnicode
 
 /// Border characters for drawing borders
-internal struct BorderChars {
+struct BorderChars {
     let topLeft: String
     let topRight: String
     let bottomLeft: String
@@ -13,32 +13,33 @@ internal struct BorderChars {
 }
 
 /// Handles rendering functionality for Box components
-internal struct BoxRenderer {
-    
+enum BoxRenderer {
     /// Render border into the lines array
     /// - Parameters:
     ///   - lines: The lines array to modify
     ///   - rect: The rectangle to draw the border in
     ///   - style: The border style to use
     ///   - color: Optional ANSI color to apply to border glyphs
-    static func renderBorder(into lines: inout [String], rect: FlexLayout.Rect, style: Box.BorderStyle, color: ANSIColor? = nil) {
+    static func renderBorder(
+        into lines: inout [String],
+        rect: FlexLayout.Rect,
+        style: Box.BorderStyle,
+        color: ANSIColor? = nil,
+    ) {
         let borderChars = getBorderChars(for: style)
 
         // For simplicity, assume border is drawn at the start of the render area
         let width = rect.width
         let height = rect.height
 
-        let colorPrefix: String
-        if let color = color { colorPrefix = color.foregroundSequence } else { colorPrefix = "" }
+        let colorPrefix: String = if let color { color.foregroundSequence } else { "" }
         let reset = colorPrefix.isEmpty ? "" : "\u{001B}[0m"
 
         // Gracefully handle dimensions too small for borders
-        guard width >= 2 && height >= 1 else {
+        guard width >= 2, height >= 1 else {
             // If dimensions are too small, fill with spaces or truncate to fit
-            for y in 0..<height {
-                if y < lines.count {
-                    lines[y] = String(repeating: " ", count: min(width, lines[y].count))
-                }
+            for y in 0 ..< height where y < lines.count {
+                lines[y] = String(repeating: " ", count: min(width, lines[y].count))
             }
             return
         }
@@ -56,14 +57,13 @@ internal struct BoxRenderer {
         }
 
         // Side borders (middle lines)
-        if height > 2 {  // Only process middle lines if height > 2
-            for y in 1..<(height - 1) {
-                if y < lines.count {
-                    let existingLine = lines[y]
-                    // Preserve middle content (after dropping borders if present)
-                    let middleContent = String(existingLine.dropFirst().dropLast())
-                    lines[y] = colorPrefix + borderChars.vertical + reset + middleContent + colorPrefix + borderChars.vertical + reset
-                }
+        if height > 2 { // Only process middle lines if height > 2
+            for y in 1 ..< (height - 1) where y < lines.count {
+                let existingLine = lines[y]
+                // Preserve middle content (after dropping borders if present)
+                let middleContent = String(existingLine.dropFirst().dropLast())
+                lines[y] = colorPrefix + borderChars.vertical + reset + middleContent + colorPrefix + borderChars
+                    .vertical + reset
             }
         }
     }
@@ -105,12 +105,11 @@ internal struct BoxRenderer {
         leftChar: String,
         rightChar: String,
         fillChar: String,
-        totalWidth: Int
     ) -> String {
         var line = ""
 
         // Add characters before the border section
-        for _ in 0..<startX {
+        for _ in 0 ..< startX {
             line += " "
         }
 
@@ -118,19 +117,15 @@ internal struct BoxRenderer {
         line += leftChar
 
         // Add fill characters
-        let fillWidth = max(0, endX - startX - 2)  // -2 for left and right chars
-        for _ in 0..<fillWidth {
+        let fillWidth = max(0, endX - startX - 2) // -2 for left and right chars
+        for _ in 0 ..< fillWidth {
             line += fillChar
         }
 
         // Add right border character
         line += rightChar
 
-        // Add characters after the border section
-        let remainingWidth = max(0, totalWidth - line.count)
-        for _ in 0..<remainingWidth {
-            line += " "
-        }
+        // Note: We no longer pad to a target total width; caller is responsible for alignment
 
         return line
     }
@@ -139,26 +134,25 @@ internal struct BoxRenderer {
     static func getBorderChars(for style: Box.BorderStyle) -> BorderChars {
         switch style {
         case .none:
-            return BorderChars(
+            BorderChars(
                 topLeft: " ", topRight: " ", bottomLeft: " ", bottomRight: " ",
-                horizontal: " ", vertical: " "
+                horizontal: " ", vertical: " ",
             )
         case .single:
-            return BorderChars(
+            BorderChars(
                 topLeft: "┌", topRight: "┐", bottomLeft: "└", bottomRight: "┘",
-                horizontal: "─", vertical: "│"
+                horizontal: "─", vertical: "│",
             )
         case .double:
-            return BorderChars(
+            BorderChars(
                 topLeft: "╔", topRight: "╗", bottomLeft: "╚", bottomRight: "╝",
-                horizontal: "═", vertical: "║"
+                horizontal: "═", vertical: "║",
             )
         case .rounded:
-            return BorderChars(
+            BorderChars(
                 topLeft: "╭", topRight: "╮", bottomLeft: "╰", bottomRight: "╯",
-                horizontal: "─", vertical: "│"
+                horizontal: "─", vertical: "│",
             )
         }
     }
 }
-

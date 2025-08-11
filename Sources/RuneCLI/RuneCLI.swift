@@ -43,13 +43,12 @@ struct RuneCLI {
         // In CI or non-interactive terminals (like Docker builds), skip demos entirely.
         let isInteractive = RenderOptions.isInteractiveTerminal()
         let isRunningTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil ||
-                             ProcessInfo.processInfo.environment["SWIFTPM_TEST"] != nil ||
-                             ProcessInfo.processInfo.environment["CI"] != nil
+            ProcessInfo.processInfo.environment["SWIFTPM_TEST"] != nil ||
+            ProcessInfo.processInfo.environment["CI"] != nil
         if !isInteractive || isRunningTests {
             print("RuneCLI running in non-interactive/test/CI mode — skipping demos.")
             return
         }
-
 
         // Check command line arguments
         let args = CommandLine.arguments
@@ -73,13 +72,11 @@ struct RuneCLI {
         }
     }
 
-        // Shared demo render options: own the terminal outside CI (Ink-like behavior)
-        static var demoOptions: RenderOptions {
-            // Use TTY and CI-aware defaults to avoid aborts in non-interactive contexts
-            return RenderOptions.fromEnvironment()
-        }
-
-
+    // Shared demo render options: own the terminal outside CI (Ink-like behavior)
+    static var demoOptions: RenderOptions {
+        // Use TTY and CI-aware defaults to avoid aborts in non-interactive contexts
+        RenderOptions.fromEnvironment()
+    }
 
     // Run through RUNE-13 to RUNE-18 ticket demos sequentially
     static func runTickets1318() async {
@@ -100,348 +97,367 @@ struct RuneCLI {
         await runTickets3034()
     }
 
-        // Run through RUNE-19 to RUNE-24 ticket demos sequentially
-        static func runTickets1924() async {
-            print("\n=== RuneKit Ticket Demos: RUNE-19 → RUNE-24 ===\n")
-            await demoRUNE19()
-            await demoRUNE20()
-            await demoRUNE21()
-            await demoRUNE22()
-            await demoRUNE23()
+    // Run through RUNE-19 to RUNE-24 ticket demos sequentially
+    static func runTickets1924() async {
+        print("\n=== RuneKit Ticket Demos: RUNE-19 → RUNE-24 ===\n")
+        await demoRUNE19()
+        await demoRUNE20()
+        await demoRUNE21()
+        await demoRUNE22()
+        await demoRUNE23()
 
-            await demoRUNE24()
-            print("\n✅ Completed RUNE-19 to RUNE-24 demos.\n")
-        }
-        // Run through RUNE-25 to RUNE-29 ticket demos sequentially
-        static func runTickets2529() async {
-            print("\n=== RuneKit Ticket Demos: RUNE-25 → RUNE-29 ===\n")
-            await demoRUNE25()
-            await demoRUNE26()
-            await demoRUNE27()
-            await demoRUNE28()
-            await demoRUNE29()
-            print("\n✅ Completed RUNE-25 to RUNE-29 demos.\n")
-        }
-        // Run through RUNE-30 to RUNE-34 ticket demos sequentially
-        static func runTickets3034() async {
-            print("\n=== RuneKit Ticket Demos: RUNE-30 → RUNE-34 ===\n")
-            await demoRUNE30()
-            await demoRUNE31()
-            await demoRUNE32()
-            await demoRUNE33()
-            await demoRUNE34()
-            print("\n✅ Completed RUNE-30 to RUNE-34 demos.\n")
-        }
+        await demoRUNE24()
+        print("\n✅ Completed RUNE-19 to RUNE-24 demos.\n")
+    }
 
-        // RUNE-30: <Box> with borders & padding
-        static func demoRUNE30() async {
-            print("RUNE-30: <Box> with borders & padding")
+    // Run through RUNE-25 to RUNE-29 ticket demos sequentially
+    static func runTickets2529() async {
+        print("\n=== RuneKit Ticket Demos: RUNE-25 → RUNE-29 ===\n")
+        await demoRUNE25()
+        await demoRUNE26()
+        await demoRUNE27()
+        await demoRUNE28()
+        await demoRUNE29()
+        print("\n✅ Completed RUNE-25 to RUNE-29 demos.\n")
+    }
 
-            // Example 1: Single border with padding
-            let single = Box(
-                border: .single,
-                paddingTop: 1, paddingRight: 2, paddingBottom: 1, paddingLeft: 2,
-                child: Text("Hello 👋 CJK：世界")
-            )
-            let singleRect = FlexLayout.Rect(x: 0, y: 0, width: 18, height: 5)
-            let singleLines = single.render(in: singleRect)
-            print("- Single border with padding:")
-            singleLines.forEach { print("  \($0)") }
+    // Run through RUNE-30 to RUNE-34 ticket demos sequentially
+    static func runTickets3034() async {
+        print("\n=== RuneKit Ticket Demos: RUNE-30 → RUNE-34 ===\n")
+        await demoRUNE30()
+        await demoRUNE31()
+        await demoRUNE32()
+        await demoRUNE33()
+        await demoRUNE34()
+        print("\n✅ Completed RUNE-30 to RUNE-34 demos.\n")
+    }
 
-            // Example 2: Double border
-            let double = Box(border: .double, child: Text("Double"))
-            let doubleLines = double.render(in: FlexLayout.Rect(x: 0, y: 0, width: 12, height: 3))
-            print("- Double border:")
-            doubleLines.forEach { print("  \($0)") }
+    // RUNE-30: <Box> with borders & padding
+    static func demoRUNE30() async {
+        print("RUNE-30: <Box> with borders & padding")
 
-            // Example 3: Rounded border
-            let rounded = Box(border: .rounded, child: Text("Rounded"))
-            let roundedLines = rounded.render(in: FlexLayout.Rect(x: 0, y: 0, width: 13, height: 3))
-            print("- Rounded border:")
-            roundedLines.forEach { print("  \($0)") }
+        // Example 1: Single border with padding
+        let single = Box(
+            border: .single,
+            paddingTop: 1, paddingRight: 2, paddingBottom: 1, paddingLeft: 2,
+            child: Text("Hello 👋 CJK：世界"),
+        )
+        let singleRect = FlexLayout.Rect(x: 0, y: 0, width: 18, height: 5)
+        let singleLines = single.render(in: singleRect)
+        print("- Single border with padding:")
+        singleLines.forEach { print("  \($0)") }
 
-            print("✅ RUNE-30 demo complete\n")
-        }
+        // Example 2: Double border
+        let double = Box(border: .double, child: Text("Double"))
+        let doubleLines = double.render(in: FlexLayout.Rect(x: 0, y: 0, width: 12, height: 3))
+        print("- Double border:")
+        doubleLines.forEach { print("  \($0)") }
 
-        // RUNE-31: <Static> region
-        static func demoRUNE31() async {
-            print("RUNE-31: <Static> region (logs above live region)")
+        // Example 3: Rounded border
+        let rounded = Box(border: .rounded, child: Text("Rounded"))
+        let roundedLines = rounded.render(in: FlexLayout.Rect(x: 0, y: 0, width: 13, height: 3))
+        print("- Rounded border:")
+        roundedLines.forEach { print("  \($0)") }
 
-            // Configure FrameBuffer with console capture to keep logs/static above live content
-            let config = RenderConfiguration(enableConsoleCapture: true)
-            let fb = FrameBuffer(configuration: config)
+        print("✅ RUNE-30 demo complete\n")
+    }
 
-            // Render a live region (simple progress box)
-            func progressFrame(_ step: Int) -> TerminalRenderer.Frame {
-                let box = Box(border: .single, flexDirection: .column, paddingRight: 1, paddingLeft: 1,
-                               children: Text("Header (live)"), Text("Progress: \(step)/3"))
-                let rect = FlexLayout.Rect(x: 0, y: 0, width: 24, height: 4)
-                let lines = box.render(in: rect)
-                return TerminalRenderer.Frame(lines: lines, width: 24, height: lines.count)
-            }
+    // RUNE-31: <Static> region
+    static func demoRUNE31() async {
+        print("RUNE-31: <Static> region (logs above live region)")
 
-            // Start with frame 1 so capture is active, then emit static lines via stdout
-            await fb.renderFrame(progressFrame(1))
-            print("=== Static Header ===")
-            print("Logs and headers stay above the live region.")
+        // Configure FrameBuffer with console capture to keep logs/static above live content
+        let config = RenderConfiguration(enableConsoleCapture: true)
+        let fb = FrameBuffer(configuration: config)
 
-            // Update frames — static lines should remain above and stable
-            await fb.renderFrame(progressFrame(2))
-            await fb.renderFrame(progressFrame(3))
-            await fb.waitForPendingUpdates()
-            await fb.clear()
-
-            print("✅ RUNE-31 demo complete\n")
-        }
-
-        // RUNE-32: <Spacer> and alignment props
-        static func demoRUNE32() async {
-            print("RUNE-32: <Spacer> and alignment props")
-
-            // Row: Left |———Spacer———| Right
-            let row = Box(
-                flexDirection: .row,
-                width: .points(24), height: .points(3),
-                children: Text("Left"), Spacer(), Text("Right")
-            )
-            let rowLines = row.render(in: FlexLayout.Rect(x: 0, y: 0, width: 24, height: 3))
-            print("- Row with Spacer (Left ··· Right):")
-            rowLines.forEach { print("  \($0)") }
-
-            // Column with centered item and Spacer not affecting cross-axis
-            let column = Box(
+        // Render a live region (simple progress box)
+        func progressFrame(_ step: Int) -> TerminalRenderer.Frame {
+            let box = Box(
                 border: .single,
                 flexDirection: .column,
-                justifyContent: .spaceBetween,
-                alignItems: .center,
-                width: .points(20), height: .points(6),
-                children: Text("Top"), Spacer(), Text("Bottom")
+                paddingRight: 1,
+                paddingLeft: 1,
+                children: Text("Header (live)"),
+                Text("Progress: \(step)/3"),
             )
-            let columnLines = column.render(in: FlexLayout.Rect(x: 0, y: 0, width: 20, height: 6))
-            print("- Column with borders, padding=0, spacers and alignment:")
-            columnLines.forEach { print("  \($0)") }
-
-            print("✅ RUNE-32 demo complete\n")
+            let rect = FlexLayout.Rect(x: 0, y: 0, width: 24, height: 4)
+            let lines = box.render(in: rect)
+            return TerminalRenderer.Frame(lines: lines, width: 24, height: lines.count)
         }
 
-        // RUNE-33: <Newline count={n}>
-        static func demoRUNE33() async {
-            print("RUNE-33: <Newline count={n}>")
-            let nl3 = Newline(count: 3)
-            let linesAll = nl3.render(in: FlexLayout.Rect(x: 0, y: 0, width: 10, height: 5))
-            print("- Newline(3) in height=5 → lines: \(linesAll.count) (expected 3)")
-            let linesConstrained = nl3.render(in: FlexLayout.Rect(x: 0, y: 0, width: 10, height: 2))
-            print("- Newline(3) in height=2 → lines: \(linesConstrained.count) (expected 2)")
-            print("- SGR leakage: none (empty strings)")
-            print("✅ RUNE-33 demo complete\n")
+        // Start with frame 1 so capture is active, then emit static lines via stdout
+        await fb.renderFrame(progressFrame(1))
+        print("=== Static Header ===")
+        print("Logs and headers stay above the live region.")
+
+        // Update frames — static lines should remain above and stable
+        await fb.renderFrame(progressFrame(2))
+        await fb.renderFrame(progressFrame(3))
+        await fb.waitForPendingUpdates()
+        await fb.clear()
+
+        print("✅ RUNE-31 demo complete\n")
+    }
+
+    // RUNE-32: <Spacer> and alignment props
+    static func demoRUNE32() async {
+        print("RUNE-32: <Spacer> and alignment props")
+
+        // Row: Left |———Spacer———| Right
+        let row = Box(
+            flexDirection: .row,
+            width: .points(24), height: .points(3),
+            children: Text("Left"), Spacer(), Text("Right"),
+        )
+        let rowLines = row.render(in: FlexLayout.Rect(x: 0, y: 0, width: 24, height: 3))
+        print("- Row with Spacer (Left ··· Right):")
+        rowLines.forEach { print("  \($0)") }
+
+        // Column with centered item and Spacer not affecting cross-axis
+        let column = Box(
+            border: .single,
+            flexDirection: .column,
+            justifyContent: .spaceBetween,
+            alignItems: .center,
+            width: .points(20), height: .points(6),
+            children: Text("Top"), Spacer(), Text("Bottom"),
+        )
+        let columnLines = column.render(in: FlexLayout.Rect(x: 0, y: 0, width: 20, height: 6))
+        print("- Column with borders, padding=0, spacers and alignment:")
+        columnLines.forEach { print("  \($0)") }
+
+        print("✅ RUNE-32 demo complete\n")
+    }
+
+    // RUNE-33: <Newline count={n}>
+    static func demoRUNE33() async {
+        print("RUNE-33: <Newline count={n}>")
+        let nl3 = Newline(count: 3)
+        let linesAll = nl3.render(in: FlexLayout.Rect(x: 0, y: 0, width: 10, height: 5))
+        print("- Newline(3) in height=5 → lines: \(linesAll.count) (expected 3)")
+        let linesConstrained = nl3.render(in: FlexLayout.Rect(x: 0, y: 0, width: 10, height: 2))
+        print("- Newline(3) in height=2 → lines: \(linesConstrained.count) (expected 2)")
+        print("- SGR leakage: none (empty strings)")
+        print("✅ RUNE-33 demo complete\n")
+    }
+
+    // RUNE-34: <Transform transform: (string) -> string>
+    static func demoRUNE34() async {
+        print("RUNE-34: <Transform transform: (string) -> string>")
+
+        // ANSI-safe uppercase
+        let upper = Transform(transform: { $0.uppercased() }) {
+            Text("Error: warning", color: .red, backgroundColor: .yellow)
         }
+        let upLine = upper.render(in: FlexLayout.Rect(x: 0, y: 0, width: 30, height: 1)).first ?? ""
+        print("- ANSI-safe uppercase: \(upLine)")
 
-        // RUNE-34: <Transform transform: (string) -> string>
-        static func demoRUNE34() async {
-            print("RUNE-34: <Transform transform: (string) -> string>")
-
-            // ANSI-safe uppercase
-            let upper = Transform(transform: { $0.uppercased() }) {
-                Text("Error: warning", color: .red, backgroundColor: .yellow)
+        // Chaining/nesting
+        let chained = Transform(transform: { $0.replacingOccurrences(of: "WORLD", with: "UNIVERSE") }) {
+            Transform(transform: { $0.uppercased() }) {
+                Text("Hello world", color: .cyan)
             }
-            let upLine = upper.render(in: FlexLayout.Rect(x: 0, y: 0, width: 30, height: 1)).first ?? ""
-            print("- ANSI-safe uppercase: \(upLine)")
-
-            // Chaining/nesting
-            let chained = Transform(transform: { $0.replacingOccurrences(of: "WORLD", with: "UNIVERSE") }) {
-                Transform(transform: { $0.uppercased() }) {
-                    Text("Hello world", color: .cyan)
-                }
-            }
-            let chLine = chained.render(in: FlexLayout.Rect(x: 0, y: 0, width: 30, height: 1)).first ?? ""
-            print("- Chained transform: \(chLine)")
-
-            print("✅ RUNE-34 demo complete\n")
         }
+        let chLine = chained.render(in: FlexLayout.Rect(x: 0, y: 0, width: 30, height: 1)).first ?? ""
+        print("- Chained transform: \(chLine)")
 
-        // RUNE-25: Render handle API (unmount/clear/rerender/waitUntilExit)
-        static func demoRUNE25() async {
-            print("RUNE-25: Render handle API (unmount/clear/rerender/waitUntilExit)")
-            struct CounterView: View { var body: some View { Text("Counter: 1", color: .yellow) } }
-            let options = RenderOptions(exitOnCtrlC: false, patchConsole: false, useAltScreen: false, fpsCap: 30)
-            let handle = await render(CounterView(), options: options)
-            // Rerender with new content (state-preserving semantics are documented)
-            struct CounterView2: View { var body: some View { Text("Counter: 2", color: .yellow) } }
-            await handle.rerender(CounterView2())
-            // Clear, then unmount; also show waitUntilExit resolving
-            let waitTask = Task { await handle.waitUntilExit() }
-            await handle.clear()
-            await handle.unmount()
-            _ = await waitTask.value
-            print("✅ RUNE-25 demo complete\n")
+        print("✅ RUNE-34 demo complete\n")
+    }
+
+    // RUNE-25: Render handle API (unmount/clear/rerender/waitUntilExit)
+    static func demoRUNE25() async {
+        print("RUNE-25: Render handle API (unmount/clear/rerender/waitUntilExit)")
+        struct CounterView: View { var body: some View { Text("Counter: 1", color: .yellow) } }
+        let options = RenderOptions(exitOnCtrlC: false, patchConsole: false, useAltScreen: false, fpsCap: 30)
+        let handle = await render(CounterView(), options: options)
+        // Rerender with new content (state-preserving semantics are documented)
+        struct CounterView2: View { var body: some View { Text("Counter: 2", color: .yellow) } }
+        await handle.rerender(CounterView2())
+        // Clear, then unmount; also show waitUntilExit resolving
+        let waitTask = Task { await handle.waitUntilExit() }
+        await handle.clear()
+        await handle.unmount()
+        _ = await waitTask.value
+        print("✅ RUNE-25 demo complete\n")
+    }
+
+    // RUNE-26: Yoga ADR + integration plan
+    static func demoRUNE26() async {
+        print("RUNE-26: Yoga ADR + integration plan")
+        print("  - ADR 001 committed selecting Yoga via SPM")
+        print("  - Package.swift includes `yoga` dependency; RuneLayout links it")
+        print("  - Mapping of Box props → Yoga nodes implemented in YogaWrapper")
+        print("  - Perf & portability notes documented in ADR")
+        print("✅ RUNE-26 demo complete\n")
+    }
+
+    // RUNE-27: Basic Yoga layout (row/column + padding/margin/gap)
+    static func demoRUNE27() async {
+        print("RUNE-27: Basic Yoga layout (row/column + padding/margin/gap)")
+        let layoutRect = FlexLayout.Rect(x: 0, y: 0, width: 30, height: 10)
+        let view = Box(
+            flexDirection: .row,
+            columnGap: 2,
+            children: Box(flexDirection: .column, rowGap: 1, children: Text("L1"), Text("L2")),
+            Box(flexDirection: .column, rowGap: 2, children: Text("R1"), Text("R2"), Text("R3")),
+        )
+        let lines = view.render(in: layoutRect)
+        for (i, line) in lines.enumerated() {
+            print("  [\(i)] \(line)")
         }
+        print("✅ RUNE-27 demo complete\n")
+    }
 
-        // RUNE-26: Yoga ADR + integration plan
-        static func demoRUNE26() async {
-            print("RUNE-26: Yoga ADR + integration plan")
-            print("  - ADR 001 committed selecting Yoga via SPM")
-            print("  - Package.swift includes `yoga` dependency; RuneLayout links it")
-            print("  - Mapping of Box props → Yoga nodes implemented in YogaWrapper")
-            print("  - Perf & portability notes documented in ADR")
-            print("✅ RUNE-26 demo complete\n")
+    // RUNE-28: Flex grow/shrink, min/max, wrap (Yoga)
+    static func demoRUNE28() async {
+        print("RUNE-28: Flex grow/shrink, min/max, wrap (Yoga)")
+        let container = FlexLayout.Rect(x: 0, y: 0, width: 40, height: 10)
+        let row = Box(
+            flexDirection: .row,
+            columnGap: 1,
+            children: Box(width: .points(10), child: Text("A")),
+            Box(flexGrow: 1, child: Text("Grow")),
+            Box(width: .points(5), minWidth: .points(5), child: Text("Fix")),
+        )
+        let lines = row.render(in: container)
+        for (i, line) in lines.enumerated() {
+            print("  [\(i)] \(line)")
         }
+        print("✅ RUNE-28 demo complete\n")
+    }
 
-        // RUNE-27: Basic Yoga layout (row/column + padding/margin/gap)
-        static func demoRUNE27() async {
-            print("RUNE-27: Basic Yoga layout (row/column + padding/margin/gap)")
-            let layoutRect = FlexLayout.Rect(x: 0, y: 0, width: 30, height: 10)
-            let view = Box(
-                flexDirection: .row,
-                columnGap: 2,
-                children: Box(flexDirection: .column, rowGap: 1, children: Text("L1"), Text("L2")),
-                          Box(flexDirection: .column, rowGap: 2, children: Text("R1"), Text("R2"), Text("R3"))
-            )
-            let lines = view.render(in: layoutRect)
-            for (i, line) in lines.enumerated() { print("  [\(i)] \(line)") }
-            print("✅ RUNE-27 demo complete\n")
+    // RUNE-29: Text component (styled)
+    static func demoRUNE29() async {
+        print("RUNE-29: Text component (styled)")
+        let rect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 3)
+        let text = Text("Styled ✅ 世界", color: .magenta, bold: true, underline: true)
+        let lines = text.render(in: rect)
+        for (i, line) in lines.enumerated() {
+            print("  [\(i)] \(line)")
         }
+        print("✅ RUNE-29 demo complete\n")
+    }
 
-        // RUNE-28: Flex grow/shrink, min/max, wrap (Yoga)
-        static func demoRUNE28() async {
-            print("RUNE-28: Flex grow/shrink, min/max, wrap (Yoga)")
-            let container = FlexLayout.Rect(x: 0, y: 0, width: 40, height: 10)
-            let row = Box(
-                flexDirection: .row,
-                columnGap: 1,
-                children: Box(width: .points(10), child: Text("A")),
-                          Box(flexGrow: 1, child: Text("Grow")),
-                          Box(width: .points(5), minWidth: .points(5), child: Text("Fix"))
-            )
-            let lines = row.render(in: container)
-            for (i, line) in lines.enumerated() { print("  [\(i)] \(line)") }
-            print("✅ RUNE-28 demo complete\n")
+    // RUNE-19: ANSI-aware wrap & slice
+    static func demoRUNE19() async {
+        print("RUNE-19: ANSI-aware wrap & slice")
+        let attrs1 = TextAttributes(color: .red, bold: true)
+        let attrs2 = TextAttributes(color: .blue)
+        let styled = StyledText(spans: [
+            TextSpan(text: "Hello ", attributes: attrs1),
+            TextSpan(text: "👨‍👩‍👧‍👦 世界 🎉 Test!", attributes: attrs2),
+        ])
+        // Wrap at width 12 and show lines without color bleed
+        let lines = styled.wrapByDisplayWidth(width: 12)
+        let converter = ANSISpanConverter()
+        for (i, line) in lines.enumerated() {
+            let tokens = converter.styledTextToTokens(line)
+            let raw = ANSITokenizer().encode(tokens)
+            print("  Line #\(i + 1): \(raw)")
         }
+        // Slice example
+        let sliced = styled.sliceByDisplayColumns(from: 3, to: 9)
+        let rawSliced = ANSITokenizer().encode(converter.styledTextToTokens(sliced))
+        print("  Slice [3,9): \(rawSliced)")
+        print("✅ RUNE-19 demo complete\n")
+    }
 
-        // RUNE-29: Text component (styled)
-        static func demoRUNE29() async {
-            print("RUNE-29: Text component (styled)")
-            let rect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 3)
-            let text = Text("Styled ✅ 世界", color: .magenta, bold: true, underline: true)
-            let lines = text.render(in: rect)
-            for (i, line) in lines.enumerated() { print("  [\(i)] \(line)") }
-            print("✅ RUNE-29 demo complete\n")
+    // RUNE-20: Frame buffer & region repaint
+    static func demoRUNE20() async {
+        print("RUNE-20: Frame buffer & region repaint")
+        let fb = FrameBuffer() // default stdout
+        // Render two frames where the second is shorter to verify erase/shrink
+        let frame1 = TerminalRenderer.Frame(lines: [
+            "Frame Buffer Test",
+            "Second Line",
+            "Third Line",
+        ], width: 80, height: 3)
+        await fb.renderFrame(frame1)
+        try? await Task.sleep(for: .milliseconds(300))
+        let frame2 = TerminalRenderer.Frame(lines: [
+            "Frame Buffer Test",
+        ], width: 80, height: 1)
+        await fb.renderFrame(frame2)
+        await fb.waitForPendingUpdates()
+        // Ensure cursor restored on clear
+        await fb.clear()
+        print("✅ RUNE-20 demo complete\n")
+    }
+
+    // RUNE-21: Line-diff renderer (changed-line rewrite)
+    static func demoRUNE21() async {
+        print("RUNE-21: Line-diff renderer (changed-line rewrite)")
+        let config = RenderConfiguration(optimizationMode: .lineDiff, enableMetrics: true)
+        let fb = FrameBuffer(configuration: config)
+        // Create base lines and then change a subset
+        var lines = (1 ... 10).map { "Line \($0)" }
+        let frame1 = TerminalRenderer.Frame(lines: lines, width: 40, height: lines.count)
+        await fb.renderFrame(frame1)
+        // Change two lines
+        lines[2] = "Line 3 Modified"
+        lines[7] = "Line 8 Modified"
+        let frame2 = TerminalRenderer.Frame(lines: lines, width: 40, height: lines.count)
+        await fb.renderFrame(frame2)
+        await fb.waitForPendingUpdates()
+        // Pull renderer metrics snapshot
+        print("  Render mode: lineDiff; metrics collected (bytes/lines via RenderStats/metrics)")
+        await fb.clear()
+        print("✅ RUNE-21 demo complete\n")
+    }
+
+    // RUNE-22: Alternate screen buffer support
+    static func demoRUNE22() async {
+        print("RUNE-22: Alternate screen buffer support")
+        // Use render(options) with alt screen on
+        struct AltView: View { var body: some View { Box(
+            backgroundColor: .blue,
+            child: Text("Alt Screen Demo", color: .white, bold: true),
+        ) } }
+        let handle = await render(
+            AltView(),
+            options: RenderOptions(exitOnCtrlC: false, patchConsole: false, useAltScreen: true),
+        )
+        print("  Entered alternate screen; showing content briefly...")
+        try? await Task.sleep(for: .milliseconds(500))
+        await handle.clear()
+        await handle.unmount()
+        print("  Left alternate screen; shell prompt should be restored")
+        print("✅ RUNE-22 demo complete\n")
+    }
+
+    // RUNE-23: Stdout/stderr capture & log lane
+    static func demoRUNE23() async {
+        print("RUNE-23: Stdout/stderr capture & log lane")
+        let options = RenderOptions(exitOnCtrlC: false, patchConsole: true, useAltScreen: false)
+        struct LogView: View { var body: some View { Box(
+            border: .single,
+            child: Text("Live Region", color: .cyan, bold: true),
+        ) } }
+        let handle = await render(LogView(), options: options)
+        // Emit some logs that should appear above the live region
+        print("Log: This is a stdout message")
+        if let data = "Error: This is a stderr message\n".data(using: .utf8) {
+            try? FileHandle.standardError.write(contentsOf: data)
         }
+        try? await Task.sleep(for: .milliseconds(300))
+        await handle.clear()
+        await handle.unmount()
+        print("✅ RUNE-23 demo complete\n")
+    }
 
-
-
-        // RUNE-19: ANSI-aware wrap & slice
-        static func demoRUNE19() async {
-            print("RUNE-19: ANSI-aware wrap & slice")
-            let attrs1 = TextAttributes(color: .red, bold: true)
-            let attrs2 = TextAttributes(color: .blue)
-            let styled = StyledText(spans: [
-                TextSpan(text: "Hello ", attributes: attrs1),
-                TextSpan(text: "👨‍👩‍👧‍👦 世界 🎉 Test!", attributes: attrs2)
-            ])
-            // Wrap at width 12 and show lines without color bleed
-            let lines = styled.wrapByDisplayWidth(width: 12)
-            let converter = ANSISpanConverter()
-            for (i, line) in lines.enumerated() {
-                let tokens = converter.styledTextToTokens(line)
-                let raw = ANSITokenizer().encode(tokens)
-                print("  Line #\(i+1): \(raw)")
-            }
-            // Slice example
-            let sliced = styled.sliceByDisplayColumns(from: 3, to: 9)
-            let rawSliced = ANSITokenizer().encode(converter.styledTextToTokens(sliced))
-            print("  Slice [3,9): \(rawSliced)")
-            print("✅ RUNE-19 demo complete\n")
-        }
-
-        // RUNE-20: Frame buffer & region repaint
-        static func demoRUNE20() async {
-            print("RUNE-20: Frame buffer & region repaint")
-            let fb = FrameBuffer() // default stdout
-            // Render two frames where the second is shorter to verify erase/shrink
-            let frame1 = TerminalRenderer.Frame(lines: [
-                "Frame Buffer Test",
-                "Second Line",
-                "Third Line"
-            ], width: 80, height: 3)
-            await fb.renderFrame(frame1)
-            try? await Task.sleep(for: .milliseconds(300))
-            let frame2 = TerminalRenderer.Frame(lines: [
-                "Frame Buffer Test"
-            ], width: 80, height: 1)
-            await fb.renderFrame(frame2)
-            await fb.waitForPendingUpdates()
-            // Ensure cursor restored on clear
-            await fb.clear()
-            print("✅ RUNE-20 demo complete\n")
-        }
-
-        // RUNE-21: Line-diff renderer (changed-line rewrite)
-        static func demoRUNE21() async {
-            print("RUNE-21: Line-diff renderer (changed-line rewrite)")
-            let config = RenderConfiguration(optimizationMode: .lineDiff, enableMetrics: true)
-            let fb = FrameBuffer(configuration: config)
-            // Create base lines and then change a subset
-            var lines = (1...10).map { "Line \($0)" }
-            let frame1 = TerminalRenderer.Frame(lines: lines, width: 40, height: lines.count)
-            await fb.renderFrame(frame1)
-            // Change two lines
-            lines[2] = "Line 3 Modified"
-            lines[7] = "Line 8 Modified"
-            let frame2 = TerminalRenderer.Frame(lines: lines, width: 40, height: lines.count)
-            await fb.renderFrame(frame2)
-            await fb.waitForPendingUpdates()
-            // Pull renderer metrics snapshot
-            print("  Render mode: lineDiff; metrics collected (bytes/lines via RenderStats/metrics)")
-            await fb.clear()
-            print("✅ RUNE-21 demo complete\n")
-        }
-
-        // RUNE-22: Alternate screen buffer support
-        static func demoRUNE22() async {
-            print("RUNE-22: Alternate screen buffer support")
-            // Use render(options) with alt screen on
-            struct AltView: View { var body: some View { Box(backgroundColor: .blue, child: Text("Alt Screen Demo", color: .white, bold: true)) } }
-            let handle = await render(AltView(), options: RenderOptions(exitOnCtrlC: false, patchConsole: false, useAltScreen: true))
-            print("  Entered alternate screen; showing content briefly...")
-            try? await Task.sleep(for: .milliseconds(500))
-            await handle.clear()
-            await handle.unmount()
-            print("  Left alternate screen; shell prompt should be restored")
-            print("✅ RUNE-22 demo complete\n")
-        }
-
-        // RUNE-23: Stdout/stderr capture & log lane
-        static func demoRUNE23() async {
-            print("RUNE-23: Stdout/stderr capture & log lane")
-            let options = RenderOptions(exitOnCtrlC: false, patchConsole: true, useAltScreen: false)
-            struct LogView: View { var body: some View { Box(border: .single, child: Text("Live Region", color: .cyan, bold: true)) } }
-            let handle = await render(LogView(), options: options)
-            // Emit some logs that should appear above the live region
-            print("Log: This is a stdout message")
-            if let data = "Error: This is a stderr message\n".data(using: .utf8) {
-                try? FileHandle.standardError.write(contentsOf: data)
-            }
-            try? await Task.sleep(for: .milliseconds(300))
-            await handle.clear()
-            await handle.unmount()
-            print("✅ RUNE-23 demo complete\n")
-        }
-
-        // RUNE-24: render(_:options) API showcase
-        static func demoRUNE24() async {
-            print("RUNE-24: render(_:options) API")
-            // Use custom fpsCap and turn features on/off to show effect
-            struct DemoView: View { var body: some View { Text("Options Demo", color: .green, bold: true) } }
-            let options = RenderOptions(exitOnCtrlC: false, patchConsole: false, useAltScreen: false, fpsCap: 30.0)
-            let handle = await render(DemoView(), options: options)
-            try? await Task.sleep(for: .milliseconds(200))
-            await handle.rerender(DemoView())
-            await handle.clear()
-            await handle.unmount()
-            print("✅ RUNE-24 demo complete\n")
-        }
-
-
+    // RUNE-24: render(_:options) API showcase
+    static func demoRUNE24() async {
+        print("RUNE-24: render(_:options) API")
+        // Use custom fpsCap and turn features on/off to show effect
+        struct DemoView: View { var body: some View { Text("Options Demo", color: .green, bold: true) } }
+        let options = RenderOptions(exitOnCtrlC: false, patchConsole: false, useAltScreen: false, fpsCap: 30.0)
+        let handle = await render(DemoView(), options: options)
+        try? await Task.sleep(for: .milliseconds(200))
+        await handle.rerender(DemoView())
+        await handle.clear()
+        await handle.unmount()
+        print("✅ RUNE-24 demo complete\n")
+    }
 
     // RUNE-13: Initialize SwiftPM library “RuneKit”
     static func demoRUNE13() async {
@@ -555,7 +571,7 @@ struct RuneCLI {
             (2, "Line Spinner"),
             (3, "Star Animation"),
             (4, "Growing Vertical"),
-            (5, "Balloon Effect")
+            (5, "Balloon Effect"),
         ]
 
         let options = demoOptions
@@ -565,9 +581,12 @@ struct RuneCLI {
             border: .single,
             paddingTop: 1, paddingRight: 2, paddingBottom: 1, paddingLeft: 2,
             children:
-                Static(["🎯 RuneKit Spinner Demo",
-                        "Demonstrating an animated spinner built with Transform + Ticker",
-                        "Preparing…"]) )
+            Static([
+                "🎯 RuneKit Spinner Demo",
+                "Demonstrating an animated spinner built with Transform + Ticker",
+                "Preparing…",
+            ]),
+        )
         let handle = await render(header, options: options)
 
         for (kind, name) in spinnerKinds {
@@ -576,30 +595,28 @@ struct RuneCLI {
             let start = Date()
             while Date().timeIntervalSince(start) < durationSec {
                 await handle.rerender { @Sendable in
-                    let frames: [String] = {
-                        switch kind {
-                        case 0: return ["·", "✢", "✳", "∗", "✻", "✽"] // simpleDots
-                        case 1: return ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"] // dots
-                        case 2: return ["|", "/", "-", "\\"] // line
-                        case 3: return ["✶", "✸", "✹", "✺", "✹", "✷"] // star
-                        case 4: return ["▁", "▃", "▄", "▅", "▆", "▇", "▆", "▅", "▄", "▃"] // growVertical
-                        default: return [".", "o", "O", "@", "*"] // balloon
-                        }
-                    }()
+                    let frames: [String] = switch kind {
+                    case 0: ["·", "✢", "✳", "∗", "✻", "✽"] // simpleDots
+                    case 1: ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"] // dots
+                    case 2: ["|", "/", "-", "\\"] // line
+                    case 3: ["✶", "✸", "✹", "✺", "✹", "✷"] // star
+                    case 4: ["▁", "▃", "▄", "▅", "▆", "▇", "▆", "▅", "▄", "▃"] // growVertical
+                    default: [".", "o", "O", "@", "*"] // balloon
+                    }
                     // Build spinner line by time-aware Transform with frames
                     let startTime = Date().timeIntervalSince1970
                     return Box(
                         border: .single,
                         paddingTop: 1, paddingRight: 2, paddingBottom: 1, paddingLeft: 2,
                         children:
-                            Static(["🎯 RuneKit Spinner Demo — \(name)"]),
-                            Newline(count: 1),
-                            Transform(timeAware: { input, t in
-                                let elapsed = t - startTime
-                                let idx = Int((elapsed * 8.0).rounded(.down)) % frames.count
-                                let symbol = frames[idx]
-                                return "\(symbol) Loading… (esc to interrupt)"
-                            }) { Text("") }
+                        Static(["🎯 RuneKit Spinner Demo — \(name)"]),
+                        Newline(count: 1),
+                        Transform(timeAware: { _, t in
+                            let elapsed = t - startTime
+                            let idx = Int((elapsed * 8.0).rounded(.down)) % frames.count
+                            let symbol = frames[idx]
+                            return "\(symbol) Loading… (esc to interrupt)"
+                        }) { Text("") },
                     )
                 }
                 try? await Task.sleep(nanoseconds: fps)
@@ -610,44 +627,45 @@ struct RuneCLI {
         await handle.unmount()
     }
 
-        struct SpinnerDemoViews {
-            static func spinnerHeaderBox(_ subtitle: String) -> some View {
-                Box(
-                    border: .single,
-                    paddingTop: 1, paddingRight: 2, paddingBottom: 1, paddingLeft: 2,
-                    children:
-                        Static(["🎯 RuneKit Spinner Demo",
-                                "Demonstrating an animated spinner built with Transform + Ticker",
-                                subtitle])
-                )
-            }
-            static func spinnerComposite(type: Int, name: String) -> some View {
-                let frames: [String]
-                switch type {
-                case 0: frames = ["·", "✢", "✳", "∗", "✻", "✽"]
-                case 1: frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
-                case 2: frames = ["|", "/", "-", "\\"]
-                case 3: frames = ["✶", "✸", "✹", "✺", "✹", "✷"]
-                case 4: frames = ["▁", "▃", "▄", "▅", "▆", "▇", "▆", "▅", "▄", "▃"]
-                default: frames = [".", "o", "O", "@", "*"]
-                }
-                let startTime = Date().timeIntervalSince1970
-                return Box(
-                    border: .single,
-                    paddingTop: 1, paddingRight: 2, paddingBottom: 1, paddingLeft: 2,
-                    children:
-                        Static(["🎯 RuneKit Spinner Demo — \(name)"]),
-                        Newline(count: 1),
-                        Transform(timeAware: { _, t in
-                            let elapsed = t - startTime
-                            let idx = Int((elapsed * 8.0).rounded(.down)) % frames.count
-                            let symbol = frames[idx]
-                            return "\(symbol) Loading… (esc to interrupt)"
-                        }) { Text("") }
-                )
-            }
+    enum SpinnerDemoViews {
+        static func spinnerHeaderBox(_ subtitle: String) -> some View {
+            Box(
+                border: .single,
+                paddingTop: 1, paddingRight: 2, paddingBottom: 1, paddingLeft: 2,
+                children:
+                Static([
+                    "🎯 RuneKit Spinner Demo",
+                    "Demonstrating an animated spinner built with Transform + Ticker",
+                    subtitle,
+                ]),
+            )
         }
 
+        static func spinnerComposite(type: Int, name: String) -> some View {
+            let frames: [String] = switch type {
+            case 0: ["·", "✢", "✳", "∗", "✻", "✽"]
+            case 1: ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
+            case 2: ["|", "/", "-", "\\"]
+            case 3: ["✶", "✸", "✹", "✺", "✹", "✷"]
+            case 4: ["▁", "▃", "▄", "▅", "▆", "▇", "▆", "▅", "▄", "▃"]
+            default: [".", "o", "O", "@", "*"]
+            }
+            let startTime = Date().timeIntervalSince1970
+            return Box(
+                border: .single,
+                paddingTop: 1, paddingRight: 2, paddingBottom: 1, paddingLeft: 2,
+                children:
+                Static(["🎯 RuneKit Spinner Demo — \(name)"]),
+                Newline(count: 1),
+                Transform(timeAware: { _, t in
+                    let elapsed = t - startTime
+                    let idx = Int((elapsed * 8.0).rounded(.down)) % frames.count
+                    let symbol = frames[idx]
+                    return "\(symbol) Loading… (esc to interrupt)"
+                }) { Text("") },
+            )
+        }
+    }
 
     /// Demo the exact spinner from your example with random messages
     static func exactSpinnerDemo() async {
@@ -659,16 +677,16 @@ struct RuneCLI {
                 border: .single,
                 paddingTop: 1, paddingRight: 2, paddingBottom: 1, paddingLeft: 2,
                 children:
-                    Static([
-                        "🎯 Exact Spinner Demo (Your Original Example)",
-                        "This is the exact spinner you requested with random messages",
-                        "(Press Ctrl+C to interrupt)"
-                    ]),
-                    Newline(count: 1),
-                    Transform(timeAware: { _, t in
-                        let idx = Int((t * 8.0).rounded(.down)) % frames.count
-                        return "\(frames[idx]) Processing… (esc to interrupt)"
-                    }) { Text("") }
+                Static([
+                    "🎯 Exact Spinner Demo (Your Original Example)",
+                    "This is the exact spinner you requested with random messages",
+                    "(Press Ctrl+C to interrupt)",
+                ]),
+                Newline(count: 1),
+                Transform(timeAware: { _, t in
+                    let idx = Int((t * 8.0).rounded(.down)) % frames.count
+                    return "\(frames[idx]) Processing… (esc to interrupt)"
+                }) { Text("") },
             )
         }
 

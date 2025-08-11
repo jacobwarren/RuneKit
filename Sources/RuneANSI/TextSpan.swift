@@ -81,7 +81,7 @@ public struct TextSpan: Equatable, Hashable {
     public func splitByDisplayWidth(
         at displayWidth: Int,
         lastColumnGuard: Bool = false,
-        ) -> (left: TextSpan, right: TextSpan) {
+    ) -> (left: TextSpan, right: TextSpan) {
         guard displayWidth > 0 else {
             return (left: TextSpan(text: "", attributes: attributes), right: self)
         }

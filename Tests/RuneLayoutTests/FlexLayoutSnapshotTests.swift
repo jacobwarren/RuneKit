@@ -1,6 +1,6 @@
 import Testing
-@testable import RuneLayout
 @testable import RuneComponents
+@testable import RuneLayout
 
 /// Snapshot tests demonstrating complete flex layout functionality (RUNE-28)
 /// These tests show real-world usage patterns and serve as documentation
@@ -13,13 +13,13 @@ struct FlexLayoutSnapshotTests {
             height: .points(30),
             flexShrink: 0, // Don't shrink sidebar
             minWidth: .points(15),
-            child: Text("Sidebar")
+            child: Text("Sidebar"),
         )
 
         let mainContent = Box(
             height: .points(30),
             flexGrow: 1, // Take remaining space
-            child: Text("Main Content Area")
+            child: Text("Main Content Area"),
         )
 
         let rightPanel = Box(
@@ -27,14 +27,14 @@ struct FlexLayoutSnapshotTests {
             height: .points(30),
             flexShrink: 2, // Shrink faster than sidebar
             minWidth: .points(10),
-            child: Text("Right Panel")
+            child: Text("Right Panel"),
         )
 
         let dashboard = Box(
             flexDirection: .row,
             width: .points(100),
             height: .points(40),
-            children: sidebar, mainContent, rightPanel
+            children: sidebar, mainContent, rightPanel,
         )
 
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 100, height: 40)
@@ -67,28 +67,28 @@ struct FlexLayoutSnapshotTests {
             width: .points(30),
             height: .points(20),
             flexShrink: 0, // Cards maintain size
-            child: Text("Card 1")
+            child: Text("Card 1"),
         )
 
         let card2 = Box(
             width: .points(30),
             height: .points(20),
             flexShrink: 0,
-            child: Text("Card 2")
+            child: Text("Card 2"),
         )
 
         let card3 = Box(
             width: .points(30),
             height: .points(20),
             flexShrink: 0,
-            child: Text("Card 3")
+            child: Text("Card 3"),
         )
 
         let card4 = Box(
             width: .points(30),
             height: .points(20),
             flexShrink: 0,
-            child: Text("Card 4")
+            child: Text("Card 4"),
         )
 
         let cardGrid = Box(
@@ -96,7 +96,7 @@ struct FlexLayoutSnapshotTests {
             width: .points(80),
             height: .points(60),
             flexWrap: .wrap,
-            children: card1, card2, card3, card4
+            children: card1, card2, card3, card4,
         )
 
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 80, height: 60)
@@ -136,21 +136,21 @@ struct FlexLayoutSnapshotTests {
             width: .points(8), // 4 emoji chars = 8 terminal columns
             height: .points(3),
             flexShrink: 0,
-            child: Text("🎉🚀💻🎯") // Party, rocket, laptop, target
+            child: Text("🎉🚀💻🎯"), // Party, rocket, laptop, target
         )
 
         let textContent = Box(
             height: .points(3),
             flexGrow: 1,
             minWidth: .points(10),
-            child: Text("Status: Ready")
+            child: Text("Status: Ready"),
         )
 
         let statusIcon = Box(
             width: .points(2), // 1 emoji = 2 columns
             height: .points(3),
             flexShrink: 0,
-            child: Text("✅") // Check mark
+            child: Text("✅"), // Check mark
         )
 
         let statusBar = Box(
@@ -158,7 +158,7 @@ struct FlexLayoutSnapshotTests {
             width: .points(25),
             height: .points(5),
             flexWrap: .wrap,
-            children: emojiHeader, textContent, statusIcon
+            children: emojiHeader, textContent, statusIcon,
         )
 
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 25, height: 5)
@@ -202,14 +202,14 @@ struct FlexLayoutSnapshotTests {
             flexShrink: 1,
             minWidth: .points(20),
             maxWidth: .points(40),
-            child: Text("Flexible Column")
+            child: Text("Flexible Column"),
         )
 
         let fixedColumn = Box(
             width: .points(30),
             height: .points(25),
             flexShrink: 0,
-            child: Text("Fixed Column")
+            child: Text("Fixed Column"),
         )
 
         let constrainedColumn = Box(
@@ -218,14 +218,14 @@ struct FlexLayoutSnapshotTests {
             flexShrink: 1,
             minWidth: .points(15),
             maxWidth: .points(35),
-            child: Text("Constrained Column")
+            child: Text("Constrained Column"),
         )
 
         let constrainedLayout = Box(
             flexDirection: .row,
             width: .points(120),
             height: .points(30),
-            children: flexibleColumn, fixedColumn, constrainedColumn
+            children: flexibleColumn, fixedColumn, constrainedColumn,
         )
 
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 120, height: 30)

@@ -1,6 +1,6 @@
 import Foundation
-import RuneRenderer
 import RuneComponents
+import RuneRenderer
 
 /// Performance demonstration functions
 extension RuneCLI {
@@ -21,13 +21,13 @@ extension RuneCLI {
         // Create frames with rapid changes
         print("Sending 100 rapid frame updates...")
 
-        for i in 1...100 {
+        for i in 1 ... 100 {
             let frame = createSystemMonitorFrame(
                 terminalWidth: 80,
-                cpuUsage: i % 100,  // Constantly changing
+                cpuUsage: i % 100, // Constantly changing
                 ramUsage: (i * 2) % 100,
                 diskUsage: (i * 3) % 100,
-                netUsage: (i * 4) % 100
+                netUsage: (i * 4) % 100,
             )
 
             // Fire and forget - don't await to create backpressure
@@ -43,7 +43,9 @@ extension RuneCLI {
             // Show progress every 10 frames
             if i % 10 == 0 {
                 let metrics = await frameBuffer.getPerformanceMetrics()
-                print("Frame \(i): Queue depth: \(metrics.currentQueueDepth), Dropped: \(metrics.droppedFrames), Quality: \(String(format: "%.1f%%", metrics.adaptiveQuality * 100))")
+                print(
+                    "Frame \(i): Queue depth: \(metrics.currentQueueDepth), Dropped: \(metrics.droppedFrames), Quality: \(String(format: "%.1f%%", metrics.adaptiveQuality * 100))",
+                )
             }
         }
 
@@ -95,11 +97,12 @@ extension RuneCLI {
 
         // Animate loading for 2 cycles (reduced for demo)
         let frameDescriptions = ["Loading...", "Loading.", "Loading..", "Loading..."]
-        for cycle in 0..<2 {
+        for cycle in 0 ..< 2 {
             for (index, frame) in loadingFrames.enumerated() {
                 await frameBuffer.renderFrame(frame)
                 print("  → Rendered frame \(cycle * 4 + index + 1): \(frameDescriptions[index]) (using Transform)")
-                let frameSleepTime: UInt64 = ProcessInfo.processInfo.environment["CI"] != nil ? 50_000_000 : 800_000_000 // 0.05s in CI, 0.8s locally
+                let frameSleepTime: UInt64 = ProcessInfo.processInfo
+                    .environment["CI"] != nil ? 50_000_000 : 800_000_000 // 0.05s in CI, 0.8s locally
                 try? await Task.sleep(nanoseconds: frameSleepTime)
             }
         }

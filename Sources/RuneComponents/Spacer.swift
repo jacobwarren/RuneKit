@@ -41,12 +41,11 @@ import RuneLayout
 /// - `flexShrink: 1.0` - Can shrink when space is constrained
 /// - `flexBasis: .auto` - Uses intrinsic size as starting point
 public struct Spacer: Component {
-    
     /// Initialize a new Spacer component
     public init() {
         // Spacer has no configuration - it's purely behavioral
     }
-    
+
     /// Render the spacer within the given rectangle
     /// - Parameter rect: The layout rectangle to render within
     /// - Returns: Array of empty strings (spacer is transparent)
@@ -54,7 +53,7 @@ public struct Spacer: Component {
         guard rect.height > 0 else {
             return []
         }
-        
+
         // Spacer renders as empty lines - it's purely for layout
         return Array(repeating: "", count: rect.height)
     }
@@ -65,18 +64,19 @@ public struct Spacer: Component {
 extension Spacer {
     /// Calculate intrinsic size for layout purposes
     /// Spacer has minimal intrinsic size but grows via flexGrow
-    internal var intrinsicSize: (width: Float, height: Float) {
+    var intrinsicSize: (width: Float, height: Float) {
         // Minimal intrinsic size - Spacer grows via flex properties
         // Use 1x1 as minimal size to ensure it's visible in cross-axis
-        return (width: 1.0, height: 1.0)
+        (width: 1.0, height: 1.0)
     }
-    
+
     /// Flex properties for Yoga layout integration
-    internal var flexProperties: (grow: Float, shrink: Float, basis: Dimension) {
-        return (
-            grow: 1.0,      // Consume all available space
-            shrink: 1.0,    // Can shrink when constrained
-            basis: .auto    // Use intrinsic size as basis
+    struct FlexProperties { let grow: Float; let shrink: Float; let basis: Dimension }
+    var flexProperties: FlexProperties {
+        FlexProperties(
+            grow: 1.0, // Consume all available space
+            shrink: 1.0, // Can shrink when constrained
+            basis: .auto, // Use intrinsic size as basis
         )
     }
 }

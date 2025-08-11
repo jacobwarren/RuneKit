@@ -4,7 +4,16 @@ import Testing
 struct SGRStateMachineTests {
     @Test("Reset clears all attributes")
     func reset() {
-        var state = SGRStateMachine(initial: TextAttributes(color: .red, backgroundColor: .blue, bold: true, italic: true, underline: true, inverse: true, strikethrough: true, dim: true))
+        var state = SGRStateMachine(initial: TextAttributes(
+            color: .red,
+            backgroundColor: .blue,
+            bold: true,
+            italic: true,
+            underline: true,
+            inverse: true,
+            strikethrough: true,
+            dim: true,
+        ))
         let attrs = state.apply([0])
         #expect(attrs.isDefault)
     }
@@ -36,4 +45,3 @@ struct SGRStateMachineTests {
         #expect(state.attributes.backgroundColor == .rgb(10, 20, 30))
     }
 }
-

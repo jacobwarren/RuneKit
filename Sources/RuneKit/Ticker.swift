@@ -10,7 +10,7 @@ public final class Ticker: @unchecked Sendable {
     private let id = UUID()
 
     public init(every interval: Duration, action: @escaping @Sendable () async -> Void) {
-        self.task = Task { [interval] in
+        task = Task { [interval] in
             // Run until cancelled
             while !Task.isCancelled {
                 try? await Task.sleep(for: interval)
@@ -30,4 +30,3 @@ public final class Ticker: @unchecked Sendable {
         cancel()
     }
 }
-

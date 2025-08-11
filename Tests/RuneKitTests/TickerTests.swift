@@ -16,7 +16,7 @@ struct TickerTests {
         // Wait for at least some ticks with a generous timeout to avoid flakiness on CI
         let start = Date()
         let deadline = start.addingTimeInterval(0.8)
-        while await counter.value < 2 && Date() < deadline {
+        while await counter.value < 2, Date() < deadline {
             try? await Task.sleep(for: .milliseconds(20))
         }
         let seen = await counter.value
@@ -27,7 +27,10 @@ struct TickerTests {
         let countAtCancel = await counter.value
         try? await Task.sleep(for: .milliseconds(200))
         let countAfter = await counter.value
-        #expect(countAfter <= countAtCancel + 1, "Ticker should stop or at most deliver one in-flight tick after cancel; before=\(countAtCancel), after=\(countAfter)")
+        #expect(
+            countAfter <= countAtCancel + 1,
+            "Ticker should stop or at most deliver one in-flight tick after cancel; before=\(countAtCancel), after=\(countAfter)",
+        )
 
         // Idempotent cancel
         ticker.cancel()
@@ -35,7 +38,6 @@ struct TickerTests {
 }
 
 actor Counter {
-    private(set) var value: Int = 0
+    private(set) var value = 0
     func increment() { value += 1 }
 }
-

@@ -23,11 +23,6 @@ private let kWcwidthAvailable = true
 private let kWcwidthAvailable = false
 #endif
 
-
-
-
-
-
 public enum Width {
     /// Calculate the display width of a string in terminal columns
     /// - Parameter string: The string to measure
@@ -96,7 +91,6 @@ public enum Width {
         return totalWidth
     }
 
-
     // Helper lives inside Width to keep access control simple
     private static func stripANSISGR(from string: String) -> String {
         var result = String.UnicodeScalarView()
@@ -104,7 +98,9 @@ public enum Width {
         while let scalar = iter.next() {
             if scalar.value == 0x1B { // ESC
                 if let bracket = iter.next(), bracket.value == 0x5B { // '['
-                    while let s = iter.next() { if s.value == 0x6D { break } }
+                    while let parameterScalar = iter.next() {
+                        if parameterScalar.value == 0x6D { break }
+                    }
                     continue
                 } else {
                     result.append(scalar)
