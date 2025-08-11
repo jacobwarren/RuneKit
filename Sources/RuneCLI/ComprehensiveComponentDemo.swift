@@ -7,8 +7,20 @@ import RuneRenderer
 
 private enum DemoEnv {
     static var options: RenderOptions {
-        // Use TTY/CI aware defaults to avoid aborts in non-interactive contexts
-        RenderOptions.fromEnvironment()
+        // Force demos to use main screen buffer (no alternate screen)
+        let base = RenderOptions.fromEnvironment()
+        return RenderOptions(
+            stdout: base.stdout,
+            stdin: base.stdin,
+            stderr: base.stderr,
+            exitOnCtrlC: base.exitOnCtrlC,
+            patchConsole: base.patchConsole,
+            useAltScreen: false,
+            enableRawMode: base.enableRawMode,
+            enableBracketedPaste: base.enableBracketedPaste,
+            fpsCap: base.fpsCap,
+            terminalProfile: base.terminalProfile
+        )
     }
 }
 

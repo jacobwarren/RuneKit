@@ -17,8 +17,8 @@ struct ChildIdentityReconcilerTests {
 
     @Test("Preserve child state across reordering with stable identity")
     func preserveAcrossReorder() {
-        // Ensure clean registry state
-        StateRegistry.shared.clearAll()
+        // Ensure clean registry state for this test's path only (avoid cross-test interference)
+        StateRegistry.shared.reset(path: "root")
 
         let container = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 2)
         // First render: A then B

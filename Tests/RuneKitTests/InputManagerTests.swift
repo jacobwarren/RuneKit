@@ -131,7 +131,7 @@ struct InputManagerTests {
         let handle = await render(Text("CtrlC"), options: options)
 
         // Inject ctrl-c into the input manager decoder directly (test hook)
-        await handle._testing_processInput(bytes: [0x03])
+        await handle.testingProcessInput(bytes: [0x03])
 
         // Assert: waitUntilExit resolves
         await handle.waitUntilExit()

@@ -5,7 +5,7 @@ import Foundation
 // to support use within property wrappers without async context.
 
 public final class StateRegistry: @unchecked Sendable {
-    public nonisolated(unsafe) static let shared = StateRegistry()
+    public static let shared = StateRegistry()
     private let queue = DispatchQueue(label: "rk.state.registry")
 
     // Keyed by identityPath -> key -> Any state
@@ -22,6 +22,11 @@ public final class StateRegistry: @unchecked Sendable {
             storage[path] = dict
             return initialValue
         }
+    }
+
+    /// Peek an existing value without initializing when missing
+    public func getIfExists<T>(path: String, key: String) -> T? {
+        queue.sync { (storage[path]?[key]) as? T }
     }
 
     public func set(path: String, key: String, value: some Any) {

@@ -6,12 +6,14 @@ ENV CI=1
 # Set working directory
 WORKDIR /workspace
 
-# Install dependencies including utf8proc for Unicode processing
+# Install dependencies including utf8proc for Unicode processing and Yoga build tools
 RUN apt-get update && apt-get install -y \
     git \
     curl \
     libutf8proc-dev \
     pkg-config \
+    cmake \
+    ninja-build \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy source code

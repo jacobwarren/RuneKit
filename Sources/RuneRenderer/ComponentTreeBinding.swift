@@ -5,9 +5,8 @@ public enum ComponentTreeBinding {
     @discardableResult
     public static func bindDuringRender<T>(tree: ComponentTreeReconciler, perform: () -> T) -> T {
         RuntimeStateContext.$recorder.withValue({ path in
-            Task {
-                await tree.visitNode(path: path)
-            }
+            // Record visits synchronously into the actor via Task; fire-and-forget is fine for tests
+            Task { await tree.visitNode(path: path) }
         }, operation: {
             perform()
         })
