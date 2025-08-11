@@ -1,6 +1,6 @@
 import Testing
-@testable import RuneKit
 @testable import RuneComponents
+@testable import RuneKit
 
 struct ViewStatePreservationTests {
     @Test("State preserves across rerenders with stable identity")
@@ -29,4 +29,3 @@ struct ViewStatePreservationTests {
         #expect(true)
     }
 }
-

@@ -9,7 +9,6 @@ public protocol TerminalDiffer {
 public struct SimpleLineDiffer: TerminalDiffer {
     public init() {}
     public func diff(from old: TerminalGrid, to new: TerminalGrid) -> [Int] {
-        return new.changedLines(comparedTo: old)
+        new.changedLines(comparedTo: old)
     }
 }
-

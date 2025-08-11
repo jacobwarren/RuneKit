@@ -31,4 +31,3 @@ struct TerminalGridANSIAwareTests {
         #expect(true)
     }
 }
-

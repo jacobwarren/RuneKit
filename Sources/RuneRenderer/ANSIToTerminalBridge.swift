@@ -3,40 +3,68 @@ import RuneANSI
 
 /// Bridge functions to convert ANSI TextAttributes/Color to Terminal types used by renderer
 enum ANSIToTerminalBridge {
+    // MARK: - Public API
+
     static func toTerminalAttributes(_ attrs: TextAttributes) -> TerminalAttributes {
-        var t: TerminalAttributes = .none
-        if attrs.bold { t.insert(.bold) }
-        if attrs.dim { t.insert(.dim) }
-        if attrs.italic { t.insert(.italic) }
-        if attrs.underline { t.insert(.underline) }
-        if attrs.inverse { t.insert(.reverse) }
-        if attrs.strikethrough { t.insert(.strikethrough) }
-        return t
+        mapAttributes(attrs)
     }
 
-    static func toTerminalColor(_ c: ANSIColor?) -> TerminalColor? {
-        guard let c else { return nil }
-        switch c {
-        case .black: return .ansi(0)
-        case .red: return .ansi(1)
-        case .green: return .ansi(2)
-        case .yellow: return .ansi(3)
-        case .blue: return .ansi(4)
-        case .magenta: return .ansi(5)
-        case .cyan: return .ansi(6)
-        case .white: return .ansi(7)
-        case .brightBlack: return .ansi(8)
-        case .brightRed: return .ansi(9)
-        case .brightGreen: return .ansi(10)
-        case .brightYellow: return .ansi(11)
-        case .brightBlue: return .ansi(12)
-        case .brightMagenta: return .ansi(13)
-        case .brightCyan: return .ansi(14)
-        case .brightWhite: return .ansi(15)
-        case .color256(let idx): return .ansi(UInt8(max(0, min(255, idx))))
-        case .rgb(let r, let g, let b):
-            return .rgb(UInt8(max(0, min(255, r))), UInt8(max(0, min(255, g))), UInt8(max(0, min(255, b))))
-        }
+    static func toTerminalColor(_ color: ANSIColor?) -> TerminalColor? {
+        guard let color else { return nil }
+        if let ansi = mapBasicAnsi(color) { return ansi }
+        if let c256 = map256(color) { return c256 }
+        if let rgb = mapRGB(color) { return rgb }
+        return nil
+    }
+
+    // MARK: - Attributes Mapping
+
+    private static func mapAttributes(_ attrs: TextAttributes) -> TerminalAttributes {
+        var result: TerminalAttributes = .none
+        // Compose via small checks to keep cyclomatic complexity low
+        if attrs.bold { result.insert(.bold) }
+        if attrs.dim { result.insert(.dim) }
+        if attrs.italic { result.insert(.italic) }
+        if attrs.underline { result.insert(.underline) }
+        if attrs.inverse { result.insert(.reverse) }
+        if attrs.strikethrough { result.insert(.strikethrough) }
+        return result
+    }
+
+    // MARK: - Color Mapping
+
+    private static func mapBasicAnsi(_ color: ANSIColor) -> TerminalColor? {
+        if let basic = basicAnsiIndex(for: color) { return .ansi(basic) }
+        return nil
+    }
+
+    private static func map256(_ color: ANSIColor) -> TerminalColor? {
+        if case let .color256(index) = color { return .ansi(clampToByte(index)) }
+        return nil
+    }
+
+    private static func mapRGB(_ color: ANSIColor) -> TerminalColor? {
+        if case let .rgb(red, green, blue) = color { return .rgb(clampToByte(red), clampToByte(green), clampToByte(blue)) }
+        return nil
+    }
+
+    private static func basicAnsiIndex(for color: ANSIColor) -> UInt8? {
+        if let base = baseIndexMap[color] { return UInt8(base) }
+        if let bright = brightIndexMap[color] { return UInt8(8 + bright) }
+        return nil
+    }
+
+    // Lookup maps replace large switch statements
+    private static let baseIndexMap: [ANSIColor: Int] = [
+        .black: 0, .red: 1, .green: 2, .yellow: 3, .blue: 4, .magenta: 5, .cyan: 6, .white: 7,
+    ]
+
+    private static let brightIndexMap: [ANSIColor: Int] = [
+        .brightBlack: 0, .brightRed: 1, .brightGreen: 2, .brightYellow: 3,
+        .brightBlue: 4, .brightMagenta: 5, .brightCyan: 6, .brightWhite: 7,
+    ]
+
+    private static func clampToByte(_ value: Int) -> UInt8 {
+        UInt8(max(0, min(255, value)))
     }
 }
-

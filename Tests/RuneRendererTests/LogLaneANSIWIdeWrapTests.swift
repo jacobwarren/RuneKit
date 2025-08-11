@@ -1,8 +1,8 @@
-import Testing
 import Foundation
+import Testing
+@testable import RuneANSI
 @testable import RuneRenderer
 @testable import RuneUnicode
-@testable import RuneANSI
 
 struct LogLaneANSIWIdeWrapTests {
     @Test("Wraps colored emoji/CJK by display columns and preserves right edge")
@@ -23,4 +23,3 @@ struct LogLaneANSIWIdeWrapTests {
         #expect(visible.contains("-end"))
     }
 }
-

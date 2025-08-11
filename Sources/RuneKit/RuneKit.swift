@@ -97,6 +97,9 @@ public struct RenderOptions: Sendable {
     /// Maximum frame rate cap (frames per second)
     public let fpsCap: Double
 
+    /// Explicit terminal profile override (nil = use heuristic)
+    public let terminalProfileOverride: TerminalProfile?
+
     // MARK: - Initialization
 
     /// Initialize with explicit options
@@ -108,6 +111,7 @@ public struct RenderOptions: Sendable {
     ///   - patchConsole: Capture console output (default: TTY-aware)
     ///   - useAltScreen: Use alternate screen buffer (default: TTY-aware)
     ///   - fpsCap: Frame rate cap in FPS (default: 60.0)
+    ///   - terminalProfile: Explicit terminal profile override (default: nil = heuristic)
     public init(
         stdout: FileHandle = FileHandle.standardOutput,
         stdin: FileHandle = FileHandle.standardInput,
@@ -116,11 +120,13 @@ public struct RenderOptions: Sendable {
         patchConsole: Bool? = nil,
         useAltScreen: Bool? = nil,
         fpsCap: Double = 60.0,
+        terminalProfile: TerminalProfile? = nil,
     ) {
         self.stdout = stdout
         self.stdin = stdin
         self.stderr = stderr
         self.fpsCap = fpsCap
+        terminalProfileOverride = terminalProfile
 
         // Use TTY-aware defaults if not explicitly provided
         let isInteractive = Self.isInteractiveTerminal()
@@ -168,6 +174,7 @@ public struct RenderOptions: Sendable {
     ) -> RenderOptions {
         let isCI = isCIEnvironment(environment)
         let isInteractive = isInteractiveTerminal()
+        let envProfile = RenderOptions.terminalProfileFromEnvironment(environment)
 
         // CI-specific defaults
         if isCI {
@@ -176,6 +183,7 @@ public struct RenderOptions: Sendable {
                 patchConsole: false,
                 useAltScreen: false,
                 fpsCap: 30.0,
+                terminalProfile: envProfile,
             )
         }
 
@@ -186,6 +194,7 @@ public struct RenderOptions: Sendable {
                 patchConsole: true,
                 useAltScreen: true,
                 fpsCap: 60.0,
+                terminalProfile: envProfile,
             )
         }
 
@@ -195,6 +204,7 @@ public struct RenderOptions: Sendable {
             patchConsole: false,
             useAltScreen: false,
             fpsCap: 30.0,
+            terminalProfile: envProfile,
         )
     }
 }
@@ -356,6 +366,7 @@ extension Text: View {
     public typealias Body = EmptyView
     public var body: EmptyView { EmptyView() }
 }
+
 /// Default: no explicit identity
 extension Text: ViewIdentifiable {}
 
@@ -364,6 +375,7 @@ extension Box: View {
     public typealias Body = EmptyView
     public var body: EmptyView { EmptyView() }
 }
+
 extension Box: ViewIdentifiable {}
 
 /// Make Static conform to View protocol
@@ -371,6 +383,7 @@ extension Static: View {
     public typealias Body = EmptyView
     public var body: EmptyView { EmptyView() }
 }
+
 extension Static: ViewIdentifiable {}
 
 /// Make Newline conform to View protocol
@@ -378,6 +391,7 @@ extension Newline: View {
     public typealias Body = EmptyView
     public var body: EmptyView { EmptyView() }
 }
+
 extension Newline: ViewIdentifiable {}
 
 /// Make Transform conform to View protocol
@@ -385,6 +399,7 @@ extension Transform: View {
     public typealias Body = EmptyView
     public var body: EmptyView { EmptyView() }
 }
+
 extension Transform: ViewIdentifiable {}
 
 /// Handle for controlling a running render session
@@ -509,7 +524,7 @@ public actor RenderHandle {
     /// Set the signal handler for this render session (internal use)
     /// - Parameter handler: Signal handler to associate with this session
     func setSignalHandler(_ handler: SignalHandler) async {
-        self.signalHandler = handler
+        signalHandler = handler
     }
 
     /// Clear the screen or region based on render options
@@ -558,7 +573,7 @@ public actor RenderHandle {
         // Determine identity for state preservation
         let typeName = String(describing: type(of: view))
         let explicit = (view as? ViewIdentifiable)?.viewIdentity
-        let identity = [typeName, explicit].compactMap { $0 }.joined(separator: "#")
+        let identity = [typeName, explicit].compactMap(\.self).joined(separator: "#")
         if lastViewIdentity != identity {
             await frameBuffer.resetDiffState()
             lastViewIdentity = identity
@@ -566,35 +581,34 @@ public actor RenderHandle {
         }
         // Begin a logical frame for the componentTree
         await componentTree.beginFrame(rootPath: identity)
-        let frame = convertViewToFrame(view, tree: componentTree)
+        let frame = convertViewToFrame(view, tree: componentTree, terminalProfile: options.terminalProfile)
         await componentTree.endFrame()
         await frameBuffer.renderFrame(frame)
     }
 
-        /// Builder overload to construct the view inside the actor context
-        /// Avoids sending non-Sendable view values across actor boundaries
-        public func rerender(_ build: @escaping @Sendable () -> some View) async {
-            let v = build()
-            await rerender(v)
-        }
+    /// Builder overload to construct the view inside the actor context
+    /// Avoids sending non-Sendable view values across actor boundaries
+    public func rerender(_ build: @escaping @Sendable () -> some View) async {
+        let builtView = build()
+        await rerender(builtView)
+    }
 
-        /// Schedule periodic rerenders until cancelled or unmounted
-        /// Returns a cancellation handle (Ticker) the caller can hold onto
-        @discardableResult
-        public func scheduleRerender(every interval: Duration, build: @escaping @Sendable () -> some View) -> Ticker {
-            let ticker = Ticker(every: interval) { [weak self] in
-                guard let self = self else { return }
-                await self.rerender(build)
-            }
-            return ticker
+    /// Schedule periodic rerenders until cancelled or unmounted
+    /// Returns a cancellation handle (Ticker) the caller can hold onto
+    @discardableResult
+    public func scheduleRerender(every interval: Duration, build: @escaping @Sendable () -> some View) -> Ticker {
+        let ticker = Ticker(every: interval) { [weak self] in
+            guard let self else { return }
+            await rerender(build)
         }
-
+        return ticker
+    }
 
     /// Update the rendered view (for future programmatic updates)
     /// Note: This is a placeholder for future RUNE tickets
     public func update(_ view: some View) async {
         // Convert view to frame and render
-        let frame = convertViewToFrame(view, tree: componentTree)
+        let frame = convertViewToFrame(view, tree: componentTree, terminalProfile: options.terminalProfile)
         await frameBuffer.renderFrame(frame)
     }
 }
@@ -604,14 +618,18 @@ public actor RenderHandle {
 /// Convert a view to a renderable frame
 /// - Parameter view: The view to convert
 /// - Returns: TerminalRenderer.Frame ready for rendering
-private func convertViewToFrame(_ view: some View, tree: ComponentTreeReconciler) -> TerminalRenderer.Frame {
+private func convertViewToFrame(
+    _ view: some View,
+    tree: ComponentTreeReconciler,
+    terminalProfile: TerminalProfile,
+) -> TerminalRenderer.Frame {
     // Get terminal size for layout
     let terminalSize = getTerminalSize()
 
     // Build identity path root from type name + optional explicit identity
     let typeName = String(describing: type(of: view))
     let explicit = (view as? ViewIdentifiable)?.viewIdentity
-    let rootPath = [typeName, explicit].compactMap { $0 }.joined(separator: "#")
+    let rootPath = [typeName, explicit].compactMap(\.self).joined(separator: "#")
 
     // Convert view to component within state context
     let component: Component = RuntimeStateContext.$currentPath.withValue(rootPath) {
@@ -632,7 +650,9 @@ private func convertViewToFrame(_ view: some View, tree: ComponentTreeReconciler
 
     // Render component to lines, recording identity paths for reconciler
     let lines: [String] = ComponentTreeBinding.bindDuringRender(tree: tree) {
-        component.render(in: layoutRect)
+        RuntimeStateContext.withTerminalProfile(terminalProfile) {
+            component.render(in: layoutRect)
+        }
     }
 
     // Create frame
@@ -665,7 +685,7 @@ private func convertViewToComponent(_ view: some View, currentPath: String) -> C
     // we fallback to a Text rendering of the view type for unknown composites.
     let childTypeName = String(describing: type(of: view))
     let explicit = (view as? ViewIdentifiable)?.viewIdentity
-    let childPath = [currentPath, childTypeName, explicit].compactMap { $0 }.joined(separator: "/")
+    let childPath = [currentPath, childTypeName, explicit].compactMap(\.self).joined(separator: "/")
     return RuntimeStateContext.$currentPath.withValue(childPath) {
         Text("View: \(String(describing: type(of: view)))")
     }
@@ -708,7 +728,7 @@ public func render(_ view: some View, options: RenderOptions = RenderOptions.fro
         maxLinesForDiff: 1000,
         minEfficiencyThreshold: 0.7,
         maxFrameRate: options.fpsCap,
-        writeBufferSize: 8192
+        writeBufferSize: 8192,
     )
     let renderConfig = RenderConfiguration(
         optimizationMode: .automatic,
@@ -717,7 +737,7 @@ public func render(_ view: some View, options: RenderOptions = RenderOptions.fro
         enableDebugLogging: false,
         hideCursorDuringRender: true,
         useAlternateScreen: options.useAltScreen,
-        enableConsoleCapture: options.patchConsole
+        enableConsoleCapture: options.patchConsole,
     )
 
     // Create frame buffer with custom output
@@ -740,7 +760,7 @@ public func render(_ view: some View, options: RenderOptions = RenderOptions.fro
     }
 
     // Convert view to frame and render
-    let frame = convertViewToFrame(view, tree: handle.componentTree)
+    let frame = convertViewToFrame(view, tree: handle.componentTree, terminalProfile: options.terminalProfile)
     await frameBuffer.renderFrame(frame)
 
     return handle

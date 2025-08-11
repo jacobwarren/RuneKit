@@ -1,7 +1,7 @@
 import Foundation
-import RuneRenderer
 import RuneComponents
 import RuneLayout
+import RuneRenderer
 
 /// Console capture demonstration functions
 extension RuneCLI {
@@ -35,8 +35,8 @@ extension RuneCLI {
             paddingRight: 1,
             paddingLeft: 1,
             children: Text("Live Application"),
-                     Text("Status: Running"),
-                     Text("Logs appear above")
+            Text("Status: Running"),
+            Text("Logs appear above"),
         )
         let rect = FlexLayout.Rect(x: 0, y: 0, width: 22, height: 4)
         let lines = box.render(in: rect)
@@ -65,8 +65,8 @@ extension RuneCLI {
             paddingRight: 1,
             paddingLeft: 1,
             children: Text("Live Application"),
-                     Text("Status: Updated"),
-                     Text("Logs appear above")
+            Text("Status: Updated"),
+            Text("Logs appear above"),
         )
         let updatedRect = FlexLayout.Rect(x: 0, y: 0, width: 22, height: 4)
         let updatedLines = updatedBox.render(in: updatedRect)
@@ -100,7 +100,7 @@ extension RuneCLI {
             paddingRight: 1,
             paddingLeft: 1,
             children: Text("Normal Mode"),
-                     Text("No capture")
+            Text("No capture"),
         )
         let normalRect = FlexLayout.Rect(x: 0, y: 0, width: 17, height: 3)
         let normalLines = normalBox.render(in: normalRect)

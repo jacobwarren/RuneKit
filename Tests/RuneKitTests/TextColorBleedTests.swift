@@ -18,11 +18,10 @@ struct TextColorBleedTests {
         var machine = SGRStateMachine()
         for token in retokens {
             switch token {
-            case .sgr(let params): _ = machine.apply(params)
+            case let .sgr(params): _ = machine.apply(params)
             default: break
             }
         }
         #expect(machine.attributes.isDefault)
     }
 }
-

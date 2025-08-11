@@ -13,7 +13,7 @@ struct ExtendedPictographicScalarTests {
             (0x1F3F4, true), // black flag base
             (0x1F1E6, false), // Regional indicator A (not EP)
             (0x1F600, true), // 😀 grinning face
-            (0x2764, true),  // ❤ heart
+            (0x2764, true), // ❤ heart
             (0x200D, false), // ZWJ is not EP
             (0x0301, false), // combining acute
             (0x0041, false), // 'A'
@@ -24,4 +24,3 @@ struct ExtendedPictographicScalarTests {
         }
     }
 }
-

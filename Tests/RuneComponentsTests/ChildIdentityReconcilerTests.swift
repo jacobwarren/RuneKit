@@ -6,7 +6,7 @@ struct ChildIdentityReconcilerTests {
     private struct StatefulChild: Component, ComponentIdentifiable {
         let id: String
         var componentIdentity: String? { id }
-        func render(in rect: FlexLayout.Rect) -> [String] {
+        func render(in _: FlexLayout.Rect) -> [String] {
             // Read, increment, and persist count in registry using current identity path
             let path = RuntimeStateContext.currentPath
             let current: Int = StateRegistry.shared.get(path: path, key: "count", initial: 0)
@@ -42,4 +42,3 @@ struct ChildIdentityReconcilerTests {
         #expect(countB == 2, "B should have been rendered twice across reordering, preserving state")
     }
 }
-

@@ -53,7 +53,7 @@ public struct LogLane {
             timestampFormat: TimestampFormat = .time,
             stdoutPrefix: String = "│",
             stderrPrefix: String = "⚠",
-            useColors: Bool = true
+            useColors: Bool = true,
         ) {
             self.maxDisplayLines = maxDisplayLines
             self.showTimestamps = showTimestamps
@@ -68,9 +68,9 @@ public struct LogLane {
     /// Timestamp format options
     public enum TimestampFormat: Sendable {
         case none
-        case time           // HH:mm:ss
-        case timeWithMs     // HH:mm:ss.SSS
-        case relative       // +1.234s
+        case time // HH:mm:ss
+        case timeWithMs // HH:mm:ss.SSS
+        case relative // +1.234s
 
         func format(_ date: Date, relativeTo baseDate: Date? = nil) -> String {
             switch self {
@@ -85,7 +85,7 @@ public struct LogLane {
                 formatter.dateFormat = "HH:mm:ss.SSS"
                 return formatter.string(from: date)
             case .relative:
-                guard let baseDate = baseDate else {
+                guard let baseDate else {
                     return "+0.000s"
                 }
                 let interval = date.timeIntervalSince(baseDate)
@@ -108,7 +108,7 @@ public struct LogLane {
     /// - Parameter configuration: Display configuration
     public init(configuration: Configuration = Configuration()) {
         self.configuration = configuration
-        self.baseTimestamp = Date()
+        baseTimestamp = Date()
     }
 
     /// Initialize LogLane with simple parameters
@@ -117,12 +117,12 @@ public struct LogLane {
     ///   - showTimestamps: Whether to show timestamps
     ///   - useColors: Whether to use ANSI colors
     public init(maxDisplayLines: Int = 10, showTimestamps: Bool = true, useColors: Bool = true) {
-        self.configuration = Configuration(
+        configuration = Configuration(
             maxDisplayLines: maxDisplayLines,
             showTimestamps: showTimestamps,
-            useColors: useColors
+            useColors: useColors,
         )
-        self.baseTimestamp = Date()
+        baseTimestamp = Date()
     }
 
     // MARK: - Public Interface
@@ -136,7 +136,7 @@ public struct LogLane {
     public func formatLogs(
         _ logs: [ConsoleCapture.LogLine],
         terminalWidth: Int,
-        maxLines: Int? = nil
+        maxLines: Int? = nil,
     ) -> [String] {
         let displayLimit = maxLines ?? configuration.maxDisplayLines
 
@@ -200,7 +200,7 @@ public struct LogLane {
     public func calculateDisplayHeight(
         _ logs: [ConsoleCapture.LogLine],
         terminalWidth: Int,
-        maxLines: Int? = nil
+        maxLines: Int? = nil,
     ) -> Int {
         let formattedLines = formatLogs(logs, terminalWidth: terminalWidth, maxLines: maxLines)
         return formattedLines.count
@@ -211,7 +211,7 @@ public struct LogLane {
     /// - Returns: Separator line string
     public func createSeparator(terminalWidth: Int) -> String {
         let char = configuration.useColors ? "─" : "-"
-        let color = configuration.useColors ? "\u{001B}[90m" : ""  // Dark gray
+        let color = configuration.useColors ? "\u{001B}[90m" : "" // Dark gray
         let reset = configuration.useColors ? "\u{001B}[0m" : ""
 
         return color + String(repeating: char, count: terminalWidth) + reset
@@ -289,7 +289,7 @@ public extension LogLane.Configuration {
         showTimestamps: true,
         showSourceIndicators: true,
         timestampFormat: .timeWithMs,
-        useColors: true
+        useColors: true,
     )
 
     /// Minimal configuration for production
@@ -298,7 +298,7 @@ public extension LogLane.Configuration {
         showTimestamps: false,
         showSourceIndicators: false,
         timestampFormat: .none,
-        useColors: false
+        useColors: false,
     )
 
     /// Compact configuration with relative timestamps
@@ -309,6 +309,6 @@ public extension LogLane.Configuration {
         timestampFormat: .relative,
         stdoutPrefix: "│",
         stderrPrefix: "!",
-        useColors: true
+        useColors: true,
     )
 }

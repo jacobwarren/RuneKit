@@ -42,7 +42,7 @@ public actor PerformanceMetrics {
             framesDropped: Int,
             renderMode: RenderMode,
             renderDuration: TimeInterval,
-            timestamp: Date = Date()
+            timestamp: Date = Date(),
         ) {
             self.bytesWritten = bytesWritten
             self.linesChanged = linesChanged
@@ -76,7 +76,7 @@ public actor PerformanceMetrics {
         totalLines: 0,
         framesDropped: 0,
         renderMode: .fullRedraw,
-        renderDuration: 0.0
+        renderDuration: 0.0,
     )
 
     /// Historical performance data (last 100 frames)
@@ -98,7 +98,7 @@ public actor PerformanceMetrics {
             totalLines: 0,
             framesDropped: currentCounters.framesDropped, // Preserve dropped count
             renderMode: mode,
-            renderDuration: 0.0
+            renderDuration: 0.0,
         )
     }
 
@@ -111,7 +111,7 @@ public actor PerformanceMetrics {
             totalLines: currentCounters.totalLines,
             framesDropped: currentCounters.framesDropped,
             renderMode: currentCounters.renderMode,
-            renderDuration: currentCounters.renderDuration
+            renderDuration: currentCounters.renderDuration,
         )
     }
 
@@ -124,7 +124,7 @@ public actor PerformanceMetrics {
             totalLines: currentCounters.totalLines,
             framesDropped: currentCounters.framesDropped,
             renderMode: currentCounters.renderMode,
-            renderDuration: currentCounters.renderDuration
+            renderDuration: currentCounters.renderDuration,
         )
     }
 
@@ -137,7 +137,7 @@ public actor PerformanceMetrics {
             totalLines: total,
             framesDropped: currentCounters.framesDropped,
             renderMode: currentCounters.renderMode,
-            renderDuration: currentCounters.renderDuration
+            renderDuration: currentCounters.renderDuration,
         )
     }
 
@@ -149,7 +149,7 @@ public actor PerformanceMetrics {
             totalLines: currentCounters.totalLines,
             framesDropped: currentCounters.framesDropped + 1,
             renderMode: currentCounters.renderMode,
-            renderDuration: currentCounters.renderDuration
+            renderDuration: currentCounters.renderDuration,
         )
     }
 
@@ -162,7 +162,7 @@ public actor PerformanceMetrics {
             totalLines: lines,
             framesDropped: currentCounters.framesDropped,
             renderMode: currentCounters.renderMode,
-            renderDuration: currentCounters.renderDuration
+            renderDuration: currentCounters.renderDuration,
         )
     }
 
@@ -177,7 +177,7 @@ public actor PerformanceMetrics {
             totalLines: currentCounters.totalLines,
             framesDropped: currentCounters.framesDropped,
             renderMode: currentCounters.renderMode,
-            renderDuration: duration
+            renderDuration: duration,
         )
 
         // Add to history
@@ -193,13 +193,13 @@ public actor PerformanceMetrics {
     /// Get current counters (without finishing the render)
     /// - Returns: Current counters snapshot
     public func getCurrentCounters() -> Counters {
-        return currentCounters
+        currentCounters
     }
 
     /// Get performance history
     /// - Returns: Array of historical performance counters
     public func getHistory() -> [Counters] {
-        return history
+        history
     }
 
     /// Get average performance over recent history
@@ -222,7 +222,7 @@ public actor PerformanceMetrics {
             totalLines: totalLines / count,
             framesDropped: totalDropped / count,
             renderMode: recentHistory.last?.renderMode ?? .fullRedraw,
-            renderDuration: totalDuration / Double(count)
+            renderDuration: totalDuration / Double(count),
         )
     }
 
@@ -234,7 +234,7 @@ public actor PerformanceMetrics {
             totalLines: 0,
             framesDropped: 0,
             renderMode: .fullRedraw,
-            renderDuration: 0.0
+            renderDuration: 0.0,
         )
         history.removeAll()
         renderStartTime = nil
@@ -251,7 +251,7 @@ public actor PerformanceMetrics {
             totalLines: 0,
             framesDropped: 0,
             renderMode: .fullRedraw,
-            renderDuration: 0.0
+            renderDuration: 0.0,
         )
     }
 }

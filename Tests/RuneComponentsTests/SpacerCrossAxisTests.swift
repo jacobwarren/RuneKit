@@ -12,7 +12,7 @@ struct SpacerCrossAxisTests {
             flexDirection: .row,
             alignItems: .stretch,
             width: .points(20), height: .points(5),
-            children: spacer
+            children: spacer,
         )
         let layout = box.calculateLayout(in: FlexLayout.Rect(x: 0, y: 0, width: 20, height: 5))
         #expect(layout.childRects.count == 1)
@@ -21,4 +21,3 @@ struct SpacerCrossAxisTests {
         #expect(r.height == 1)
     }
 }
-

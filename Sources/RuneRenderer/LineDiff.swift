@@ -4,7 +4,7 @@ import Foundation
 ///
 /// This system compares frames line-by-line to identify changes and minimize
 /// terminal I/O by only rewriting lines that have actually changed.
-public struct LineDiff {
+public enum LineDiff {
     /// Represents a change to a specific line
     public struct LineChange: Sendable {
         /// Zero-based line index
@@ -36,7 +36,7 @@ public struct LineDiff {
 
         /// Whether the frame size changed
         public var frameSizeChanged: Bool {
-            return totalLines != previousTotalLines
+            totalLines != previousTotalLines
         }
 
         /// Efficiency ratio (0.0 = all lines changed, 1.0 = no lines changed)
@@ -60,7 +60,7 @@ public struct LineDiff {
             // Use built-in Hasher for cross-platform compatibility
             var hasher = Hasher()
             hasher.combine(line)
-            self.hash = String(hasher.finalize())
+            hash = String(hasher.finalize())
         }
 
         /// Fast hash for simple ASCII content (optimization)
@@ -68,7 +68,7 @@ public struct LineDiff {
             // For ASCII-only content, use a simpler hash
             var hasher = Hasher()
             hasher.combine(line)
-            self.hash = String(hasher.finalize())
+            hash = String(hasher.finalize())
         }
     }
 
@@ -80,9 +80,9 @@ public struct LineDiff {
         init(lines: [String], useSimpleHash: Bool = false) {
             self.lines = lines
             if useSimpleHash {
-                self.hashes = lines.map { LineHash(fastHash: $0) }
+                hashes = lines.map { LineHash(fastHash: $0) }
             } else {
-                self.hashes = lines.map { LineHash($0) }
+                hashes = lines.map { LineHash($0) }
             }
         }
     }
@@ -98,9 +98,9 @@ public struct LineDiff {
     public static func compare(
         currentFrame: TerminalRenderer.Frame,
         previousFrame: TerminalRenderer.Frame?,
-        useSimpleHash: Bool = false
+        useSimpleHash: Bool = false,
     ) -> DiffResult {
-        guard let previousFrame = previousFrame else {
+        guard let previousFrame else {
             // No previous frame - all lines are changes
             let changes = currentFrame.lines.enumerated().map { index, line in
                 LineChange(lineIndex: index, newContent: line)
@@ -108,7 +108,7 @@ public struct LineDiff {
             return DiffResult(
                 changes: changes,
                 totalLines: currentFrame.lines.count,
-                previousTotalLines: 0
+                previousTotalLines: 0,
             )
         }
 
@@ -124,7 +124,7 @@ public struct LineDiff {
 
         let maxLines = max(current.lines.count, previous.lines.count)
 
-        for lineIndex in 0..<maxLines {
+        for lineIndex in 0 ..< maxLines {
             let currentLine = lineIndex < current.lines.count ? current.lines[lineIndex] : ""
             let currentHash = lineIndex < current.hashes.count ? current.hashes[lineIndex] : LineHash("")
 
@@ -136,7 +136,7 @@ public struct LineDiff {
                 changes.append(LineChange(
                     lineIndex: lineIndex,
                     newContent: currentLine,
-                    previousContent: lineIndex < previous.lines.count ? previousLine : nil
+                    previousContent: lineIndex < previous.lines.count ? previousLine : nil,
                 ))
             }
         }
@@ -144,7 +144,7 @@ public struct LineDiff {
         return DiffResult(
             changes: changes,
             totalLines: current.lines.count,
-            previousTotalLines: previous.lines.count
+            previousTotalLines: previous.lines.count,
         )
     }
 
@@ -155,7 +155,7 @@ public struct LineDiff {
     /// - Returns: ANSI sequence string to apply the changes
     public static func generateANSISequences(
         for changes: [LineChange],
-        currentCursorLine: Int = 0
+        currentCursorLine: Int = 0,
     ) -> String {
         guard !changes.isEmpty else { return "" }
 
@@ -180,8 +180,8 @@ public struct LineDiff {
             }
 
             // Move to beginning of line and clear it
-            sequences.append("\u{001B}[G")  // Move to column 1
-            sequences.append("\u{001B}[K")  // Clear from cursor to end of line (EL)
+            sequences.append("\u{001B}[G") // Move to column 1
+            sequences.append("\u{001B}[K") // Clear from cursor to end of line (EL)
 
             // Write the new content
             sequences.append(change.newContent)
@@ -197,10 +197,10 @@ public struct LineDiff {
     /// - Returns: Estimated bytes saved (positive = savings, negative = overhead)
     public static func estimateByteSavings(
         diffResult: DiffResult,
-        fullFrameSize: Int
+        fullFrameSize: Int,
     ) -> Int {
         // Estimate overhead for cursor movement and line clearing
-        let cursorOverheadPerLine = 10  // Approximate ANSI sequence overhead
+        let cursorOverheadPerLine = 10 // Approximate ANSI sequence overhead
         let diffSize = diffResult.changes.reduce(0) { total, change in
             total + change.newContent.utf8.count + cursorOverheadPerLine
         }
@@ -226,7 +226,7 @@ public extension LineDiff {
         }
 
         for (index, change) in diffResult.changes.enumerated() {
-            if index < 5 {  // Show first 5 changes
+            if index < 5 { // Show first 5 changes
                 let preview = change.newContent.prefix(40)
                 description.append("  Line \(change.lineIndex): \"\(preview)\"")
             } else if index == 5 {

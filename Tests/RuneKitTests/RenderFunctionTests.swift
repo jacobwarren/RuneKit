@@ -91,7 +91,7 @@ struct RenderFunctionTests {
             exitOnCtrlC: false,
             patchConsole: false,
             useAltScreen: false,
-            fpsCap: 30.0
+            fpsCap: 30.0,
         )
 
         // Act

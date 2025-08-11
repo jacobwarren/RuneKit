@@ -1,13 +1,12 @@
-import RuneLayout
 import RuneANSI
+import RuneLayout
 
-// Convenience initializers and factories for Box extracted (no behavior change)
-extension Box {
+public extension Box {
     /// Convenience initializer for simple padding
-    public init(
+    init(
         border: BorderStyle = .none,
         padding: Float,
-        child: Component? = nil
+        child: Component? = nil,
     ) {
         self.init(
             border: border,
@@ -17,16 +16,16 @@ extension Box {
             paddingRight: padding,
             paddingBottom: padding,
             paddingLeft: padding,
-            child: child
+            child: child,
         )
     }
 
     /// Convenience initializer for horizontal and vertical padding
-    public init(
+    init(
         border: BorderStyle = .none,
         paddingHorizontal: Float = 0,
         paddingVertical: Float = 0,
-        child: Component? = nil
+        child: Component? = nil,
     ) {
         self.init(
             border: border,
@@ -36,19 +35,19 @@ extension Box {
             paddingRight: paddingHorizontal,
             paddingBottom: paddingVertical,
             paddingLeft: paddingHorizontal,
-            child: child
+            child: child,
         )
     }
 
     /// Convenience initializer for flex row layout
-    public static func row(
+    static func row(
         justifyContent: JustifyContent = .flexStart,
         alignItems: AlignItems = .stretch,
         alignSelf: AlignSelf = .auto,
         gap: Float = 0,
-        child: Component? = nil
+        child: Component? = nil,
     ) -> Box {
-        return Box(
+        Box(
             borderColor: nil,
             backgroundColor: nil,
             flexDirection: .row,
@@ -56,19 +55,19 @@ extension Box {
             alignItems: alignItems,
             alignSelf: alignSelf,
             columnGap: gap,
-            child: child
+            child: child,
         )
     }
 
     /// Convenience initializer for flex column layout
-    public static func column(
+    static func column(
         justifyContent: JustifyContent = .flexStart,
         alignItems: AlignItems = .stretch,
         alignSelf: AlignSelf = .auto,
         gap: Float = 0,
-        child: Component? = nil
+        child: Component? = nil,
     ) -> Box {
-        return Box(
+        Box(
             borderColor: nil,
             backgroundColor: nil,
             flexDirection: .column,
@@ -76,8 +75,7 @@ extension Box {
             alignItems: alignItems,
             alignSelf: alignSelf,
             rowGap: gap,
-            child: child
+            child: child,
         )
     }
 }
-

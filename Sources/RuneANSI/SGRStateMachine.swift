@@ -6,7 +6,7 @@ public struct SGRStateMachine {
     public private(set) var attributes: TextAttributes
 
     public init(initial: TextAttributes = TextAttributes()) {
-        self.attributes = initial
+        attributes = initial
     }
 
     /// Feed SGR parameters and update state
@@ -16,4 +16,3 @@ public struct SGRStateMachine {
         return attributes
     }
 }
-

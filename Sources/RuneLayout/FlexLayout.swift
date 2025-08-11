@@ -58,7 +58,7 @@ public enum FlexLayout {
         children: [Size],
         containerSize: Size,
         direction: FlexDirection = .row,
-        ) -> [Rect] {
+    ) -> [Rect] {
         // Handle empty children case
         guard !children.isEmpty else {
             return []
@@ -88,7 +88,7 @@ public enum FlexLayout {
         _ = layoutEngine.calculateLayout(
             for: rootNode,
             availableWidth: containerSize.width,
-            availableHeight: containerSize.height
+            availableHeight: containerSize.height,
         )
 
         // Extract results
@@ -99,7 +99,7 @@ public enum FlexLayout {
                 x: result.x,
                 y: result.y,
                 width: result.width,
-                height: result.height
+                height: result.height,
             ))
         }
 

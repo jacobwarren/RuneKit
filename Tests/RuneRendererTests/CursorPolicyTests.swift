@@ -37,4 +37,3 @@ struct CursorPolicyTests {
         #expect(out.contains("\u{001B}[?25h"), "Should show cursor after render")
     }
 }
-

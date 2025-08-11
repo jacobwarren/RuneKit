@@ -2,7 +2,7 @@ import Foundation
 
 /// Controls adaptive quality reduction under backpressure and provides grid preprocessing.
 public struct AdaptiveQualityController: Sendable {
-    private(set) var adaptiveQuality: Double = 1.0
+    private(set) var adaptiveQuality = 1.0
 
     public init() {}
 
@@ -19,4 +19,3 @@ public struct AdaptiveQualityController: Sendable {
         return grid
     }
 }
-

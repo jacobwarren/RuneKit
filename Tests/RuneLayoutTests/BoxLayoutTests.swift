@@ -1,6 +1,6 @@
 import Testing
-@testable import RuneLayout
 @testable import RuneComponents
+@testable import RuneLayout
 
 /// Tests for Box layout with nested structures and complex scenarios (RUNE-27)
 /// Extended for RUNE-28: Flex grow/shrink, min/max, wrap
@@ -15,7 +15,7 @@ struct BoxLayoutTests {
             paddingRight: 1,
             paddingBottom: 1,
             paddingLeft: 1,
-            child: Text("Inner")
+            child: Text("Inner"),
         )
 
         let outerBox = Box(
@@ -27,7 +27,7 @@ struct BoxLayoutTests {
             marginRight: 1,
             marginBottom: 1,
             marginLeft: 1,
-            child: innerBox
+            child: innerBox,
         )
 
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 15)
@@ -58,19 +58,19 @@ struct BoxLayoutTests {
         let leftColumn = Box(
             flexDirection: .column,
             rowGap: 1,
-            children: Text("Left 1"), Text("Left 2")
+            children: Text("Left 1"), Text("Left 2"),
         )
 
         let rightColumn = Box(
             flexDirection: .column,
             rowGap: 2,
-            children: Text("Right 1"), Text("Right 2"), Text("Right 3")
+            children: Text("Right 1"), Text("Right 2"), Text("Right 3"),
         )
 
         let mainRow = Box(
             flexDirection: .row,
             columnGap: 3,
-            children: leftColumn, rightColumn
+            children: leftColumn, rightColumn,
         )
 
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 30, height: 12)
@@ -94,7 +94,7 @@ struct BoxLayoutTests {
         // Left column children: "Left 1"=6x1, "Left 2"=6x1 with 1-row gap
         let expectedLeftChildren = [
             FlexLayout.Rect(x: 0, y: 0, width: 6, height: 1),
-            FlexLayout.Rect(x: 0, y: 2, width: 6, height: 1) // 1 + 1 gap
+            FlexLayout.Rect(x: 0, y: 2, width: 6, height: 1), // 1 + 1 gap
         ]
         #expect(leftLayout.childRects == expectedLeftChildren, "Left column children should be spaced correctly")
 
@@ -103,7 +103,7 @@ struct BoxLayoutTests {
         let expectedRightChildren = [
             FlexLayout.Rect(x: 0, y: 0, width: 7, height: 1),
             FlexLayout.Rect(x: 0, y: 3, width: 7, height: 1), // 1 + 2 gap
-            FlexLayout.Rect(x: 0, y: 6, width: 7, height: 1)  // 3 + 1 + 2 gap
+            FlexLayout.Rect(x: 0, y: 6, width: 7, height: 1), // 3 + 1 + 2 gap
         ]
         #expect(rightLayout.childRects == expectedRightChildren, "Right column children should be spaced correctly")
     }
@@ -129,9 +129,9 @@ struct BoxLayoutTests {
                 children: Text("Title"), Box(
                     flexDirection: .row,
                     columnGap: 2,
-                    children: Text("Button 1"), Text("Button 2")
-                )
-            )
+                    children: Text("Button 1"), Text("Button 2"),
+                ),
+            ),
         )
 
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 40, height: 20)
@@ -156,7 +156,7 @@ struct BoxLayoutTests {
         let box = Box(
             width: .points(0),
             height: .points(0),
-            child: Text("Hidden")
+            child: Text("Hidden"),
         )
         let containerRect = FlexLayout.Rect(x: 5, y: 5, width: 20, height: 15)
 
@@ -177,7 +177,7 @@ struct BoxLayoutTests {
             paddingRight: 15,
             paddingBottom: 10,
             paddingLeft: 15,
-            child: Text("Overflow")
+            child: Text("Overflow"),
         )
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 15)
 
@@ -198,7 +198,7 @@ struct BoxLayoutTests {
         // Arrange
         let box = Box(
             flexDirection: .row,
-            children: Text("A"), Text("B"), Text("C")
+            children: Text("A"), Text("B"), Text("C"),
         )
         // Use container width that doesn't divide evenly by 3
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 10, height: 5)
@@ -218,7 +218,7 @@ struct BoxLayoutTests {
         let expectedRects = [
             FlexLayout.Rect(x: 0, y: 0, width: 1, height: 1), // "A"
             FlexLayout.Rect(x: 1, y: 0, width: 1, height: 1), // "B"
-            FlexLayout.Rect(x: 2, y: 0, width: 1, height: 1)  // "C"
+            FlexLayout.Rect(x: 2, y: 0, width: 1, height: 1), // "C"
         ]
 
         for (index, rect) in layout.childRects.enumerated() {
@@ -241,7 +241,7 @@ struct BoxLayoutTests {
             paddingRight: 3,
             paddingBottom: 2,
             paddingLeft: 3,
-            children: Text("Centered")
+            children: Text("Centered"),
         )
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 10)
 
@@ -260,8 +260,14 @@ struct BoxLayoutTests {
         // Child should be positioned relative to content area, not container
         #expect(childRect.x >= expectedContentRect.x, "Child should be within content area")
         #expect(childRect.y >= expectedContentRect.y, "Child should be within content area")
-        #expect(childRect.x + childRect.width <= expectedContentRect.x + expectedContentRect.width, "Child should fit in content area")
-        #expect(childRect.y + childRect.height <= expectedContentRect.y + expectedContentRect.height, "Child should fit in content area")
+        #expect(
+            childRect.x + childRect.width <= expectedContentRect.x + expectedContentRect.width,
+            "Child should fit in content area",
+        )
+        #expect(
+            childRect.y + childRect.height <= expectedContentRect.y + expectedContentRect.height,
+            "Child should fit in content area",
+        )
     }
 
     // MARK: - RUNE-28: Flex Grow/Shrink Tests
@@ -273,21 +279,21 @@ struct BoxLayoutTests {
             width: .points(50),
             height: .points(20),
             flexGrow: 1,
-            child: Text("Child 1")
+            child: Text("Child 1"),
         )
 
         let child2 = Box(
             width: .points(50),
             height: .points(20),
             flexGrow: 2,
-            child: Text("Child 2")
+            child: Text("Child 2"),
         )
 
         let container = Box(
             flexDirection: .row,
             width: .points(200),
             height: .points(50),
-            children: child1, child2
+            children: child1, child2,
         )
 
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 200, height: 50)
@@ -318,21 +324,21 @@ struct BoxLayoutTests {
             width: .points(100),
             height: .points(20),
             flexShrink: 1,
-            child: Text("Child 1")
+            child: Text("Child 1"),
         )
 
         let child2 = Box(
             width: .points(100),
             height: .points(20),
             flexShrink: 2,
-            child: Text("Child 2")
+            child: Text("Child 2"),
         )
 
         let container = Box(
             flexDirection: .row,
             width: .points(150),
             height: .points(50),
-            children: child1, child2
+            children: child1, child2,
         )
 
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 150, height: 50)
@@ -362,20 +368,20 @@ struct BoxLayoutTests {
         let child1 = Box(
             flexGrow: 1,
             flexBasis: .points(30),
-            child: Text("Child 1")
+            child: Text("Child 1"),
         )
 
         let child2 = Box(
             flexGrow: 1,
             flexBasis: .points(70),
-            child: Text("Child 2")
+            child: Text("Child 2"),
         )
 
         let container = Box(
             flexDirection: .row,
             width: .points(200),
             height: .points(50),
-            children: child1, child2
+            children: child1, child2,
         )
 
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 200, height: 50)

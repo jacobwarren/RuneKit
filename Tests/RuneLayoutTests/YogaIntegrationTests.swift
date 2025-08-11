@@ -1,5 +1,5 @@
-import Testing
 import RuneLayout
+import Testing
 
 /// Integration tests for Yoga layout engine
 /// Verifies that the Yoga integration works correctly with RuneKit components
@@ -22,7 +22,7 @@ struct YogaIntegrationTests {
         let result = layoutEngine.calculateLayout(
             for: node,
             availableWidth: 100,
-            availableHeight: 50
+            availableHeight: 50,
         )
 
         #expect(result.width == 100, "Node should be created and layout should work")
@@ -62,7 +62,7 @@ struct YogaIntegrationTests {
         let rootResult = layoutEngine.calculateLayout(
             for: rootNode,
             availableWidth: 100,
-            availableHeight: 50
+            availableHeight: 50,
         )
 
         let child1Result = layoutEngine.getLayoutResult(for: child1)
@@ -107,7 +107,7 @@ struct YogaIntegrationTests {
         _ = layoutEngine.calculateLayout(
             for: rootNode,
             availableWidth: 100,
-            availableHeight: 100
+            availableHeight: 100,
         )
 
         let child1Result = layoutEngine.getLayoutResult(for: child1)
@@ -147,7 +147,7 @@ struct YogaIntegrationTests {
         _ = layoutEngine.calculateLayout(
             for: rootNode,
             availableWidth: 100,
-            availableHeight: 100
+            availableHeight: 100,
         )
 
         let childResult = layoutEngine.getLayoutResult(for: child)
@@ -179,7 +179,7 @@ struct YogaIntegrationTests {
         _ = layoutEngine.calculateLayout(
             for: rootNode,
             availableWidth: 200,
-            availableHeight: 100
+            availableHeight: 100,
         )
 
         let child1Result = layoutEngine.getLayoutResult(for: child1)
@@ -197,7 +197,7 @@ struct YogaIntegrationTests {
         let children = [
             FlexLayout.Size(width: 20, height: 10),
             FlexLayout.Size(width: 30, height: 10),
-            FlexLayout.Size(width: 25, height: 10)
+            FlexLayout.Size(width: 25, height: 10),
         ]
         let containerSize = FlexLayout.Size(width: 100, height: 50)
 
@@ -205,7 +205,7 @@ struct YogaIntegrationTests {
         let rowRects = FlexLayout.calculateLayout(
             children: children,
             containerSize: containerSize,
-            direction: .row
+            direction: .row,
         )
 
         #expect(rowRects.count == 3, "Should return 3 rectangles")
@@ -217,7 +217,7 @@ struct YogaIntegrationTests {
         let columnRects = FlexLayout.calculateLayout(
             children: children,
             containerSize: containerSize,
-            direction: .column
+            direction: .column,
         )
 
         #expect(columnRects.count == 3, "Should return 3 rectangles")
@@ -234,7 +234,7 @@ struct YogaIntegrationTests {
         let rects = FlexLayout.calculateLayout(
             children: children,
             containerSize: containerSize,
-            direction: .row
+            direction: .row,
         )
 
         #expect(rects.isEmpty, "Should return empty array for empty children")
@@ -259,7 +259,7 @@ struct YogaIntegrationTests {
         _ = layoutEngine.calculateLayout(
             for: rootNode,
             availableWidth: 100,
-            availableHeight: 50
+            availableHeight: 50,
         )
 
         let childResult = layoutEngine.getLayoutResult(for: child)
@@ -291,7 +291,7 @@ struct YogaIntegrationTests {
         _ = layoutEngine.calculateLayout(
             for: rootNode,
             availableWidth: 100,
-            availableHeight: 50
+            availableHeight: 50,
         )
 
         let child1Result = layoutEngine.getLayoutResult(for: child1)
@@ -321,7 +321,7 @@ struct YogaIntegrationTests {
         _ = layoutEngine.calculateLayout(
             for: rootNode,
             availableWidth: 100,
-            availableHeight: 50
+            availableHeight: 50,
         )
 
         let childResult = layoutEngine.getLayoutResult(for: child)
@@ -349,7 +349,7 @@ struct YogaIntegrationTests {
         _ = layoutEngine.calculateLayout(
             for: rootNode,
             availableWidth: 100,
-            availableHeight: 50
+            availableHeight: 50,
         )
 
         let childResult = layoutEngine.getLayoutResult(for: child)
@@ -384,7 +384,7 @@ struct YogaIntegrationTests {
         let result = layoutEngine.calculateLayout(
             for: rootNode,
             availableWidth: 0,
-            availableHeight: 0
+            availableHeight: 0,
         )
 
         #expect(result.width == 0, "Zero width should be preserved")
@@ -398,7 +398,7 @@ struct YogaIntegrationTests {
         let layoutEngine = YogaLayoutEngine.shared
 
         // Perform multiple layout calculations
-        for _ in 0..<100 {
+        for _ in 0 ..< 100 {
             let rootNode = YogaNode()
             rootNode.setFlexDirection(.row)
             rootNode.setWidth(.points(100))
@@ -412,7 +412,7 @@ struct YogaIntegrationTests {
             _ = layoutEngine.calculateLayout(
                 for: rootNode,
                 availableWidth: 100,
-                availableHeight: 50
+                availableHeight: 50,
             )
 
             // Nodes should be cleaned up automatically when they go out of scope

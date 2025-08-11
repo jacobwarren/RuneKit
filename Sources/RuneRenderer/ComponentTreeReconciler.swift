@@ -8,7 +8,7 @@ public actor ComponentTreeReconciler {
 
     public init() {}
 
-    public func beginFrame(rootPath: String) {
+    public func beginFrame(rootPath _: String) {
         // Could snapshot previous set for diff; keep simple for now
     }
 
@@ -23,4 +23,3 @@ public actor ComponentTreeReconciler {
     public func contains(path: String) -> Bool { nodeSet.contains(path) }
     public func reset() { nodeSet.removeAll() }
 }
-

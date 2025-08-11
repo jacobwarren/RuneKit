@@ -37,13 +37,13 @@ public actor AlternateScreenBuffer {
     private let output: FileHandle
 
     /// Whether alternate screen buffer is currently active
-    private var _isActive: Bool = false
+    private var _isActive = false
 
     /// Whether fallback mode is enabled for unsupported terminals
     private let enableFallback: Bool
 
     /// Whether the buffer has been entered at least once (for deinit cleanup)
-    private var hasBeenEntered: Bool = false
+    private var hasBeenEntered = false
 
     // MARK: - ANSI Escape Sequences
 
@@ -71,7 +71,7 @@ public actor AlternateScreenBuffer {
 
     /// Whether alternate screen buffer is currently active
     public var isActive: Bool {
-        return _isActive
+        _isActive
     }
 
     /// Enter alternate screen buffer

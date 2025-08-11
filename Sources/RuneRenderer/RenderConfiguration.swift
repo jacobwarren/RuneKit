@@ -15,7 +15,7 @@ public struct RenderConfiguration: Sendable {
         case lineDiff = "line_diff"
 
         /// Automatic mode - choose based on frame characteristics
-        case automatic = "automatic"
+        case automatic
     }
 
     /// Performance tuning parameters
@@ -38,7 +38,7 @@ public struct RenderConfiguration: Sendable {
             maxLinesForDiff: Int = 1000,
             minEfficiencyThreshold: Double = 0.7,
             maxFrameRate: Double = 60.0,
-            writeBufferSize: Int = 8192
+            writeBufferSize: Int = 8192,
         ) {
             self.maxLinesForDiff = maxLinesForDiff
             self.minEfficiencyThreshold = minEfficiencyThreshold
@@ -73,7 +73,6 @@ public struct RenderConfiguration: Sendable {
     /// Feature flag: allow public injection of OutputEncoder/CursorManager
     public let enablePluggableIO: Bool
 
-
     // MARK: - Initialization
 
     public init(
@@ -84,7 +83,7 @@ public struct RenderConfiguration: Sendable {
         hideCursorDuringRender: Bool = true,
         useAlternateScreen: Bool = false,
         enableConsoleCapture: Bool = false,
-        enablePluggableIO: Bool = false
+        enablePluggableIO: Bool = false,
     ) {
         self.optimizationMode = optimizationMode
         self.performance = performance
@@ -104,7 +103,7 @@ public struct RenderConfiguration: Sendable {
         enableDebugLogging: Bool = false,
         hideCursorDuringRender: Bool = true,
         useAlternateScreen: Bool = false,
-        enableConsoleCapture: Bool = false
+        enableConsoleCapture: Bool = false,
     ) {
         self.init(
             optimizationMode: optimizationMode,
@@ -114,7 +113,7 @@ public struct RenderConfiguration: Sendable {
             hideCursorDuringRender: hideCursorDuringRender,
             useAlternateScreen: useAlternateScreen,
             enableConsoleCapture: enableConsoleCapture,
-            enablePluggableIO: false
+            enablePluggableIO: false,
         )
     }
 
@@ -132,11 +131,11 @@ public struct RenderConfiguration: Sendable {
             maxLinesForDiff: 2000,
             minEfficiencyThreshold: 0.8,
             maxFrameRate: 120.0,
-            writeBufferSize: 16384
+            writeBufferSize: 16384,
         ),
         enableMetrics: true,
         enableDebugLogging: false,
-        enableConsoleCapture: false
+        enableConsoleCapture: false,
     )
 
     /// Conservative configuration for slow terminals or debugging
@@ -147,11 +146,11 @@ public struct RenderConfiguration: Sendable {
             maxLinesForDiff: 100,
             minEfficiencyThreshold: 0.5,
             maxFrameRate: 30.0,
-            writeBufferSize: 4096
+            writeBufferSize: 4096,
         ),
         enableMetrics: true,
         enableDebugLogging: true,
-        enableConsoleCapture: false
+        enableConsoleCapture: false,
     )
 
     /// Debug configuration with extensive logging and metrics
@@ -162,13 +161,13 @@ public struct RenderConfiguration: Sendable {
             maxLinesForDiff: 500,
             minEfficiencyThreshold: 0.6,
             maxFrameRate: 30.0,
-            writeBufferSize: 1024
+            writeBufferSize: 1024,
         ),
         enableMetrics: true,
         enableDebugLogging: true,
         hideCursorDuringRender: true,
         useAlternateScreen: false,
-        enableConsoleCapture: true
+        enableConsoleCapture: true,
     )
 
     // MARK: - Decision Logic
@@ -182,7 +181,7 @@ public struct RenderConfiguration: Sendable {
     public func resolveOptimizationMode(
         frameLines: Int,
         changedLines: Int? = nil,
-        previousMetrics: PerformanceMetrics.Counters? = nil
+        previousMetrics: PerformanceMetrics.Counters? = nil,
     ) -> OptimizationMode {
         switch optimizationMode {
         case .fullRedraw:
@@ -195,7 +194,7 @@ public struct RenderConfiguration: Sendable {
             }
 
             // Check efficiency threshold if we know changed lines
-            if let changedLines = changedLines {
+            if let changedLines {
                 let efficiency = 1.0 - (Double(changedLines) / Double(frameLines))
                 if efficiency < performance.minEfficiencyThreshold {
                     return .fullRedraw
@@ -239,7 +238,7 @@ public extension RenderConfiguration {
     /// Create a configuration from environment variables
     /// Useful for runtime configuration without code changes
     static func fromEnvironment() -> RenderConfiguration {
-        return fromEnvironment(ProcessInfo.processInfo.environment)
+        fromEnvironment(ProcessInfo.processInfo.environment)
     }
 
     /// Create a configuration from provided environment dictionary
@@ -271,7 +270,7 @@ public extension RenderConfiguration {
                 enableDebugLogging: config.enableDebugLogging,
                 hideCursorDuringRender: config.hideCursorDuringRender,
                 useAlternateScreen: useAltScreen,
-                enableConsoleCapture: config.enableConsoleCapture
+                enableConsoleCapture: config.enableConsoleCapture,
             )
         }
 
@@ -285,7 +284,7 @@ public extension RenderConfiguration {
                 enableDebugLogging: config.enableDebugLogging,
                 hideCursorDuringRender: config.hideCursorDuringRender,
                 useAlternateScreen: config.useAlternateScreen,
-                enableConsoleCapture: enableCapture
+                enableConsoleCapture: enableCapture,
             )
         }
 

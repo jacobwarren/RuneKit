@@ -12,13 +12,13 @@ public struct StrategyDeterminer: Sendable {
     }
 
     public mutating func updateAdaptiveThresholds(_ thresholds: AdaptiveThresholds) {
-        self.adaptiveThresholds = thresholds
+        adaptiveThresholds = thresholds
     }
 
     public func determineStrategy(
         newGrid: TerminalGrid,
         currentGrid: TerminalGrid?,
-        forceFullRedraw: Bool
+        forceFullRedraw: Bool,
     ) async -> RenderingStrategy {
         if forceFullRedraw || currentGrid == nil {
             return .fullRedraw
@@ -65,7 +65,7 @@ public struct StrategyDeterminer: Sendable {
     }
 
     private func estimateFullRedrawBytes(grid: TerminalGrid) -> Int {
-        return grid.width * grid.height * 2
+        grid.width * grid.height * 2
     }
 
     private func estimateDeltaBytes(changedLines: [Int], grid: TerminalGrid) -> Int {
@@ -77,24 +77,23 @@ public struct StrategyDeterminer: Sendable {
     private func detectScrollPattern(newGrid: TerminalGrid, currentGrid: TerminalGrid) async -> Bool {
         guard newGrid.width == currentGrid.width else { return false }
         guard newGrid.height == currentGrid.height else { return false }
-        let h = newGrid.height
-        // Try downward scroll by n (new lines appended at bottom)
-        for n in 1..<h {
+        let height = newGrid.height
+        // Try downward scroll by offset (new lines appended at bottom)
+        for offset in 1 ..< height {
             var ok = true
-            for r in 0..<(h - n) {
-                if newGrid.getRow(r)! != currentGrid.getRow(r + n)! { ok = false; break }
+            for row in 0 ..< (height - offset) where newGrid.getRow(row)! != currentGrid.getRow(row + offset)! {
+                ok = false; break
             }
             if ok { return true }
         }
-        // Try upward scroll by n (new lines added at top)
-        for n in 1..<h {
+        // Try upward scroll by offset (new lines added at top)
+        for offset in 1 ..< height {
             var ok = true
-            for r in n..<h {
-                if newGrid.getRow(r)! != currentGrid.getRow(r - n)! { ok = false; break }
+            for row in offset ..< height where newGrid.getRow(row)! != currentGrid.getRow(row - offset)! {
+                ok = false; break
             }
             if ok { return true }
         }
         return false
     }
 }
-

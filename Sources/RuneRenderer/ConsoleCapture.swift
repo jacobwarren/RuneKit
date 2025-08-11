@@ -68,7 +68,7 @@ public actor ConsoleCapture {
     // MARK: - Private State
 
     /// Whether capture is currently active
-    private var isCapturing: Bool = false
+    private var isCapturing = false
 
     /// Original stdout file handle (saved for restoration)
     private var originalStdout: FileHandle?
@@ -121,10 +121,10 @@ public actor ConsoleCapture {
             stderrReaderTask?.cancel()
 
             // Restore file handles synchronously
-            if let originalStdout = originalStdout {
+            if let originalStdout {
                 dup2(originalStdout.fileDescriptor, STDOUT_FILENO)
             }
-            if let originalStderr = originalStderr {
+            if let originalStderr {
                 dup2(originalStderr.fileDescriptor, STDERR_FILENO)
             }
 
@@ -145,7 +145,7 @@ public actor ConsoleCapture {
 
     /// Whether console capture is currently active
     public var isCaptureActive: Bool {
-        return isCapturing
+        isCapturing
     }
 
     /// Start capturing stdout and stderr
@@ -171,8 +171,9 @@ public actor ConsoleCapture {
         stdoutPipe = Pipe()
         stderrPipe = Pipe()
 
-        guard let stdoutPipe = stdoutPipe,
-              let stderrPipe = stderrPipe else {
+        guard let stdoutPipe,
+              let stderrPipe
+        else {
             debugLog("Failed to create pipes for console capture")
             return
         }
@@ -213,10 +214,10 @@ public actor ConsoleCapture {
         stderrReaderTask = nil
 
         // Restore original file handles
-        if let originalStdout = originalStdout {
+        if let originalStdout {
             dup2(originalStdout.fileDescriptor, STDOUT_FILENO)
         }
-        if let originalStderr = originalStderr {
+        if let originalStderr {
             dup2(originalStderr.fileDescriptor, STDERR_FILENO)
         }
 
@@ -248,7 +249,7 @@ public actor ConsoleCapture {
     /// Get all buffered log lines
     /// - Returns: Array of captured log lines in chronological order
     public func getBufferedLogs() -> [LogLine] {
-        return logBuffer
+        logBuffer
     }
 
     /// Get recent log lines
@@ -268,7 +269,7 @@ public actor ConsoleCapture {
     /// Get the current buffer size
     /// - Returns: Number of log lines currently buffered
     public func getBufferSize() -> Int {
-        return logBuffer.count
+        logBuffer.count
     }
 
     // MARK: - Private Implementation
@@ -392,7 +393,7 @@ public actor ConsoleCapture {
         }
 
         // Keep incomplete line in buffer
-        if !forceFlush && !lines.isEmpty {
+        if !forceFlush, !lines.isEmpty {
             let remainingLine = lines.last ?? ""
             buffer = remainingLine.data(using: .utf8) ?? Data()
         } else {
@@ -418,7 +419,7 @@ public actor ConsoleCapture {
     private func debugLog(_ message: String) {
         if enableDebugLogging {
             // Write directly to original stderr to avoid capture loop
-            if let originalStderr = originalStderr {
+            if let originalStderr {
                 let debugMessage = "[ConsoleCapture] \(message)\n"
                 if let data = debugMessage.data(using: .utf8) {
                     originalStderr.write(data)

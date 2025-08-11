@@ -4,7 +4,7 @@ import Testing
 
 private struct FakeDiffer: TerminalDiffer {
     let lines: [Int]
-    func diff(from old: TerminalGrid, to new: TerminalGrid) -> [Int] { lines }
+    func diff(from _: TerminalGrid, to _: TerminalGrid) -> [Int] { lines }
 }
 
 struct HybridDifferInjectionTests {
@@ -12,7 +12,11 @@ struct HybridDifferInjectionTests {
     func usesInjectedDiffer() async {
         let pipe = Pipe(); defer { pipe.fileHandleForReading.closeFile() }
         let renderer = TerminalRenderer(output: pipe.fileHandleForWriting)
-        let reconciler = HybridReconciler(renderer: renderer, configuration: RenderConfiguration(), differ: FakeDiffer(lines: [1]))
+        let reconciler = HybridReconciler(
+            renderer: renderer,
+            configuration: RenderConfiguration(),
+            differ: FakeDiffer(lines: [1]),
+        )
 
         let g1 = TerminalGrid(width: 5, height: 3)
         await reconciler.render(g1)
@@ -27,6 +31,3 @@ struct HybridDifferInjectionTests {
         #expect(output.contains("\u{001B}[2;1H"))
     }
 }
-
-
-

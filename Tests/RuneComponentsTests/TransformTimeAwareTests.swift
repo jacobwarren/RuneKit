@@ -10,7 +10,7 @@ struct TransformTimeAwareTests {
         // Arrange
         let child = Text("\u{001B}[1;34mhello\u{001B}[0m") // bold blue hello
         let transform = Transform(timeAware: { input, _ in
-            return input.uppercased()
+            input.uppercased()
         }) { child }
         let rect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 1)
 
@@ -30,7 +30,7 @@ struct TransformTimeAwareTests {
         // Arrange: encode the integer seconds field into output to detect change
         let child = Text("tick")
         let transform = Transform(timeAware: { _, t in
-            return "T:\(Int(t*1000))" // ms resolution to make change likely
+            "T:\(Int(t * 1000))" // ms resolution to make change likely
         }) { child }
         let rect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 1)
 
@@ -43,4 +43,3 @@ struct TransformTimeAwareTests {
         #expect(first != second, "Two renders separated by time should differ")
     }
 }
-

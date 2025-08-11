@@ -1,9 +1,9 @@
 import Foundation
-import RuneLayout
 import RuneComponents
+import RuneLayout
 
 /// Demo showcasing the new Yoga-based layout system
-struct YogaLayoutDemo {
+enum YogaLayoutDemo {
     /// Run the complete Yoga layout demonstration
     static func run() async {
         print("\n🧘 Yoga Layout Engine Demo (RUNE-26)")
@@ -57,7 +57,7 @@ struct YogaLayoutDemo {
         let rootResult = layoutEngine.calculateLayout(
             for: rootNode,
             availableWidth: 20,
-            availableHeight: 5
+            availableHeight: 5,
         )
 
         let child1Result = layoutEngine.getLayoutResult(for: child1)
@@ -84,7 +84,7 @@ struct YogaLayoutDemo {
         let children = [
             FlexLayout.Size(width: 5, height: 2),
             FlexLayout.Size(width: 8, height: 2),
-            FlexLayout.Size(width: 3, height: 2)
+            FlexLayout.Size(width: 3, height: 2),
         ]
         let containerSize = FlexLayout.Size(width: 20, height: 5)
 
@@ -95,7 +95,7 @@ struct YogaLayoutDemo {
         let rowRects = FlexLayout.calculateLayout(
             children: children,
             containerSize: containerSize,
-            direction: .row
+            direction: .row,
         )
 
         print("Row layout results:")
@@ -108,7 +108,7 @@ struct YogaLayoutDemo {
         let columnRects = FlexLayout.calculateLayout(
             children: children,
             containerSize: containerSize,
-            direction: .column
+            direction: .column,
         )
 
         print("Column layout results:")
@@ -118,7 +118,10 @@ struct YogaLayoutDemo {
 
         // Verify layouts
         assert(rowRects[0].x == 0 && rowRects[1].x == 5 && rowRects[2].x == 13, "Row layout positions incorrect")
-        assert(columnRects[0].y == 0 && columnRects[1].y == 2 && columnRects[2].y == 4, "Column layout positions incorrect")
+        assert(
+            columnRects[0].y == 0 && columnRects[1].y == 2 && columnRects[2].y == 4,
+            "Column layout positions incorrect",
+        )
         print("\n✅ FlexLayout with Yoga backend working correctly!")
         print("")
     }
@@ -135,12 +138,14 @@ struct YogaLayoutDemo {
             paddingRight: 2,
             paddingBottom: 2,
             paddingLeft: 2,
-            child: Text("Padded content")
+            child: Text("Padded content"),
         )
 
         print("Padded Box properties:")
         print("  Border: \(paddedBox.borderStyle)")
-        print("  Padding: top=\(paddedBox.paddingTop), right=\(paddedBox.paddingRight), bottom=\(paddedBox.paddingBottom), left=\(paddedBox.paddingLeft)")
+        print(
+            "  Padding: top=\(paddedBox.paddingTop), right=\(paddedBox.paddingRight), bottom=\(paddedBox.paddingBottom), left=\(paddedBox.paddingLeft)",
+        )
         print("  Flex direction: \(paddedBox.flexDirection)")
         print("")
 
@@ -150,7 +155,7 @@ struct YogaLayoutDemo {
             justifyContent: .center,
             alignItems: .center,
             columnGap: 1,
-            child: Text("Row layout")
+            child: Text("Row layout"),
         )
 
         print("Row Box properties:")
@@ -166,7 +171,7 @@ struct YogaLayoutDemo {
             justifyContent: .spaceBetween,
             alignItems: .flexStart,
             rowGap: 2,
-            child: Text("Column layout")
+            child: Text("Column layout"),
         )
 
         print("Column Box properties:")
@@ -185,7 +190,7 @@ struct YogaLayoutDemo {
             paddingRight: 1,
             paddingBottom: 1,
             paddingLeft: 1,
-            child: Text("Fixed size")
+            child: Text("Fixed size"),
         )
 
         print("Sized Box properties:")
@@ -207,13 +212,13 @@ struct YogaLayoutDemo {
         let innerBox1 = Box(
             border: .single,
             padding: 1,
-            child: Text("Inner 1")
+            child: Text("Inner 1"),
         )
 
         let innerBox2 = Box(
             border: .single,
             padding: 1,
-            child: Text("Inner 2")
+            child: Text("Inner 2"),
         )
 
         let outerBox = Box(
@@ -221,7 +226,7 @@ struct YogaLayoutDemo {
             justifyContent: .spaceBetween,
             alignItems: .stretch,
             columnGap: 2,
-            child: nil // Would contain multiple children in real implementation
+            child: nil, // Would contain multiple children in real implementation
         )
 
         print("Nested layout structure:")
@@ -249,7 +254,14 @@ struct YogaLayoutDemo {
         print("")
 
         // Test all justify content options
-        let justifyOptions: [JustifyContent] = [.flexStart, .flexEnd, .center, .spaceBetween, .spaceAround, .spaceEvenly]
+        let justifyOptions: [JustifyContent] = [
+            .flexStart,
+            .flexEnd,
+            .center,
+            .spaceBetween,
+            .spaceAround,
+            .spaceEvenly,
+        ]
         print("Justify Content options:")
         for option in justifyOptions {
             let box = Box(flexDirection: .row, justifyContent: option)
@@ -281,11 +293,15 @@ struct YogaLayoutDemo {
         // Test margin and padding combinations
         let spacedBox = Box(
             paddingTop: 1, paddingRight: 2, paddingBottom: 1, paddingLeft: 2,
-            marginTop: 0.5, marginRight: 1, marginBottom: 0.5, marginLeft: 1
+            marginTop: 0.5, marginRight: 1, marginBottom: 0.5, marginLeft: 1,
         )
         print("Spacing combinations:")
-        print("  Padding: T=\(spacedBox.paddingTop), R=\(spacedBox.paddingRight), B=\(spacedBox.paddingBottom), L=\(spacedBox.paddingLeft)")
-        print("  Margin: T=\(spacedBox.marginTop), R=\(spacedBox.marginRight), B=\(spacedBox.marginBottom), L=\(spacedBox.marginLeft)")
+        print(
+            "  Padding: T=\(spacedBox.paddingTop), R=\(spacedBox.paddingRight), B=\(spacedBox.paddingBottom), L=\(spacedBox.paddingLeft)",
+        )
+        print(
+            "  Margin: T=\(spacedBox.marginTop), R=\(spacedBox.marginRight), B=\(spacedBox.marginBottom), L=\(spacedBox.marginLeft)",
+        )
         print("")
 
         print("✅ All layout property combinations working correctly!")

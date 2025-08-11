@@ -2,8 +2,7 @@ import RuneLayout
 import RuneUnicode
 
 /// Handles layout calculation functionality for Box components
-internal struct BoxLayout {
-    
+enum BoxLayout {
     /// Calculate intrinsic size for a component
     /// - Parameter component: The component to calculate size for
     /// - Returns: Intrinsic size as (width, height)
@@ -14,7 +13,8 @@ internal struct BoxLayout {
             return spacerComponent.intrinsicSize
         } else if let boxComponent = component as? Box {
             // For box components, calculate based on their children
-            let allChildren = boxComponent.children.isEmpty ? (boxComponent.child.map { [$0] } ?? []) : boxComponent.children
+            let allChildren = boxComponent.children.isEmpty ? (boxComponent.child.map { [$0] } ?? []) : boxComponent
+                .children
 
             if allChildren.isEmpty {
                 return (width: 0.0, height: 0.0)
@@ -41,12 +41,16 @@ internal struct BoxLayout {
             let gapCount = max(0, allChildren.count - 1)
             if boxComponent.flexDirection == .row {
                 totalWidth += Float(gapCount) * boxComponent.columnGap
-                return (width: totalWidth + boxComponent.paddingLeft + boxComponent.paddingRight,
-                       height: maxHeight + boxComponent.paddingTop + boxComponent.paddingBottom)
+                return (
+                    width: totalWidth + boxComponent.paddingLeft + boxComponent.paddingRight,
+                    height: maxHeight + boxComponent.paddingTop + boxComponent.paddingBottom,
+                )
             } else {
                 totalHeight += Float(gapCount) * boxComponent.rowGap
-                return (width: maxWidth + boxComponent.paddingLeft + boxComponent.paddingRight,
-                       height: totalHeight + boxComponent.paddingTop + boxComponent.paddingBottom)
+                return (
+                    width: maxWidth + boxComponent.paddingLeft + boxComponent.paddingRight,
+                    height: totalHeight + boxComponent.paddingTop + boxComponent.paddingBottom,
+                )
             }
         }
 
@@ -54,4 +58,3 @@ internal struct BoxLayout {
         return (width: 0.0, height: 0.0)
     }
 }
-

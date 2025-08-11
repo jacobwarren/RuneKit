@@ -1,5 +1,5 @@
-import RuneLayout
 import RuneANSI
+import RuneLayout
 import RuneUnicode
 
 /// A styled text component that supports ANSI styling
@@ -16,7 +16,7 @@ public struct Text: Component {
     /// - Parameter content: The text content to display
     public init(_ content: String) {
         self.content = content
-        self.attributes = TextAttributes()
+        attributes = TextAttributes()
     }
 
     /// Initialize a text component with content and optional styling
@@ -40,10 +40,10 @@ public struct Text: Component {
         underline: Bool = false,
         strikethrough: Bool = false,
         inverse: Bool = false,
-        dim: Bool = false
+        dim: Bool = false,
     ) {
         self.content = content
-        self.attributes = TextAttributes(
+        attributes = TextAttributes(
             color: color,
             backgroundColor: backgroundColor,
             bold: bold,
@@ -51,7 +51,7 @@ public struct Text: Component {
             underline: underline,
             inverse: inverse,
             strikethrough: strikethrough,
-            dim: dim
+            dim: dim,
         )
     }
 
@@ -65,6 +65,12 @@ public struct Text: Component {
         self.attributes = attributes
     }
 
+    /// Initialize with TextStyle abstraction
+    public init(_ content: String, style: TextStyle) {
+        self.content = content
+        attributes = style.attributes
+    }
+
     public func render(in rect: FlexLayout.Rect) -> [String] {
         guard rect.height > 0, rect.width > 0 else {
             return []
@@ -73,51 +79,26 @@ public struct Text: Component {
         // Handle empty content
         if content.isEmpty {
             var lines: [String] = []
-            for _ in 0..<rect.height {
+            for _ in 0 ..< rect.height {
                 lines.append("")
             }
             return lines
         }
 
-        // Create styled text span
-        let span = TextSpan(text: content, attributes: attributes)
-        _ = StyledText(spans: [span])
+        // Build styled text and wrap to width, preserving ANSI
+        let styled = StyledText(spans: [TextSpan(text: content, attributes: attributes)])
+        let wrappedStyled = styled.wrapByDisplayWidth(width: rect.width)
+        let converter = ANSISpanConverter(profile: RuntimeStateContext.terminalProfile)
+        let tokenizer = ANSITokenizer()
+        let encodedLines = wrappedStyled.map { tokenizer.encode(converter.styledTextToTokens($0)) }
 
-        // Convert to ANSI tokens if styling is applied
-        if attributes.isDefault {
-            // No styling - use plain text with width constraint
-            // Use display width to prevent emoji clipping (ANSI-safe)
-            let truncated = ANSISafeTruncation.truncateToDisplayWidth(content, maxWidth: rect.width)
-            var lines = [truncated]
-
-            // Fill remaining height with empty lines
-            while lines.count < rect.height {
-                lines.append("")
-            }
-
-            return lines
-        } else {
-            // Apply width constraint to the content first, then apply styling
-            // Use display width to prevent emoji clipping (ANSI-safe)
-            let truncatedContent = ANSISafeTruncation.truncateToDisplayWidth(content, maxWidth: rect.width)
-            let truncatedSpan = TextSpan(text: truncatedContent, attributes: attributes)
-            let truncatedStyledText = StyledText(spans: [truncatedSpan])
-
-            // Convert to ANSI tokens and encode
-            let converter = ANSISpanConverter()
-            let tokens = converter.styledTextToTokens(truncatedStyledText)
-            let tokenizer = ANSITokenizer()
-            let ansiString = tokenizer.encode(tokens)
-
-            var lines = [ansiString]
-
-            // Fill remaining height with empty lines
-            while lines.count < rect.height {
-                lines.append("")
-            }
-
-            return lines
+        // Render semantics: single line of content within width; remaining lines empty
+        var lines: [String] = []
+        lines.append(encodedLines.first ?? "")
+        while lines.count < rect.height {
+            lines.append("")
         }
+        return lines
     }
 
     /// Truncate a string to fit within a specific display width
@@ -142,5 +123,85 @@ public struct Text: Component {
         }
 
         return result
+    }
+}
+
+// MARK: - Chainable modifiers for developer ergonomics (RUNE-36)
+
+public extension Text {
+    /// Returns a copy with bold enabled/disabled
+    func bold(_ enabled: Bool = true) -> Text {
+        var attrs = attributes
+        attrs.bold = enabled
+        return Text(content, attributes: attrs)
+    }
+
+    /// Returns a copy with italic enabled/disabled
+    func italic(_ enabled: Bool = true) -> Text {
+        var attrs = attributes
+        attrs.italic = enabled
+        return Text(content, attributes: attrs)
+    }
+
+    /// Returns a copy with underline enabled/disabled
+    func underline(_ enabled: Bool = true) -> Text {
+        var attrs = attributes
+        attrs.underline = enabled
+        return Text(content, attributes: attrs)
+    }
+
+    /// Returns a copy with strikethrough enabled/disabled
+    func strikethrough(_ enabled: Bool = true) -> Text {
+        var attrs = attributes
+        attrs.strikethrough = enabled
+        return Text(content, attributes: attrs)
+    }
+
+    /// Returns a copy with inverse enabled/disabled
+    func inverse(_ enabled: Bool = true) -> Text {
+        var attrs = attributes
+        attrs.inverse = enabled
+        return Text(content, attributes: attrs)
+    }
+
+    /// Returns a copy with dim enabled/disabled
+    func dim(_ enabled: Bool = true) -> Text {
+        var attrs = attributes
+        attrs.dim = enabled
+        return Text(content, attributes: attrs)
+    }
+
+    /// Returns a copy with foreground color set
+    func color(_ color: ANSIColor?) -> Text {
+        var attrs = attributes
+        attrs.color = color
+        return Text(content, attributes: attrs)
+    }
+
+    /// Returns a copy with background color set
+    func bg(_ color: ANSIColor?) -> Text {
+        var attrs = attributes
+        attrs.backgroundColor = color
+        return Text(content, attributes: attrs)
+    }
+
+    // MARK: - Ergonomics: hex + conditional modifiers
+
+    func color(hex: String?) -> Text {
+        guard let hex, let ansiColor = ANSIColor.fromHex(hex) else { return self }
+        return self.color(ansiColor)
+    }
+
+    func bg(hex: String?) -> Text {
+        guard let hex, let ansiColor = ANSIColor.fromHex(hex) else { return self }
+        return self.bg(ansiColor)
+    }
+
+    func color(_ color: ANSIColor?, when condition: Bool) -> Text {
+        condition ? self.color(color) : self
+    }
+
+    func bg(_ color: ANSIColor?, when condition: Bool) -> Text {
+        condition ? bg(color) : self
     }
 }

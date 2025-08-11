@@ -22,8 +22,8 @@ public struct TerminalGrid: Sendable, Equatable {
         self.height = height
 
         // Initialize with empty cells
-        self.cells = Array(repeating: Array(repeating: .empty, count: width), count: height)
-        self.lineHashes = Array(repeating: 0, count: height)
+        cells = Array(repeating: Array(repeating: .empty, count: width), count: height)
+        lineHashes = Array(repeating: 0, count: height)
 
         // Calculate initial hashes
         updateLineHashes()
@@ -35,11 +35,11 @@ public struct TerminalGrid: Sendable, Equatable {
     ///   - width: Grid width (will pad or truncate lines as needed)
     public init(lines: [String], width: Int) {
         self.width = width
-        self.height = lines.count
+        height = lines.count
 
         // Parse each line with ANSI awareness so SGR sequences don't consume columns
         let tokenizer = ANSITokenizer()
-        self.cells = lines.map { line in
+        cells = lines.map { line in
             var row: [TerminalCell] = []
             var columnIndex = 0
 
@@ -58,7 +58,7 @@ public struct TerminalGrid: Sendable, Equatable {
                     content: charString,
                     foreground: fg,
                     background: bg,
-                    attributes: termAttrs
+                    attributes: termAttrs,
                 )
                 if columnIndex + cell.width <= width {
                     row.append(cell)
@@ -68,10 +68,12 @@ public struct TerminalGrid: Sendable, Equatable {
 
             for token in tokens {
                 switch token {
-                case .text(let content):
-                    for char in content { appendCell(for: char) }
+                case let .text(content):
+                    for char in content {
+                        appendCell(for: char)
+                    }
 
-                case .sgr(let params):
+                case let .sgr(params):
                     _ = sgrState.apply(params)
 
                 default:
@@ -102,7 +104,7 @@ public struct TerminalGrid: Sendable, Equatable {
             return row
         }
 
-        self.lineHashes = Array(repeating: 0, count: height)
+        lineHashes = Array(repeating: 0, count: height)
         updateLineHashes()
     }
 
@@ -112,7 +114,7 @@ public struct TerminalGrid: Sendable, Equatable {
     ///   - column: Column index (0-based)
     /// - Returns: The cell, or nil if out of bounds
     public func cell(at row: Int, column: Int) -> TerminalCell? {
-        guard row >= 0 && row < height && column >= 0 && column < width else {
+        guard row >= 0, row < height, column >= 0, column < width else {
             return nil
         }
         return cells[row][column]
@@ -124,7 +126,7 @@ public struct TerminalGrid: Sendable, Equatable {
     ///   - column: Column index (0-based)
     ///   - cell: The new cell value
     public mutating func setCell(at row: Int, column: Int, to cell: TerminalCell) {
-        guard row >= 0 && row < height && column >= 0 && column < width else {
+        guard row >= 0, row < height, column >= 0, column < width else {
             return
         }
 
@@ -137,7 +139,7 @@ public struct TerminalGrid: Sendable, Equatable {
     ///   - row: Row index (0-based)
     ///   - cells: Array of cells (will be padded or truncated to fit)
     public mutating func setRow(_ row: Int, to newCells: [TerminalCell]) {
-        guard row >= 0 && row < height else { return }
+        guard row >= 0, row < height else { return }
 
         var adjustedCells = newCells
 
@@ -159,7 +161,7 @@ public struct TerminalGrid: Sendable, Equatable {
     /// - Parameter row: Row index (0-based)
     /// - Returns: Array of cells, or nil if out of bounds
     public func getRow(_ row: Int) -> [TerminalCell]? {
-        guard row >= 0 && row < height else { return nil }
+        guard row >= 0, row < height else { return nil }
         return cells[row]
     }
 
@@ -175,15 +177,15 @@ public struct TerminalGrid: Sendable, Equatable {
         endRow: Int,
         startColumn: Int,
         endColumn: Int,
-        with cell: TerminalCell
+        with cell: TerminalCell,
     ) {
         let clampedStartRow = max(0, startRow)
         let clampedEndRow = min(height, endRow)
         let clampedStartColumn = max(0, startColumn)
         let clampedEndColumn = min(width, endColumn)
 
-        for row in clampedStartRow..<clampedEndRow {
-            for column in clampedStartColumn..<clampedEndColumn {
+        for row in clampedStartRow ..< clampedEndRow {
+            for column in clampedStartColumn ..< clampedEndColumn {
                 cells[row][column] = cell
             }
             updateLineHash(for: row)
@@ -192,8 +194,8 @@ public struct TerminalGrid: Sendable, Equatable {
 
     /// Clear the entire grid
     public mutating func clear() {
-        for row in 0..<height {
-            for column in 0..<width {
+        for row in 0 ..< height {
+            for column in 0 ..< width {
                 cells[row][column] = .empty
             }
             updateLineHash(for: row)
@@ -212,12 +214,12 @@ public struct TerminalGrid: Sendable, Equatable {
             let commonHeight = min(height, other.height)
             let commonWidth = min(width, other.width)
 
-            for row in 0..<commonHeight {
+            for row in 0 ..< commonHeight {
                 // For dimension changes, we need to compare cell by cell
                 // since line hashes might not be comparable
                 var lineChanged = false
 
-                for col in 0..<commonWidth where cells[row][col] != other.cells[row][col] {
+                for col in 0 ..< commonWidth where cells[row][col] != other.cells[row][col] {
                     lineChanged = true
                     break
                 }
@@ -234,14 +236,14 @@ public struct TerminalGrid: Sendable, Equatable {
 
             // Add any new lines (if height increased)
             if height > other.height {
-                for row in other.height..<height {
+                for row in other.height ..< height {
                     changedRows.append(row)
                 }
             }
 
             // Add any removed lines (if height decreased)
             if height < other.height {
-                for row in height..<other.height {
+                for row in height ..< other.height {
                     changedRows.append(row)
                 }
             }
@@ -250,7 +252,7 @@ public struct TerminalGrid: Sendable, Equatable {
         }
 
         // Same dimensions - use fast hash comparison
-        for row in 0..<height where lineHashes[row] != other.lineHashes[row] {
+        for row in 0 ..< height where lineHashes[row] != other.lineHashes[row] {
             changedRows.append(row)
         }
 
@@ -274,22 +276,22 @@ public struct TerminalGrid: Sendable, Equatable {
                 startRow: row,
                 endRow: row + 1,
                 startColumn: 0,
-                endColumn: width
+                endColumn: width,
             )
         }
     }
 
     /// Convert grid to string representation (for debugging)
     public func toString() -> String {
-        return cells.map { row in
-            row.map { $0.content }.joined()
+        cells.map { row in
+            row.map(\.content).joined()
         }.joined(separator: "\n")
     }
 
     /// Get grid as array of strings (for Frame conversion)
     public func getLines() -> [String] {
-        return cells.map { row in
-            row.map { $0.content }.joined()
+        cells.map { row in
+            row.map(\.content).joined()
         }
     }
 
@@ -297,14 +299,14 @@ public struct TerminalGrid: Sendable, Equatable {
 
     /// Update line hashes for all rows
     private mutating func updateLineHashes() {
-        for row in 0..<height {
+        for row in 0 ..< height {
             updateLineHash(for: row)
         }
     }
 
     /// Update hash for a specific row
     private mutating func updateLineHash(for row: Int) {
-        guard row >= 0 && row < height else { return }
+        guard row >= 0, row < height else { return }
 
         var hasher = Hasher()
         for cell in cells[row] {
@@ -317,9 +319,9 @@ public struct TerminalGrid: Sendable, Equatable {
 /// Represents a rectangular region that needs updating
 public struct DirtyRectangle: Sendable, Equatable {
     public let startRow: Int
-    public let endRow: Int      // Exclusive
+    public let endRow: Int // Exclusive
     public let startColumn: Int
-    public let endColumn: Int   // Exclusive
+    public let endColumn: Int // Exclusive
 
     public init(startRow: Int, endRow: Int, startColumn: Int, endColumn: Int) {
         self.startRow = startRow
@@ -330,11 +332,11 @@ public struct DirtyRectangle: Sendable, Equatable {
 
     /// Check if this rectangle is empty
     public var isEmpty: Bool {
-        return startRow >= endRow || startColumn >= endColumn
+        startRow >= endRow || startColumn >= endColumn
     }
 
     /// Get the area of this rectangle
     public var area: Int {
-        return max(0, endRow - startRow) * max(0, endColumn - startColumn)
+        max(0, endRow - startRow) * max(0, endColumn - startColumn)
     }
 }

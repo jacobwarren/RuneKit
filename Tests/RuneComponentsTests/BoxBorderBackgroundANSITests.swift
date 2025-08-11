@@ -1,7 +1,7 @@
-import Testing
 import Foundation
-@testable import RuneComponents
+import Testing
 @testable import RuneANSI
+@testable import RuneComponents
 @testable import RuneUnicode
 
 struct BoxBorderBackgroundANSITests {
@@ -14,7 +14,7 @@ struct BoxBorderBackgroundANSITests {
             backgroundColor: .brightBlack,
             width: .points(8),
             height: .points(3),
-            child: child
+            child: child,
         )
         let lines = box.render(in: FlexLayout.Rect(x: 0, y: 0, width: 8, height: 3))
         #expect(lines.count == 3)
@@ -44,7 +44,7 @@ struct BoxBorderBackgroundANSITests {
             borderColor: .yellow,
             flexDirection: .row,
             width: .points(10), height: .points(3),
-            children: c1, c2, c3
+            children: c1, c2, c3,
         )
         let lines = box.render(in: FlexLayout.Rect(x: 0, y: 0, width: 10, height: 3))
         // Slice interior columns ANSI-safely (drop 1 col from left and right borders)
@@ -59,4 +59,3 @@ struct BoxBorderBackgroundANSITests {
         #expect(interiorRaw.contains("Y"))
     }
 }
-

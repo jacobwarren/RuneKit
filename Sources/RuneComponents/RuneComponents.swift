@@ -1,6 +1,7 @@
+@_exported import RuneANSI
+
 // Re-export main types for convenience
 @_exported import RuneLayout
-@_exported import RuneANSI
 
 /// RuneComponents module - UI components for terminal interfaces
 ///

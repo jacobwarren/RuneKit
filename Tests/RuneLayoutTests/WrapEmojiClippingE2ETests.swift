@@ -1,7 +1,7 @@
 import Testing
+@testable import RuneANSI
 @testable import RuneComponents
 @testable import RuneLayout
-@testable import RuneANSI
 @testable import RuneUnicode
 
 struct WrapEmojiClippingE2ETests {
@@ -23,4 +23,3 @@ struct WrapEmojiClippingE2ETests {
         }
     }
 }
-

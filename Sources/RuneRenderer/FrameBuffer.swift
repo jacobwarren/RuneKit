@@ -34,7 +34,7 @@ public actor FrameBuffer {
     private let alternateScreenBuffer: AlternateScreenBuffer?
 
     /// Whether alternate screen has been entered
-    private var alternateScreenActive: Bool = false
+    private var alternateScreenActive = false
 
     /// Console capture for stdout/stderr redirection (optional)
     private let consoleCapture: ConsoleCapture?
@@ -51,11 +51,11 @@ public actor FrameBuffer {
     ///   - configuration: Rendering configuration (defaults to .default)
     public init(
         output: FileHandle = .standardOutput,
-        configuration: RenderConfiguration = .default
+        configuration: RenderConfiguration = .default,
     ) {
         self.configuration = configuration
-        self.metrics = PerformanceMetrics()
-        self.originalOutput = output
+        metrics = PerformanceMetrics()
+        originalOutput = output
 
         // When console capture is enabled, duplicate the output FD so renderer writes bypass the capture pipe.
         // This prevents recursive self-capture and potential crashes when logs are rendered above the live region.
@@ -75,32 +75,37 @@ public actor FrameBuffer {
 
         // Create alternate screen buffer if enabled in configuration
         if configuration.useAlternateScreen {
-            self.alternateScreenBuffer = AlternateScreenBuffer(output: effectiveOutput)
+            alternateScreenBuffer = AlternateScreenBuffer(output: effectiveOutput)
         } else {
-            self.alternateScreenBuffer = nil
+            alternateScreenBuffer = nil
         }
 
-        self.alternateScreenActive = false
+        alternateScreenActive = false
 
         // Create console capture if enabled in configuration
         if configuration.enableConsoleCapture {
-            self.consoleCapture = ConsoleCapture(enableDebugLogging: configuration.enableDebugLogging)
+            consoleCapture = ConsoleCapture(enableDebugLogging: configuration.enableDebugLogging)
         } else {
-            self.consoleCapture = nil
+            consoleCapture = nil
         }
 
         // Create log lane for formatting captured logs
-        self.logLane = LogLane(useColors: true)
+        logLane = LogLane(useColors: true)
 
         // Create the terminal renderer and hybrid reconciler
         if configuration.enablePluggableIO {
             let encoder = FileHandleOutputEncoder(handle: effectiveOutput)
             let cursor = ANSICursorManager(out: encoder)
-            let renderer = TerminalRenderer(output: effectiveOutput, encoder: encoder, cursor: cursor, configuration: configuration)
-            self.reconciler = HybridReconciler(renderer: renderer, configuration: configuration)
+            let renderer = TerminalRenderer(
+                output: effectiveOutput,
+                encoder: encoder,
+                cursor: cursor,
+                configuration: configuration,
+            )
+            reconciler = HybridReconciler(renderer: renderer, configuration: configuration)
         } else {
             let renderer = TerminalRenderer(output: effectiveOutput)
-            self.reconciler = HybridReconciler(renderer: renderer, configuration: configuration)
+            reconciler = HybridReconciler(renderer: renderer, configuration: configuration)
         }
     }
 
@@ -154,27 +159,26 @@ public actor FrameBuffer {
     /// Get current performance metrics
     /// - Returns: Current performance counters
     public func getPerformanceMetrics() async -> HybridPerformanceMetrics {
-        return await reconciler.getPerformanceMetrics()
+        await reconciler.getPerformanceMetrics()
     }
 
     /// Get legacy performance metrics for compatibility
     /// - Returns: Legacy performance counters
     public func getLegacyPerformanceMetrics() async -> PerformanceMetrics.Counters {
-        return await metrics.getCurrentCounters()
+        await metrics.getCurrentCounters()
     }
 
     /// Get performance history for testing and analysis
     /// - Returns: Array of performance counters from recent renders
     public func getPerformanceHistory() async -> [PerformanceMetrics.Counters] {
-        return await reconciler.getLegacyPerformanceHistory()
+        await reconciler.getLegacyPerformanceHistory()
     }
 
     /// Get current frame for testing
     /// - Returns: Current frame being displayed (if any)
     public func getCurrentFrame() async -> TerminalRenderer.Frame? {
-        return await reconciler.getCurrentFrame()
+        await reconciler.getCurrentFrame()
     }
-
 
     /// Reset diff state at the reconciler level (used when view identity changes)
     public func resetDiffState() async {
@@ -189,7 +193,7 @@ public actor FrameBuffer {
     /// Get current configuration for testing
     /// - Returns: Current render configuration
     public func getConfiguration() -> RenderConfiguration {
-        return configuration
+        configuration
     }
 
     /// Wait for any pending updates to complete (for testing)
@@ -245,7 +249,8 @@ public actor FrameBuffer {
     /// - Parameter frame: Frame to render
     private func renderWithLogs(_ frame: TerminalRenderer.Frame) async {
         guard let capture = consoleCapture,
-              await capture.isCaptureActive else {
+              await capture.isCaptureActive
+        else {
             // No console capture, render normally
             await reconciler.render(frame)
             return
@@ -277,7 +282,8 @@ public actor FrameBuffer {
     /// - Parameter grid: Grid to render
     private func renderGridWithLogs(_ grid: TerminalGrid) async {
         guard let capture = consoleCapture,
-              await capture.isCaptureActive else {
+              await capture.isCaptureActive
+        else {
             // No console capture, render normally
             await reconciler.render(grid)
             return
@@ -337,7 +343,7 @@ public actor FrameBuffer {
         }
 
         // Copy live grid content
-        for row in 0..<liveGrid.height {
+        for row in 0 ..< liveGrid.height {
             if let liveRow = liveGrid.getRow(row) {
                 combinedGrid.setRow(currentRow + row, to: liveRow)
             }
@@ -359,7 +365,14 @@ public actor FrameBuffer {
             let attrs = ANSIToTerminalBridge.toTerminalAttributes(span.attributes)
             let fg = ANSIToTerminalBridge.toTerminalColor(span.attributes.color)
             let bg = ANSIToTerminalBridge.toTerminalColor(span.attributes.backgroundColor)
-            for ch in span.text { cells.append(TerminalCell(content: String(ch), foreground: fg, background: bg, attributes: attrs)) }
+            for ch in span.text {
+                cells.append(TerminalCell(
+                    content: String(ch),
+                    foreground: fg,
+                    background: bg,
+                    attributes: attrs,
+                ))
+            }
         }
         return cells
     }
@@ -370,7 +383,11 @@ public actor FrameBuffer {
     ///   - liveFrame: Live application frame
     ///   - terminalWidth: Terminal width
     /// - Returns: Combined frame
-    private func createCombinedFrame(logLines: [String], liveFrame: TerminalRenderer.Frame, terminalWidth: Int) -> TerminalRenderer.Frame {
+    private func createCombinedFrame(
+        logLines: [String],
+        liveFrame: TerminalRenderer.Frame,
+        terminalWidth: Int,
+    ) -> TerminalRenderer.Frame {
         var combinedLines: [String] = []
 
         // Add log lines
@@ -387,7 +404,7 @@ public actor FrameBuffer {
         return TerminalRenderer.Frame(
             lines: combinedLines,
             width: max(terminalWidth, liveFrame.width),
-            height: combinedLines.count
+            height: combinedLines.count,
         )
     }
 
@@ -403,7 +420,7 @@ public actor FrameBuffer {
         let result = ioctl(STDOUT_FILENO, TIOCGWINSZ, &winsize)
         #endif
 
-        if result == 0 && winsize.ws_col > 0 && winsize.ws_row > 0 {
+        if result == 0, winsize.ws_col > 0, winsize.ws_row > 0 {
             return (width: Int(winsize.ws_col), height: Int(winsize.ws_row))
         }
 
@@ -451,6 +468,6 @@ public actor FrameBuffer {
 
     /// Get alternate screen buffer status (for testing)
     public func isAlternateScreenActive() async -> Bool {
-        return alternateScreenActive
+        alternateScreenActive
     }
 }

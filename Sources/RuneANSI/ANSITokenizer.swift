@@ -93,7 +93,7 @@ public struct ANSITokenizer: ANSITokenizing, ANSIEncoding {
     private func parseEscapeSequence(
         from input: String,
         startingAt startIndex: String.Index,
-        ) -> (ANSIToken, String.Index)? {
+    ) -> (ANSIToken, String.Index)? {
         guard startIndex < input.endIndex else { return nil }
 
         let escapeIndex = input.index(after: startIndex)
@@ -124,7 +124,7 @@ public struct ANSITokenizer: ANSITokenizing, ANSIEncoding {
     private func parseCSISequence(
         from input: String,
         startingAt startIndex: String.Index,
-        ) -> (ANSIToken, String.Index)? {
+    ) -> (ANSIToken, String.Index)? {
         var currentIndex = input.index(after: startIndex) // Skip the '['
         var parameters: [String] = []
         var currentParam = ""
@@ -140,43 +140,24 @@ public struct ANSITokenizer: ANSITokenizing, ANSIEncoding {
                 currentParam = ""
             } else if char.isLetter || "ABCDEFGHIJKLMNOPQRSTUVWXYZ@`".contains(char) {
                 // Final character found
-                if !currentParam.isEmpty {
-                    parameters.append(currentParam)
-                }
+                if !currentParam.isEmpty { parameters.append(currentParam) }
 
                 let finalChar = String(char)
                 let nextIndex = input.index(after: currentIndex)
 
-                // Check if we have any invalid parameters (non-numeric)
-                let hasInvalidParams = parameters.contains { !$0.isEmpty && Int($0) == nil }
-
-                if hasInvalidParams {
-                    // Treat as control sequence if parameters are invalid
-                    let escapeIndex = input.index(before: startIndex) // This points to the ESC character
+                // Validate and build token
+                if hasInvalidCSIParams(parameters) {
+                    let escapeIndex = input.index(before: startIndex)
                     let fullSequence = String(input[escapeIndex ..< nextIndex])
                     return (.control(fullSequence), nextIndex)
                 }
+                let token = buildCSIToken(parameters: parameters, finalChar: finalChar)
+                if let token { return (token, nextIndex) }
 
-                // Determine token type based on final character
-                switch finalChar {
-                case "m":
-                    // SGR (Select Graphic Rendition)
-                    let intParams = parameters.isEmpty ? [0] : parameters.compactMap { Int($0) }
-                    return (.sgr(intParams), nextIndex)
-                case "A", "B", "C", "D", "E", "F", "G", "H":
-                    // Cursor movement
-                    let count = parameters.first.flatMap { Int($0) } ?? 1
-                    return (.cursor(count, finalChar), nextIndex)
-                case "J", "K":
-                    // Erase sequences
-                    let mode = parameters.first.flatMap { Int($0) } ?? 0
-                    return (.erase(mode, finalChar), nextIndex)
-                default:
-                    // Other CSI sequences
-                    let escapeIndex = input.index(before: startIndex) // This points to the ESC character
-                    let fullSequence = String(input[escapeIndex ..< nextIndex])
-                    return (.control(fullSequence), nextIndex)
-                }
+                // Unknown CSI: treat as control
+                let escapeIndex = input.index(before: startIndex)
+                let fullSequence = String(input[escapeIndex ..< nextIndex])
+                return (.control(fullSequence), nextIndex)
             } else {
                 // Invalid character in CSI sequence - add to current parameter and continue
                 // This allows us to detect invalid parameters later
@@ -190,6 +171,31 @@ public struct ANSITokenizer: ANSITokenizing, ANSIEncoding {
         return nil
     }
 
+    /// Returns true if any CSI parameter is non-numeric (except empty which is allowed)
+    private func hasInvalidCSIParams(_ params: [String]) -> Bool {
+        params.contains { !$0.isEmpty && Int($0) == nil }
+    }
+
+    /// Constructs the appropriate token for a CSI final char and parameters; returns nil for unhandled
+    private func buildCSIToken(parameters: [String], finalChar: String) -> ANSIToken? {
+        switch finalChar {
+        case "m":
+            // SGR (Select Graphic Rendition)
+            let intParams = parameters.isEmpty ? [0] : parameters.compactMap { Int($0) }
+            return .sgr(intParams)
+        case "A", "B", "C", "D", "E", "F", "G", "H":
+            // Cursor movement
+            let count = parameters.first.flatMap { Int($0) } ?? 1
+            return .cursor(count, finalChar)
+        case "J", "K":
+            // Erase sequences
+            let mode = parameters.first.flatMap { Int($0) } ?? 0
+            return .erase(mode, finalChar)
+        default:
+            return nil
+        }
+    }
+
     /// Parses an OSC (Operating System Command) sequence
     /// - Parameters:
     ///   - input: The input string
@@ -198,7 +204,7 @@ public struct ANSITokenizer: ANSITokenizing, ANSIEncoding {
     private func parseOSCSequence(
         from input: String,
         startingAt startIndex: String.Index,
-        ) -> (ANSIToken, String.Index)? {
+    ) -> (ANSIToken, String.Index)? {
         var currentIndex = input.index(after: startIndex) // Skip the ']'
         var command = ""
         var data = ""
@@ -209,8 +215,8 @@ public struct ANSITokenizer: ANSITokenizing, ANSIEncoding {
             let char = input[currentIndex]
 
             if char == "\u{0007}" || (char == "\u{001B}" &&
-                                        input.index(after: currentIndex) < input.endIndex &&
-                                        input[input.index(after: currentIndex)] == "\\"
+                input.index(after: currentIndex) < input.endIndex &&
+                input[input.index(after: currentIndex)] == "\\"
             ) {
                 // Found terminator (BEL or ESC\)
                 let nextIndex: String.Index = if char == "\u{0007}" {
@@ -252,32 +258,42 @@ public struct ANSITokenizer: ANSITokenizing, ANSIEncoding {
         case let .text(content):
             return content
         case let .sgr(parameters):
-            let paramString = parameters.map { String($0) }.joined(separator: ";")
-            return "\u{001B}[\(paramString)m"
+            return encodeSGR(parameters)
         case let .cursor(count, direction):
-            if count == 1 {
-                return "\u{001B}[\(direction)"
-            } else {
-                return "\u{001B}[\(count)\(direction)"
-            }
+            return encodeCursor(count, direction)
         case let .erase(mode, type):
-            if mode == 0 {
-                return "\u{001B}[\(type)"
-            } else {
-                return "\u{001B}[\(mode)\(type)"
-            }
+            return encodeErase(mode, type)
         case let .osc(command, data):
             // Legacy path: default to BEL terminator for backward compatibility
             return "\u{001B}]\(command);\(data)\u{0007}"
         case let .oscExt(command, data, terminator):
-            switch terminator {
-            case .bel:
-                return "\u{001B}]\(command);\(data)\u{0007}"
-            case .st:
-                return "\u{001B}]\(command);\(data)\u{001B}\\"
-            }
+            return encodeOSC(command: command, data: data, terminator: terminator)
         case let .control(sequence):
             return sequence
+        }
+    }
+
+    private func encodeSGR(_ parameters: [Int]) -> String {
+        let paramString = parameters.map(String.init).joined(separator: ";")
+        return "\u{001B}[\(paramString)m"
+    }
+
+    private func encodeCursor(_ count: Int, _ direction: String) -> String {
+        if count == 1 { return "\u{001B}[\(direction)" }
+        return "\u{001B}[\(count)\(direction)"
+    }
+
+    private func encodeErase(_ mode: Int, _ type: String) -> String {
+        if mode == 0 { return "\u{001B}[\(type)" }
+        return "\u{001B}[\(mode)\(type)"
+    }
+
+    private func encodeOSC(command: String, data: String, terminator: OSCTerminator) -> String {
+        switch terminator {
+        case .bel:
+            return "\u{001B}]\(command);\(data)\u{0007}"
+        case .st:
+            return "\u{001B}]\(command);\(data)\u{001B}\\"
         }
     }
 }

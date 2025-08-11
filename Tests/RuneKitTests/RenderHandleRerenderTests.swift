@@ -97,7 +97,7 @@ struct RenderHandleRerenderTests {
         let handle = RenderHandle(frameBuffer: frameBuffer, signalHandler: nil, options: options)
 
         // Act - call rerender multiple times rapidly
-        for i in 0..<10 {
+        for i in 0 ..< 10 {
             let view = MockView(content: "Content \(i)")
             await handle.rerender(view)
         }

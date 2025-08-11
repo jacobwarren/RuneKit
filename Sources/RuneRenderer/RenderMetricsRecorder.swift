@@ -13,7 +13,7 @@ public actor RenderMetricsRecorder {
         thresholds: AdaptiveThresholds,
         legacyMetrics: PerformanceMetrics,
         droppedFramesProvider: @escaping () async -> Int,
-        currentGridHeightProvider: @escaping () async -> Int
+        currentGridHeightProvider: @escaping () async -> Int,
     ) {
         self.thresholds = thresholds
         self.legacyMetrics = legacyMetrics
@@ -23,17 +23,17 @@ public actor RenderMetricsRecorder {
 
     public init(
         thresholds: AdaptiveThresholds,
-        legacyMetrics: PerformanceMetrics
+        legacyMetrics: PerformanceMetrics,
     ) {
         self.thresholds = thresholds
         self.legacyMetrics = legacyMetrics
-        self.droppedFramesProvider = { 0 }
-        self.currentGridHeightProvider = { 0 }
+        droppedFramesProvider = { 0 }
+        currentGridHeightProvider = { 0 }
     }
 
     public func updateProviders(
         droppedFramesProvider: @escaping () async -> Int,
-        currentGridHeightProvider: @escaping () async -> Int
+        currentGridHeightProvider: @escaping () async -> Int,
     ) {
         self.droppedFramesProvider = droppedFramesProvider
         self.currentGridHeightProvider = currentGridHeightProvider
@@ -46,7 +46,7 @@ public actor RenderMetricsRecorder {
             bytesWritten: stats.bytesWritten,
             duration: stats.duration,
             efficiency: stats.efficiency,
-            timestamp: Date()
+            timestamp: Date(),
         )
         renderHistory.append(performance)
         if renderHistory.count > maxHistorySize { renderHistory.removeFirst() }
@@ -103,4 +103,3 @@ struct RenderPerformance: Sendable {
     let efficiency: Double
     let timestamp: Date
 }
-

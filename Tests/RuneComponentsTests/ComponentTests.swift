@@ -2,13 +2,13 @@
 import Foundation
 import Testing
 import TestSupport
-@testable import RuneComponents
-@testable import RuneLayout
 @testable import RuneANSI
-@testable import RuneUnicode
-@testable import RuneRenderer
-@testable import RuneKit
 @testable import RuneCLI
+@testable import RuneComponents
+@testable import RuneKit
+@testable import RuneLayout
+@testable import RuneRenderer
+@testable import RuneUnicode
 
 /// Tests for component functionality following TDD principles
 struct ComponentTests {
@@ -97,7 +97,8 @@ struct ComponentTests {
         // Assert
         #expect(lines.count == 3, "Should return correct number of lines")
         // swiftlint:disable:next prefer_key_path
-        #expect(lines.allSatisfy { $0.isEmpty }, "All lines should be empty")
+        let allEmpty = lines.reduce(true) { $0 && $1.isEmpty }
+        #expect(allEmpty, "All lines should be empty")
     }
 
     @Test("Box with text child")
@@ -128,10 +129,8 @@ struct ComponentTests {
         // Assert
         #expect(lines.count == 3, "Should return correct number of lines")
         // swiftlint:disable:next prefer_key_path
-        #expect(
-            lines.allSatisfy { $0.isEmpty },
-            "All lines should be empty for no border",
-        )
+        let allEmptyNoBorder = lines.reduce(true) { $0 && $1.isEmpty }
+        #expect(allEmptyNoBorder, "All lines should be empty for no border")
     }
 
     @Test("Box with zero dimensions")
@@ -365,7 +364,7 @@ struct ComponentTests {
             flexDirection: .row,
             width: .points(20),
             height: .points(3),
-            children: Text("Left"), Spacer(), Text("Right")
+            children: Text("Left"), Spacer(), Text("Right"),
         )
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 3)
 
@@ -398,7 +397,7 @@ struct ComponentTests {
             flexDirection: .column,
             width: .points(10),
             height: .points(10),
-            children: Text("Top"), Spacer(), Text("Bottom")
+            children: Text("Top"), Spacer(), Text("Bottom"),
         )
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 10, height: 10)
 
@@ -431,7 +430,7 @@ struct ComponentTests {
             flexDirection: .row,
             width: .points(20),
             height: .points(3),
-            children: Text("A"), Spacer(), Text("B"), Spacer(), Text("C")
+            children: Text("A"), Spacer(), Text("B"), Spacer(), Text("C"),
         )
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 3)
 
@@ -456,7 +455,7 @@ struct ComponentTests {
             flexDirection: .row,
             width: .points(5),
             height: .points(3),
-            children: Text("VeryLongText"), Spacer(), Text("MoreText")
+            children: Text("VeryLongText"), Spacer(), Text("MoreText"),
         )
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 5, height: 3)
 
@@ -475,7 +474,7 @@ struct ComponentTests {
             flexDirection: .row,
             width: .points(20),
             height: .points(5),
-            children: Text("Text"), Spacer()
+            children: Text("Text"), Spacer(),
         )
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 5)
 
@@ -500,7 +499,8 @@ struct ComponentTests {
 
         // Assert
         #expect(lines.count == 3, "Should render correct number of lines")
-        #expect(lines.allSatisfy { $0.isEmpty }, "All lines should be empty")
+        let spacerAllEmpty = lines.reduce(true) { $0 && $1.isEmpty }
+        #expect(spacerAllEmpty, "All lines should be empty")
     }
 
     // MARK: - AlignSelf Tests (RUNE-32)
@@ -514,7 +514,7 @@ struct ComponentTests {
             .flexEnd,
             .center,
             .stretch,
-            .baseline
+            .baseline,
         ]
 
         // Assert
@@ -539,7 +539,7 @@ struct ComponentTests {
             width: .points(20),
             height: .points(10),
             children: Box(alignSelf: .auto, width: .points(5), height: .points(3)),
-                     Box(alignSelf: .flexEnd, width: .points(5), height: .points(3))
+            Box(alignSelf: .flexEnd, width: .points(5), height: .points(3)),
         )
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 10)
 
@@ -559,7 +559,7 @@ struct ComponentTests {
             alignItems: .center,
             width: .points(20),
             height: .points(10),
-            children: Box(width: .points(5), height: .points(3))
+            children: Box(width: .points(5), height: .points(3)),
         )
         let centerLayout = centerParentBox.calculateLayout(in: containerRect)
         let expectedCenterY = centerLayout.childRects[0].y
@@ -578,7 +578,7 @@ struct ComponentTests {
             alignItems: .flexStart,
             width: .points(20),
             height: .points(10),
-            children: Box(alignSelf: .center, width: .points(5), height: .points(3))
+            children: Box(alignSelf: .center, width: .points(5), height: .points(3)),
         )
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 10)
 
@@ -594,7 +594,7 @@ struct ComponentTests {
             alignItems: .center,
             width: .points(20),
             height: .points(10),
-            children: Box(width: .points(5), height: .points(3))
+            children: Box(width: .points(5), height: .points(3)),
         )
         let centerLayout = centerParentBox.calculateLayout(in: containerRect)
         let centerChildRect = centerLayout.childRects[0]
@@ -612,7 +612,7 @@ struct ComponentTests {
         // Test the row layout with Spacer (from RUNE27 demo)
         let rowBoxWithSpacer = Box(
             flexDirection: .row,
-            children: Text("Left"), Spacer(), Text("Center"), Spacer(), Text("Right")
+            children: Text("Left"), Spacer(), Text("Center"), Spacer(), Text("Right"),
         )
 
         let rowLayout = rowBoxWithSpacer.calculateLayout(in: containerRect)
@@ -639,7 +639,7 @@ struct ComponentTests {
         // Test the column layout with Spacer (from RUNE27 demo)
         let columnBoxWithSpacer = Box(
             flexDirection: .column,
-            children: Text("Header"), Spacer(), Text("Footer")
+            children: Text("Header"), Spacer(), Text("Footer"),
         )
 
         let columnLayout = columnBoxWithSpacer.calculateLayout(in: containerRect)
@@ -671,7 +671,7 @@ struct ComponentTests {
             alignItems: .center,
             width: .points(50),
             height: .points(3),
-            children: Text("← Back"), Spacer(), Text("Page Title"), Spacer(), Text("Menu ☰")
+            children: Text("← Back"), Spacer(), Text("Page Title"), Spacer(), Text("Menu ☰"),
         )
 
         let navResult = navBar.calculateLayout(in: FlexLayout.Rect(x: 0, y: 0, width: 50, height: 3))
@@ -707,11 +707,11 @@ struct ComponentTests {
             width: .points(30),
             height: .points(15),
             children: Text("Card Title"),
-                     Spacer(),
-                     Box(
-                        flexDirection: .row,
-                        children: Text("Cancel"), Spacer(), Text("OK")
-                     )
+            Spacer(),
+            Box(
+                flexDirection: .row,
+                children: Text("Cancel"), Spacer(), Text("OK"),
+            ),
         )
 
         let cardResult = cardLayout.calculateLayout(in: FlexLayout.Rect(x: 0, y: 0, width: 30, height: 15))
@@ -743,7 +743,7 @@ struct ComponentTests {
             alignItems: .flexStart,
             width: .points(20),
             height: .points(10),
-            children: Box(alignSelf: .stretch, width: .points(5))
+            children: Box(alignSelf: .stretch, width: .points(5)),
         )
         let containerRect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 10)
 
@@ -759,7 +759,7 @@ struct ComponentTests {
             alignItems: .stretch,
             width: .points(20),
             height: .points(10),
-            children: Box(width: .points(5))
+            children: Box(width: .points(5)),
         )
         let stretchLayout = stretchParentBox.calculateLayout(in: containerRect)
         let expectedStretchHeight = stretchLayout.childRects[0].height
@@ -775,7 +775,7 @@ struct ComponentTests {
         // Arrange
         let box = Box(
             border: .single,
-            child: Text("Content")
+            child: Text("Content"),
         )
         let rect = FlexLayout.Rect(x: 0, y: 0, width: 12, height: 3)
 
@@ -794,7 +794,7 @@ struct ComponentTests {
         // Arrange
         let box = Box(
             border: .double,
-            child: Text("Test")
+            child: Text("Test"),
         )
         let rect = FlexLayout.Rect(x: 0, y: 0, width: 10, height: 3)
 
@@ -813,7 +813,7 @@ struct ComponentTests {
         // Arrange
         let box = Box(
             border: .rounded,
-            child: Text("Round")
+            child: Text("Round"),
         )
         let rect = FlexLayout.Rect(x: 0, y: 0, width: 11, height: 3)
 
@@ -836,7 +836,7 @@ struct ComponentTests {
             paddingRight: 2,
             paddingBottom: 1,
             paddingLeft: 2,
-            child: Text("Padded")
+            child: Text("Padded"),
         )
         let rect = FlexLayout.Rect(x: 0, y: 0, width: 15, height: 5)
 
@@ -857,7 +857,7 @@ struct ComponentTests {
         // Arrange
         let box = Box(
             border: .single,
-            child: Text("Content")
+            child: Text("Content"),
         )
         let rect = FlexLayout.Rect(x: 0, y: 0, width: 12, height: 3)
 
@@ -878,7 +878,7 @@ struct ComponentTests {
         // Arrange
         let box = Box(
             border: .single,
-            child: Text("BG")
+            child: Text("BG"),
         )
         let rect = FlexLayout.Rect(x: 0, y: 0, width: 8, height: 3)
 
@@ -898,7 +898,7 @@ struct ComponentTests {
         // Arrange
         let box = Box(
             border: .single,
-            child: Text("Hello 👋")
+            child: Text("Hello 👋"),
         )
         let rect = FlexLayout.Rect(x: 0, y: 0, width: 12, height: 3)
 
@@ -918,7 +918,7 @@ struct ComponentTests {
         // Arrange
         let box = Box(
             border: .single,
-            child: Text("你好")
+            child: Text("你好"),
         )
         let rect = FlexLayout.Rect(x: 0, y: 0, width: 10, height: 3)
 
@@ -938,7 +938,7 @@ struct ComponentTests {
         // Arrange - narrow box that would clip emoji
         let box = Box(
             border: .single,
-            child: Text("👨‍👩‍👧‍👦") // Family emoji (width 2)
+            child: Text("👨‍👩‍👧‍👦"), // Family emoji (width 2)
         )
         let rect = FlexLayout.Rect(x: 0, y: 0, width: 4, height: 3) // Very narrow
 
@@ -952,30 +952,29 @@ struct ComponentTests {
         print("Content line: '\(contentLine)' (count: \(contentLine.count))")
         print("Content line characters:")
         for (index, char) in contentLine.enumerated() {
-            print("  [\(index)]: '\(char)' (scalars: \(char.unicodeScalars.map { $0.value }))")
+            print("  [\(index)]: '\(char)' (scalars: \(char.unicodeScalars.map(\.value)))")
         }
 
-        let contentWithoutBorders: String
-        if contentLine.count >= 2 {
-            contentWithoutBorders = String(contentLine.dropFirst().dropLast())
+        let contentWithoutBorders = if contentLine.count >= 2 {
+            String(contentLine.dropFirst().dropLast())
         } else {
-            contentWithoutBorders = ""
+            ""
         }
 
         print("Content without borders: '\(contentWithoutBorders)' (count: \(contentWithoutBorders.count))")
         print("Content without borders characters:")
         for (index, char) in contentWithoutBorders.enumerated() {
-            print("  [\(index)]: '\(char)' (scalars: \(char.unicodeScalars.map { $0.value }))")
+            print("  [\(index)]: '\(char)' (scalars: \(char.unicodeScalars.map(\.value)))")
         }
 
-        print("Expected emoji: '👨‍👩‍👧‍👦' (scalars: \("👨‍👩‍👧‍👦".unicodeScalars.map { $0.value }))")
+        print("Expected emoji: '👨‍👩‍👧‍👦' (scalars: \("👨‍👩‍👧‍👦".unicodeScalars.map(\.value)))")
         print("Content contains full emoji: \(contentWithoutBorders.contains("👨‍👩‍👧‍👦"))")
         print("Content equals full emoji: \(contentWithoutBorders == "👨‍👩‍👧‍👦")")
 
         // Content should either be empty or contain the full emoji
         #expect(
             contentWithoutBorders.isEmpty || contentWithoutBorders.contains("👨‍👩‍👧‍👦"),
-            "Should not clip emoji - either show full emoji or hide it"
+            "Should not clip emoji - either show full emoji or hide it",
         )
     }
 
@@ -984,7 +983,7 @@ struct ComponentTests {
         // Arrange - minimum size that can fit borders
         let box = Box(
             border: .single,
-            child: Text("X")
+            child: Text("X"),
         )
         let rect = FlexLayout.Rect(x: 0, y: 0, width: 3, height: 3)
 
@@ -1003,7 +1002,7 @@ struct ComponentTests {
         // Arrange - dimensions too small for borders
         let box = Box(
             border: .single,
-            child: Text("Content")
+            child: Text("Content"),
         )
         let rect = FlexLayout.Rect(x: 0, y: 0, width: 1, height: 1)
 
@@ -1015,8 +1014,6 @@ struct ComponentTests {
         // Should gracefully handle impossible dimensions
         #expect(lines[0].count <= 1, "Should not exceed available width")
     }
-
-
 
     @Test("Text component with no styling should not add ANSI codes")
     func textComponentWithNoStyling() {
@@ -1092,7 +1089,11 @@ struct ComponentTests {
             ("Bold text", Text("Hello World", bold: true), "\u{001B}[1mHello World\u{001B}[0m"),
             ("Red bold", Text("Hello World", color: .red, bold: true), "\u{001B}[1;31mHello World\u{001B}[0m"),
             ("Blue background", Text("Hello World", backgroundColor: .blue), "\u{001B}[44mHello World\u{001B}[0m"),
-            ("All styles", Text("Hello", color: .yellow, backgroundColor: .magenta, bold: true, italic: true, underline: true), "\u{001B}[1;3;4;33;45mHello\u{001B}[0m"),
+            (
+                "All styles",
+                Text("Hello", color: .yellow, backgroundColor: .magenta, bold: true, italic: true, underline: true),
+                "\u{001B}[1;3;4;33;45mHello\u{001B}[0m"
+            ),
         ]
 
         for (description, text, expectedPattern) in testCases {
@@ -1152,10 +1153,10 @@ struct ComponentTests {
             // Verify CJK characters are preserved
             let containsCJK = lines[0].unicodeScalars.contains { scalar in
                 let value = scalar.value
-                return (0x4E00...0x9FFF).contains(value) || // CJK Unified Ideographs
-                       (0x3040...0x309F).contains(value) || // Hiragana
-                       (0x30A0...0x30FF).contains(value) || // Katakana
-                       (0xAC00...0xD7AF).contains(value)    // Hangul
+                return (0x4E00 ... 0x9FFF).contains(value) || // CJK Unified Ideographs
+                    (0x3040 ... 0x309F).contains(value) || // Hiragana
+                    (0x30A0 ... 0x30FF).contains(value) || // Katakana
+                    (0xAC00 ... 0xD7AF).contains(value) // Hangul
             }
             #expect(containsCJK, "\(description): Should contain CJK characters")
         }
@@ -1261,7 +1262,7 @@ struct ComponentTests {
             border: .single,
             paddingRight: 1,
             paddingLeft: 1,
-            child: transform
+            child: transform,
         )
 
         let rect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 3)
@@ -1279,7 +1280,9 @@ struct ComponentTests {
                 print("  Line \(i): '\(line)' (length: \(line.count))")
                 // Print character by character to see what's happening
                 for (j, char) in line.enumerated() {
-                    print("    Char \(j): '\(char)' (Unicode: \\u{\(String(char.unicodeScalars.first?.value ?? 0, radix: 16))})")
+                    print(
+                        "    Char \(j): '\(char)' (Unicode: \\u{\(String(char.unicodeScalars.first?.value ?? 0, radix: 16))})",
+                    )
                 }
             }
         }
@@ -1364,7 +1367,10 @@ struct ComponentTests {
         // Assert
         #expect(lines.count == 3, "Should return three lines")
         #expect(lines[0].contains("┌"), "Should preserve border characters")
-        #expect(lines[1].contains("HELL"), "Should apply transformation to text (note: Box truncates 'hello' to 'hell')")
+        #expect(
+            lines[1].contains("HELL"),
+            "Should apply transformation to text (note: Box truncates 'hello' to 'hell')",
+        )
         #expect(lines[1].contains("\u{001B}[32m"), "Should preserve green color code")
         // Note: Box component truncates and loses reset code - this is a separate issue
         #expect(lines[2].contains("└"), "Should preserve border characters")
@@ -1464,7 +1470,20 @@ struct ComponentTests {
             ("Single style", Text("Test", color: .red)),
             ("Multiple styles", Text("Test", color: .green, bold: true, italic: true)),
             ("Background color", Text("Test", backgroundColor: .yellow)),
-            ("All styles", Text("Test", color: .white, backgroundColor: .black, bold: true, italic: true, underline: true, strikethrough: true, inverse: true, dim: true)),
+            (
+                "All styles",
+                Text(
+                    "Test",
+                    color: .white,
+                    backgroundColor: .black,
+                    bold: true,
+                    italic: true,
+                    underline: true,
+                    strikethrough: true,
+                    inverse: true,
+                    dim: true,
+                )
+            ),
         ]
 
         for (description, text) in testCases {
@@ -1520,7 +1539,7 @@ struct ComponentTests {
             border: .single,
             paddingRight: 1,
             paddingLeft: 1,
-            child: Text("Complete! ✅")
+            child: Text("Complete! ✅"),
         )
         let rect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 3)
 
@@ -1533,7 +1552,7 @@ struct ComponentTests {
         // Check that the content line contains the emoji
         let contentLine = lines[1]
         print("Content line: '\(contentLine)'")
-        print("Content line scalars: \(contentLine.unicodeScalars.map { $0.value })")
+        print("Content line scalars: \(contentLine.unicodeScalars.map(\.value))")
 
         // The content should contain both the text and the emoji
         #expect(contentLine.contains("Complete!"), "Should contain the text")
@@ -1542,8 +1561,6 @@ struct ComponentTests {
         // Check that the right border is present
         #expect(contentLine.hasSuffix("│"), "Should have right border character")
     }
-
-
 
     @Test("Box border rendering with emoji content")
     func boxBorderRenderingWithEmojiContent() {
@@ -1561,12 +1578,12 @@ struct ComponentTests {
             paddingRight: 2,
             paddingBottom: 1,
             paddingLeft: 2,
-            child: Text(content, color: .cyan, bold: true)
+            child: Text(content, color: .cyan, bold: true),
         )
 
         // Calculate width the same way as createBoxFrame
         let contentDisplayWidth = max(Width.displayWidth(of: content), 10)
-        let totalWidth = contentDisplayWidth + 6  // 2 for borders + 4 for padding (2 left + 2 right)
+        let totalWidth = contentDisplayWidth + 6 // 2 for borders + 4 for padding (2 left + 2 right)
 
         // Test with a very wide width to see if the border appears
         let wideWidth = 100
@@ -1672,7 +1689,7 @@ struct ComponentTests {
             border: .single,
             paddingRight: 1,
             paddingLeft: 1,
-            child: Text(content)
+            child: Text(content),
         )
         let rect = FlexLayout.Rect(x: 0, y: 0, width: totalWidth, height: 3)
 
@@ -1733,7 +1750,9 @@ struct ComponentTests {
         for (index, char) in emojiLine.enumerated() {
             let charString = String(char)
             let cell = TerminalCell(content: charString)
-            print("    [\(index)] '\(charString)' -> width: \(cell.width), scalars: \(charString.unicodeScalars.map { $0.value })")
+            print(
+                "    [\(index)] '\(charString)' -> width: \(cell.width), scalars: \(charString.unicodeScalars.map(\.value))",
+            )
         }
 
         // Test Text component with 12-column constraint
@@ -1742,7 +1761,9 @@ struct ComponentTests {
         let textRect = FlexLayout.Rect(x: 0, y: 0, width: 12, height: 1)
         let textOutput = textComponent.render(in: textRect)
         for (index, line) in textOutput.enumerated() {
-            print("  Text line \(index): '\(line)' (length: \(line.count), display width: \(Width.displayWidth(of: line)))")
+            print(
+                "  Text line \(index): '\(line)' (length: \(line.count), display width: \(Width.displayWidth(of: line)))",
+            )
         }
     }
 
@@ -1755,8 +1776,8 @@ struct ComponentTests {
             paddingRight: 1,
             paddingLeft: 1,
             children: Text("Line 1"),
-                     Text("Line 2"),
-                     Text("Line 3")
+            Text("Line 2"),
+            Text("Line 3"),
         )
         let rect = FlexLayout.Rect(x: 0, y: 0, width: 12, height: 7)
 
@@ -1787,10 +1808,10 @@ struct ComponentTests {
             paddingRight: 1,
             paddingLeft: 1,
             children: Text("System Monitor"),
-                     Text("CPU: [████████░░] 80%"),
-                     Text("RAM: [██████░░░░] 60%"),
-                     Text("DISK: [███░░░░░░░] 30%"),
-                     Text("NET: [██████████] 100%")
+            Text("CPU: [████████░░] 80%"),
+            Text("RAM: [██████░░░░] 60%"),
+            Text("DISK: [███░░░░░░░] 30%"),
+            Text("NET: [██████████] 100%"),
         )
         let rect = FlexLayout.Rect(x: 0, y: 0, width: 30, height: 8)
 
@@ -1836,7 +1857,7 @@ struct ComponentTests {
         let staticLines = [
             "=== Application Log ===",
             "Started at: 2024-01-01 12:00:00",
-            "Version: 1.0.0"
+            "Version: 1.0.0",
         ]
         let staticComponent = Static(staticLines)
         let rect = FlexLayout.Rect(x: 0, y: 0, width: 35, height: 3)
@@ -1871,7 +1892,7 @@ struct ComponentTests {
             "Line 1",
             "Line 2",
             "Line 3",
-            "Line 4"
+            "Line 4",
         ]
         let staticComponent = Static(staticLines)
         let rect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 2)
@@ -1983,7 +2004,7 @@ struct ComponentTests {
         let staticLines = [
             "Log Entry 1",
             "Log Entry 2",
-            "Log Entry 3"
+            "Log Entry 3",
         ]
         let staticComponent = Static(staticLines)
         let rect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 3)
@@ -2080,7 +2101,8 @@ struct ComponentTests {
 
         // Assert
         #expect(lines.count == 3, "Should respect height constraint and render only 3 lines")
-        #expect(lines.allSatisfy { $0.isEmpty }, "All lines should be empty")
+        let newlineAllEmpty1 = lines.reduce(true) { $0 && $1.isEmpty }
+        #expect(newlineAllEmpty1, "All lines should be empty")
     }
 
     @Test("Newline component with zero height renders no lines")
@@ -2107,7 +2129,8 @@ struct ComponentTests {
 
         // Assert
         #expect(lines.count == 2, "Should render 2 lines even with zero width")
-        #expect(lines.allSatisfy { $0.isEmpty }, "All lines should be empty")
+        let newlineAllEmpty2 = lines.reduce(true) { $0 && $1.isEmpty }
+        #expect(newlineAllEmpty2, "All lines should be empty")
     }
 
     @Test("Newline component with large count respects height constraint")
@@ -2121,7 +2144,8 @@ struct ComponentTests {
 
         // Assert
         #expect(lines.count == 2, "Should respect height constraint even with large count")
-        #expect(lines.allSatisfy { $0.isEmpty }, "All lines should be empty")
+        let newlineAllEmpty3 = lines.reduce(true) { $0 && $1.isEmpty }
+        #expect(newlineAllEmpty3, "All lines should be empty")
     }
 
     @Test("Newline component View protocol conformance")

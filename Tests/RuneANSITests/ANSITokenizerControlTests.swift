@@ -80,7 +80,7 @@ struct ANSITokenizerControlTests {
         let tokens = tokenizer.tokenize(input)
         // Should not contain any .osc token
         let hasOSC = tokens.contains { token in
-            if case .osc = token { return true } else { return false }
+            if case .osc = token { true } else { false }
         }
         #expect(!hasOSC, "Unterminated OSC should not produce .osc token")
         // Reconstruct concatenated text content equals original input
@@ -98,4 +98,3 @@ struct ANSITokenizerControlTests {
         #expect(reconstructed == input)
     }
 }
-

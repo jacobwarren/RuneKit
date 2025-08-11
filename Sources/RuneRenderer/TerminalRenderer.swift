@@ -16,14 +16,14 @@ public actor TerminalRenderer {
 
         /// Create frame from terminal grid
         public init(from grid: TerminalGrid) {
-            self.lines = grid.getLines()
-            self.width = grid.width
-            self.height = grid.height
+            lines = grid.getLines()
+            width = grid.width
+            height = grid.height
         }
 
         /// Convert frame to terminal grid
         public func toGrid() -> TerminalGrid {
-            return TerminalGrid(lines: lines, width: width)
+            TerminalGrid(lines: lines, width: width)
         }
     }
 
@@ -35,20 +35,23 @@ public actor TerminalRenderer {
 
     /// Output handle for writing to terminal
     private let output: FileHandle
-    private let outEncoder: OutputEncoder?
+    private let outEncoder: TerminalOutputEncoder?
     private let cursorMgr: CursorManager?
     /// Optional configuration for policy decisions (cursor, etc.)
     private let configuration: RenderConfiguration?
 
     /// Current cursor position
-    private var cursorRow: Int = 0
-    private var cursorColumn: Int = 0
+    private var cursorRow = 0
+    private var cursorColumn = 0
 
     /// Whether cursor is currently hidden
-    private var cursorHidden: Bool = false
+    private var cursorHidden = false
+
+    /// Whether autowrap is currently disabled by the renderer
+    private var autowrapDisabled = false
 
     /// Performance metrics
-    private var bytesWritten: Int = 0
+    private var bytesWritten = 0
     private var lastRenderTime = Date()
 
     /// Track previous render for clean updates (Ink-style)
@@ -56,22 +59,27 @@ public actor TerminalRenderer {
 
     public init(output: FileHandle = .standardOutput) {
         self.output = output
-        self.outEncoder = nil
-        self.cursorMgr = nil
-        self.configuration = nil
+        outEncoder = nil
+        cursorMgr = nil
+        configuration = nil
     }
 
     /// New convenience initializer allowing pluggable abstractions (public when enabled)
-    public init(output: FileHandle = .standardOutput, encoder: OutputEncoder?, cursor: CursorManager?, configuration: RenderConfiguration = .default) {
+    public init(
+        output: FileHandle = .standardOutput,
+        encoder: TerminalOutputEncoder?,
+        cursor: CursorManager?,
+        configuration: RenderConfiguration = .default,
+    ) {
         self.output = output
         self.configuration = configuration
         // Feature flag: only honor injected encoder/cursor when enabled via configuration
         if configuration.enablePluggableIO {
-            self.outEncoder = encoder
-            self.cursorMgr = cursor
+            outEncoder = encoder
+            cursorMgr = cursor
         } else {
-            self.outEncoder = nil
-            self.cursorMgr = nil
+            outEncoder = nil
+            cursorMgr = nil
         }
     }
 
@@ -89,7 +97,11 @@ public actor TerminalRenderer {
     ///   - previousGrid: The previous grid for delta comparison (optional)
     /// - Returns: Rendering statistics
     @discardableResult
-    public func render(_ grid: TerminalGrid, strategy: RenderingStrategy, previousGrid: TerminalGrid? = nil) async -> RenderStats {
+    public func render(
+        _ grid: TerminalGrid,
+        strategy: RenderingStrategy,
+        previousGrid: TerminalGrid? = nil,
+    ) async -> RenderStats {
         let startTime = Date()
         var stats = RenderStats()
 
@@ -122,7 +134,7 @@ public actor TerminalRenderer {
         lastRenderTime = Date()
 
         // Restore cursor if we hid it
-        if policyHide && shouldRestoreCursor && cursorHidden {
+        if policyHide, shouldRestoreCursor, cursorHidden {
             await showCursor()
         }
 
@@ -147,14 +159,13 @@ public actor TerminalRenderer {
         }
 
         // Determine rendering strategy
-        let strategy: RenderingStrategy
-        if forceFullRedraw {
-            strategy = .fullRedraw
+        let strategy: RenderingStrategy = if forceFullRedraw {
+            .fullRedraw
         } else {
-            strategy = determineRenderingStrategy(
+            determineRenderingStrategy(
                 newGrid: grid,
                 currentGrid: currentGrid,
-                forceFullRedraw: false
+                forceFullRedraw: false,
             )
         }
 
@@ -181,7 +192,7 @@ public actor TerminalRenderer {
         lastRenderTime = Date()
 
         // Restore cursor if we hid it
-        if policyHide && shouldRestoreCursor && cursorHidden {
+        if policyHide, shouldRestoreCursor, cursorHidden {
             await showCursor()
         }
 
@@ -223,14 +234,14 @@ public actor TerminalRenderer {
     ///   - row: Row position (1-based)
     ///   - column: Column position (1-based)
     public func moveCursor(to row: Int, column: Int) async {
-        await moveCursorInternal(to: row - 1, column - 1)  // Convert to 0-based
+        await moveCursorInternal(to: row - 1, column - 1) // Convert to 0-based
     }
 
     /// Get current performance metrics
     public func getPerformanceMetrics() -> RendererPerformanceMetrics {
-        return RendererPerformanceMetrics(
+        RendererPerformanceMetrics(
             totalBytesWritten: bytesWritten,
-            lastRenderTime: lastRenderTime
+            lastRenderTime: lastRenderTime,
         )
     }
 
@@ -254,7 +265,7 @@ public actor TerminalRenderer {
     private func determineRenderingStrategy(
         newGrid: TerminalGrid,
         currentGrid: TerminalGrid?,
-        forceFullRedraw: Bool
+        forceFullRedraw: Bool,
     ) -> RenderingStrategy {
         if forceFullRedraw || currentGrid == nil {
             return .fullRedraw
@@ -284,32 +295,35 @@ public actor TerminalRenderer {
     }
 
     /// Render using Ink-style approach: erase previous + write new
-    private func renderInkStyle(_ grid: TerminalGrid) async -> RenderStats {
+    func renderInkStyle(_ grid: TerminalGrid) async -> RenderStats {
         var stats = RenderStats()
         stats.strategy = .fullRedraw
 
+        // Disable autowrap during render to prevent right-edge wrap artifacts
+        await disableAutowrapIfNeeded()
+
         // For the first render, just clear screen and start fresh
         if previousLineCount == 0 {
-            await writeSequence("\u{001B}[2J\u{001B}[H")  // Clear screen, go to top
+            await writeSequence("\u{001B}[2J\u{001B}[H") // Clear screen, go to top
             stats.bytesWritten += 7
         } else {
             // For subsequent renders, erase exactly the number of lines we wrote last time
             // Move cursor to beginning of line, then erase the exact number of lines
-            await writeSequence("\r")  // Move to beginning of current line
+            await writeSequence("\r") // Move to beginning of current line
 
             // Erase the previous output by moving up and clearing
             if previousLineCount > 1 {
-                await writeSequence("\u{001B}[\(previousLineCount - 1)A")  // Move up (N-1) lines
+                await writeSequence("\u{001B}[\(previousLineCount - 1)A") // Move up (N-1) lines
                 stats.bytesWritten += 5 + String(previousLineCount - 1).count
             }
 
             // Use line-by-line clearing for better test compatibility
-            for lineIndex in 0..<previousLineCount {
+            for lineIndex in 0 ..< previousLineCount {
                 if lineIndex > 0 {
-                    await writeSequence("\u{001B}[\(lineIndex + 1);1H")  // Move to line
+                    await writeSequence("\u{001B}[\(lineIndex + 1);1H") // Move to line
                     stats.bytesWritten += 6 + String(lineIndex + 1).count
                 }
-                await writeSequence("\u{001B}[2K")  // Clear entire line
+                await writeSequence("\u{001B}[2K") // Clear entire line
                 stats.bytesWritten += 4
             }
 
@@ -322,49 +336,52 @@ public actor TerminalRenderer {
         await writeSequence(TerminalState.resetSequence)
         terminalState = .default
 
-        // Build complete output
-        var output = ""
-        for row in 0..<grid.height {
+        // Render each line absolutely with explicit cursor moves and EOL hygiene
+        for row in 0 ..< grid.height {
+            // Move to row, column 1
+            await writeSequence("\u{001B}[\(row + 1);1H")
+            // Clear line before drawing to eliminate any leftover bg/colors
+            await writeSequence("\u{001B}[2K")
             if let rowCells = grid.getRow(row) {
                 let sequence = await renderRow(rowCells, optimizeState: true)
-                output += sequence
+                await writeSequence(sequence)
             }
-
-            // Move to next line explicitly to avoid right-edge autowrap artifacts
-            if row < grid.height - 1 {
-                output += "\r\n"
-            }
+            // Reset SGR at end-of-line to prevent bleed into border/newline
+            await writeSequence(TerminalState.resetSequence)
         }
 
-        // Write the complete output
-        await writeSequence(output)
-        stats.bytesWritten += output.utf8.count
-
-        // CRITICAL: Position cursor after the frame for proper subsequent rendering
-        // This ensures that subsequent frames start from the correct position
-        let cursorRestoreSequence = "\u{001B}[\(grid.height + 1);1H"  // Move to line after frame
+        // Position cursor after the frame
+        let cursorRestoreSequence = "\u{001B}[\(grid.height + 1);1H" // Move to line after frame
         await writeSequence(cursorRestoreSequence)
-        stats.bytesWritten += cursorRestoreSequence.utf8.count
+        stats.bytesWritten += (6 + String(grid.height + 1).count)
 
         // Update tracking
         previousLineCount = grid.height
         stats.linesChanged = grid.height
-        // Populate totalLines for consistent metrics
         stats.totalLines = grid.height
+
+        // Re-enable autowrap if we disabled it
+        await enableAutowrapIfNeeded()
 
         return stats
     }
 
     /// Render using delta update: only changed lines
-    private func renderDelta(_ grid: TerminalGrid, previousGrid: TerminalGrid? = nil) async -> RenderStats {
+    func renderDelta(_ grid: TerminalGrid, previousGrid: TerminalGrid? = nil) async -> RenderStats {
         var stats = RenderStats()
         stats.strategy = .deltaUpdate
 
+        // Disable autowrap during delta updates as well for consistency
+        await disableAutowrapIfNeeded()
+
         // Use provided previous grid or fall back to currentGrid
         let current = previousGrid ?? currentGrid
-        guard let current = current else {
+        guard let current else {
             // No previous grid - fall back to full redraw
-            return await renderInkStyle(grid)
+            let statsFromFull = await renderInkStyle(grid)
+            // renderInkStyle re-enables autowrap; ensure our local flag is reset
+            await enableAutowrapIfNeeded()
+            return statsFromFull
         }
 
         // Find changed lines via differ (SimpleLineDiffer for now)
@@ -379,23 +396,24 @@ public actor TerminalRenderer {
             stats.bytesWritten += restoreCursorSequence.utf8.count
             // Populate totalLines for accurate efficiency
             stats.totalLines = grid.height
+            await enableAutowrapIfNeeded()
             return stats
         }
 
         // Render each changed line
         for lineIndex in changedLines {
             // Move cursor to the line
-            let moveSequence = "\u{001B}[\(lineIndex + 1);1H"  // Move to line (1-based), column 1
+            let moveSequence = "\u{001B}[\(lineIndex + 1);1H" // Move to line (1-based), column 1
             await writeSequence(moveSequence)
             stats.bytesWritten += moveSequence.utf8.count
 
             // Clear the entire line (for test compatibility)
-            let clearSequence = "\u{001B}[2K"  // Clear entire line
+            let clearSequence = "\u{001B}[2K" // Clear entire line
             await writeSequence(clearSequence)
             stats.bytesWritten += clearSequence.utf8.count
 
             // Move cursor back to column 1
-            let columnSequence = "\u{001B}[G"  // Move to column 1
+            let columnSequence = "\u{001B}[G" // Move to column 1
             await writeSequence(columnSequence)
             stats.bytesWritten += columnSequence.utf8.count
 
@@ -406,23 +424,25 @@ public actor TerminalRenderer {
                 await writeSequence(lineSequence)
                 stats.bytesWritten += lineSequence.utf8.count
             }
+            // Reset SGR at end-of-line to prevent style bleed
+            await writeSequence(TerminalState.resetSequence)
         }
 
         // Handle frame shrinkage: clear lines that are beyond the new frame
         if grid.height < current.height {
-            for lineIndex in grid.height..<current.height {
+            for lineIndex in grid.height ..< current.height {
                 // Move cursor to the line that needs to be cleared
-                let moveSequence = "\u{001B}[\(lineIndex + 1);1H"  // Move to line (1-based), column 1
+                let moveSequence = "\u{001B}[\(lineIndex + 1);1H" // Move to line (1-based), column 1
                 await writeSequence(moveSequence)
                 stats.bytesWritten += moveSequence.utf8.count
 
                 // Clear the entire line
-                let clearSequence = "\u{001B}[2K"  // Clear entire line
+                let clearSequence = "\u{001B}[2K" // Clear entire line
                 await writeSequence(clearSequence)
                 stats.bytesWritten += clearSequence.utf8.count
 
                 // Move cursor back to column 1
-                let columnSequence = "\u{001B}[G"  // Move to column 1
+                let columnSequence = "\u{001B}[G" // Move to column 1
                 await writeSequence(columnSequence)
                 stats.bytesWritten += columnSequence.utf8.count
             }
@@ -431,94 +451,19 @@ public actor TerminalRenderer {
         // CRITICAL: Always restore cursor to the end position after delta updates
         // This ensures the cursor returns to the proper typing position regardless
         // of which lines were updated during the delta rendering
-        let restoreCursorSequence = "\u{001B}[\(grid.height + 1);1H"  // Move to line after frame
+        let restoreCursorSequence = "\u{001B}[\(grid.height + 1);1H" // Move to line after frame
         await writeSequence(restoreCursorSequence)
         stats.bytesWritten += restoreCursorSequence.utf8.count
 
         // Populate totalLines for accurate efficiency
         stats.totalLines = grid.height
 
+        await enableAutowrapIfNeeded()
         return stats
     }
 
-    /// Render using scroll-optimized updates when grid is an N-line shift
-    private func renderScrollOptimized(_ grid: TerminalGrid, previousGrid: TerminalGrid?) async -> RenderStats {
-        var stats = RenderStats()
-        stats.strategy = .scrollOptimized
-        guard let current = previousGrid else { return await renderInkStyle(grid) }
-        // Determine direction: try match of current shifted
-        let h = grid.height
-        // Detect largest n for down/up shift
-        func detectDownShift() -> Int {
-            var best = 0
-            if h > 1 {
-                for n in 1..<h {
-                    var ok = true
-                    for r in 0..<(h - n) {
-                        if grid.getRow(r)! != current.getRow(r + n)! { ok = false; break }
-                    }
-                    if ok { best = n; break }
-                }
-            }
-            return best
-        }
-        func detectUpShift() -> Int {
-            var best = 0
-            if h > 1 {
-                for n in 1..<h {
-                    var ok = true
-                    for r in n..<h {
-                        if grid.getRow(r)! != current.getRow(r - n)! { ok = false; break }
-                    }
-                    if ok { best = n; break }
-                }
-            }
-            return best
-        }
-        let nDown = detectDownShift()
-        if nDown > 0 {
-            // Scroll up by n: ESC[nS] moves the viewport up; new lines to render at bottom
-            let seq = "\u{001B}[\(nDown)S"
-            await writeSequence(seq); stats.bytesWritten += seq.utf8.count
-            for j in 0..<nDown {
-                let rowIndex = h - nDown + j
-                let move = "\u{001B}[\(rowIndex + 1);1H"
-                await writeSequence(move); stats.bytesWritten += move.utf8.count
-                if let row = grid.getRow(rowIndex) {
-                    let line = await renderRow(row, optimizeState: true)
-                    await writeSequence(line); stats.bytesWritten += line.utf8.count
-                }
-            }
-            let restore = "\u{001B}[\(h + 1);1H"
-            await writeSequence(restore); stats.bytesWritten += restore.utf8.count
-            stats.totalLines = h
-            return stats
-        }
-        let nUp = detectUpShift()
-        if nUp > 0 {
-            // Scroll down by n: ESC[nT]; new lines to render at top
-            let seq = "\u{001B}[\(nUp)T"
-            await writeSequence(seq); stats.bytesWritten += seq.utf8.count
-            for j in 0..<nUp {
-                let move = "\u{001B}[\(j + 1);1H"
-                await writeSequence(move); stats.bytesWritten += move.utf8.count
-                if let row = grid.getRow(j) {
-                    let line = await renderRow(row, optimizeState: true)
-                    await writeSequence(line); stats.bytesWritten += line.utf8.count
-                }
-            }
-            let restore = "\u{001B}[\(h + 1);1H"
-            await writeSequence(restore); stats.bytesWritten += restore.utf8.count
-            stats.totalLines = h
-            return stats
-        }
-        // Fallback
-        return await renderDelta(grid, previousGrid: previousGrid)
-    }
-
-
     /// Render a row of cells with SGR optimization
-    private func renderRow(_ cells: [TerminalCell], optimizeState: Bool) async -> String {
+    func renderRow(_ cells: [TerminalCell], optimizeState: Bool) async -> String {
         var sequence = ""
         var currentState = optimizeState ? terminalState : .default
 
@@ -546,7 +491,7 @@ public actor TerminalRenderer {
     }
 
     /// Write a sequence to the output
-    private func writeSequence(_ sequence: String) async {
+    func writeSequence(_ sequence: String) async {
         if let out = outEncoder {
             out.write(sequence)
             return
@@ -560,39 +505,20 @@ public actor TerminalRenderer {
             }
         }
     }
-}
 
-/// Rendering strategy options
-public enum RenderingStrategy: Sendable {
-    case fullRedraw
-    case deltaUpdate
-    case scrollOptimized
-}
-
-/// Statistics from a rendering operation
-public struct RenderStats: Sendable {
-    public var strategy: RenderingStrategy = .fullRedraw
-    public var linesChanged: Int = 0
-    public var bytesWritten: Int = 0
-    public var duration: TimeInterval = 0
-    /// Total lines in the frame (for accurate efficiency computation)
-    public var totalLines: Int? = nil
-
-    public var efficiency: Double {
-        // If no changes, efficiency is perfect
-        if linesChanged == 0 { return 1.0 }
-        // Prefer accurate calculation when total is known
-        if let total = totalLines, total > 0 {
-            let e = 1.0 - (Double(linesChanged) / Double(total))
-            return max(0.0, min(1.0, e))
+    /// Disable terminal autowrap during rendering
+    private func disableAutowrapIfNeeded() async {
+        if !autowrapDisabled {
+            await writeSequence("\u{001B}[?7l") // DECAWM off
+            autowrapDisabled = true
         }
-        // Fallback heuristic by strategy
-        return strategy == .deltaUpdate ? 0.8 : 0.0
     }
-}
 
-/// Overall performance metrics for the renderer
-public struct RendererPerformanceMetrics: Sendable {
-    public let totalBytesWritten: Int
-    public let lastRenderTime: Date
+    /// Re-enable terminal autowrap after rendering
+    private func enableAutowrapIfNeeded() async {
+        if autowrapDisabled {
+            await writeSequence("\u{001B}[?7h") // DECAWM on
+            autowrapDisabled = false
+        }
+    }
 }
