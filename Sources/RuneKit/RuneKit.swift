@@ -94,6 +94,12 @@ public struct RenderOptions: Sendable {
     /// Whether to use alternate screen buffer if available
     public let useAltScreen: Bool
 
+    /// Whether to put stdin into raw mode (disable canonical/echo) for interactive input
+    public let enableRawMode: Bool
+
+    /// Whether to enable bracketed paste mode and emit paste events
+    public let enableBracketedPaste: Bool
+
     /// Maximum frame rate cap (frames per second)
     public let fpsCap: Double
 
@@ -119,6 +125,8 @@ public struct RenderOptions: Sendable {
         exitOnCtrlC: Bool? = nil,
         patchConsole: Bool? = nil,
         useAltScreen: Bool? = nil,
+        enableRawMode: Bool? = nil,
+        enableBracketedPaste: Bool? = nil,
         fpsCap: Double = 60.0,
         terminalProfile: TerminalProfile? = nil,
     ) {
@@ -135,6 +143,9 @@ public struct RenderOptions: Sendable {
         self.exitOnCtrlC = exitOnCtrlC ?? (isInteractive && !isCI)
         self.patchConsole = patchConsole ?? (isInteractive && !isCI)
         self.useAltScreen = useAltScreen ?? (isInteractive && !isCI)
+        // Input defaults: raw + paste when interactive TTY and not CI
+        self.enableRawMode = enableRawMode ?? (isInteractive && !isCI)
+        self.enableBracketedPaste = enableBracketedPaste ?? (isInteractive && !isCI)
     }
 
     // MARK: - Environment Detection
@@ -182,6 +193,8 @@ public struct RenderOptions: Sendable {
                 exitOnCtrlC: false,
                 patchConsole: false,
                 useAltScreen: false,
+                enableRawMode: false,
+                enableBracketedPaste: false,
                 fpsCap: 30.0,
                 terminalProfile: envProfile,
             )
@@ -193,6 +206,8 @@ public struct RenderOptions: Sendable {
                 exitOnCtrlC: true,
                 patchConsole: true,
                 useAltScreen: true,
+                enableRawMode: true,
+                enableBracketedPaste: true,
                 fpsCap: 60.0,
                 terminalProfile: envProfile,
             )
@@ -203,6 +218,8 @@ public struct RenderOptions: Sendable {
             exitOnCtrlC: false,
             patchConsole: false,
             useAltScreen: false,
+            enableRawMode: false,
+            enableBracketedPaste: false,
             fpsCap: 30.0,
             terminalProfile: envProfile,
         )
@@ -416,6 +433,9 @@ public actor RenderHandle {
     /// Signal handler for graceful termination
     private var signalHandler: SignalHandler?
 
+    /// Input manager for raw-mode and key events
+    private var inputManager: InputManager?
+
     /// Whether the handle has been unmounted
     private var isUnmounted = false
 
@@ -453,6 +473,10 @@ public actor RenderHandle {
         // Clean up signal handler
         await signalHandler?.cleanup()
 
+        // Stop input manager
+        await inputManager?.stop()
+        inputManager = nil
+
         // Clear the frame buffer
         await frameBuffer.clear()
 
@@ -479,6 +503,10 @@ public actor RenderHandle {
 
         // Clean up signal handler
         await signalHandler?.cleanup()
+
+        // Stop input manager
+        await inputManager?.stop()
+        inputManager = nil
 
         // Clear the frame buffer and restore terminal state
         await frameBuffer.clear()
@@ -525,6 +553,11 @@ public actor RenderHandle {
     /// - Parameter handler: Signal handler to associate with this session
     func setSignalHandler(_ handler: SignalHandler) async {
         signalHandler = handler
+    }
+
+    /// Set input manager (internal use)
+    func setInputManager(_ mgr: InputManager) async {
+        inputManager = mgr
     }
 
     /// Clear the screen or region based on render options
@@ -602,6 +635,11 @@ public actor RenderHandle {
             await rerender(build)
         }
         return ticker
+    }
+
+    // MARK: - Testing hook to inject input
+    public func _testing_processInput(bytes: [UInt8]) async {
+        await inputManager?.process(bytes: bytes)
     }
 
     /// Update the rendered view (for future programmatic updates)
@@ -758,6 +796,41 @@ public func render(_ view: some View, options: RenderOptions = RenderOptions.fro
         // Update the handle with the signal handler
         await handle.setSignalHandler(handler)
     }
+
+    // Set up input manager for key events and paste detection
+    // Create a controlOut handle that bypasses console capture similar to FrameBuffer
+    let controlOut: FileHandle = {
+        #if os(Linux)
+        let dupfd = Glibc.dup(options.stdout.fileDescriptor)
+        #else
+        let dupfd = Darwin.dup(options.stdout.fileDescriptor)
+        #endif
+        if dupfd >= 0 {
+            return FileHandle(fileDescriptor: dupfd, closeOnDealloc: true)
+        } else {
+            return options.stdout
+        }
+    }()
+    let inputMgr = InputManager(
+        input: options.stdin,
+        controlOut: controlOut,
+        enableRawMode: options.enableRawMode,
+        enableBracketedPaste: options.enableBracketedPaste,
+        exitOnCtrlC: options.exitOnCtrlC
+    )
+    await inputMgr.setEventHandler { event in
+        switch event {
+        case .ctrlC where options.exitOnCtrlC:
+            await handle.unmount()
+        case .ctrlD where options.exitOnCtrlC:
+            await handle.unmount()
+        default:
+            // TODO: wire to useInput in future tickets
+            break
+        }
+    }
+    await inputMgr.start()
+    await handle.setInputManager(inputMgr)
 
     // Convert view to frame and render
     let frame = convertViewToFrame(view, tree: handle.componentTree, terminalProfile: options.terminalProfile)
