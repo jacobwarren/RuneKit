@@ -436,6 +436,9 @@ public actor RenderHandle {
     /// Input manager for raw-mode and key events
     private var inputManager: InputManager?
 
+    /// Registry of active input handlers keyed by effect id
+    private var inputHandlers: [String: (active: Bool, handler: @Sendable (KeyEvent) async -> Void)] = [:]
+
     /// Whether the handle has been unmounted
     private var isUnmounted = false
 
@@ -466,6 +469,28 @@ public actor RenderHandle {
 
     /// Helper invoked from requestRerender to avoid capturing non-Sendable state
     private func rerenderUsingRoot() async { await rootRebuilder?() }
+
+    // MARK: - Input handler registration
+
+    private func registerInputHandler(id: String, isActive: Bool, handler: @escaping @Sendable (KeyEvent) async -> Void) -> @Sendable () -> Void {
+        inputHandlers[id] = (active: isActive, handler: handler)
+        let cleanup: @Sendable () -> Void = { [weak self] in
+            Task { await self?.removeInputHandler(id: id) }
+        }
+        return cleanup
+    }
+
+    private func removeInputHandler(id: String) {
+        inputHandlers.removeValue(forKey: id)
+    }
+
+    public func dispatchInput(_ event: KeyEvent) async {
+        // Snapshot handlers to avoid mutation during iteration
+        let handlers = inputHandlers
+        for (_, entry) in handlers where entry.active {
+            await entry.handler(event)
+        }
+    }
 
     // MARK: - Initialization
 
@@ -619,6 +644,16 @@ public actor RenderHandle {
     /// This provides programmatic control over the rendered content and supports
     /// dynamic UI updates similar to Ink's rerender functionality.
     ///
+
+        /// Align internal identity and reset diff/component tree if changed
+        public func alignIdentity(_ identity: String) async {
+            if lastViewIdentity != identity {
+                await frameBuffer.resetDiffState()
+                lastViewIdentity = identity
+                await componentTree.reset()
+            }
+        }
+
     /// State preservation semantics:
     /// - If the incoming view has the same identity as the previous render, preserve
     ///   internal diff state for efficient updates.
@@ -659,6 +694,10 @@ public actor RenderHandle {
     }
 
     // MARK: - Effects commit/cleanup
+    public func commitCollectedEffects(_ specs: [(id: String, deps: String?, effect: @Sendable () async -> (() -> Void)?)]) async {
+        await commitEffects(specs)
+    }
+
     private func commitEffects(_ specs: [(id: String, deps: String?, effect: @Sendable () async -> (() -> Void)?)]) async {
         // Build lookup of new specs
         var newMap: [String: (String?, @Sendable () async -> (() -> Void)?)] = [:]
@@ -680,7 +719,7 @@ public actor RenderHandle {
                 prev?.cleanup?()
                 // Give any scheduled tasks inside cleanup a chance to run (non-blocking)
                 await Task.yield()
-                // Bind requestRerender and currentPath for this effect invocation
+                // Bind requestRerender, inputRegistrar, and currentPath for this effect invocation
                 let parts = id.split(separator: ":", maxSplits: 1, omittingEmptySubsequences: false)
                 let path = parts.first.map(String.init) ?? RuntimeStateContext.currentPath
                 let cleanup = await RuntimeStateContext.$currentPath.withValue(path) {
@@ -688,7 +727,13 @@ public actor RenderHandle {
                         guard let self else { return }
                         Task { await self.rerenderUsingRoot() }
                     }, operation: {
-                        await effect()
+                        await HooksRuntime.$inputRegistrar.withValue({ [weak self] (effectId, handler, isActive) in
+                            guard let self else { return { } }
+                            let cleanup = await self.registerInputHandler(id: effectId, isActive: isActive, handler: handler)
+                            return cleanup
+                        }, operation: {
+                            await effect()
+                        })
                     })
                 }
                 effects[id] = (deps: depsToken, cleanup: cleanup)
@@ -965,16 +1010,34 @@ public func render(_ view: some View, options: RenderOptions = RenderOptions.fro
         case .ctrlD where options.exitOnCtrlC:
             await handle.unmount()
         default:
-            // TODO: wire to useInput in future tickets
-            break
+            // Dispatch to any active useInput handlers registered via HooksRuntime
+            await handle.dispatchInput(event)
         }
     }
     await inputMgr.start()
     await handle.setInputManager(inputMgr)
 
-    // Convert view to frame and render
-    let frame = convertViewToFrame(view, tree: handle.componentTree, terminalProfile: options.terminalProfile)
+    // Initial render: collect effects and render without sending non-Sendable view across actor boundary.
+    // Mirrors RenderHandle.rerender(view) semantics (identity/reset + effect collection/commit).
+    let box = EffectCollectorBox()
+    let typeName = String(describing: type(of: view))
+    let explicit = (view as? ViewIdentifiable)?.viewIdentity
+    let identity = [typeName, explicit].compactMap(\.self).joined(separator: "#")
+
+    // Align diff-state reset and component tree lifecycle with actor's logic
+    await frameBuffer.resetDiffState()
+    await handle.componentTree.reset()
+
+    await handle.componentTree.beginFrame(rootPath: identity)
+    let frame: TerminalRenderer.Frame = await RuntimeStateContext.$effectCollector.withValue({ id, deps, effect in
+        box.add(id: id, deps: deps, effect: effect)
+    }, operation: {
+        convertViewToFrame(view, tree: handle.componentTree, terminalProfile: options.terminalProfile)
+    })
+    await handle.componentTree.endFrame()
+
     await frameBuffer.renderFrame(frame)
+    await handle.commitCollectedEffects(box.snapshot())
 
     return handle
 }
