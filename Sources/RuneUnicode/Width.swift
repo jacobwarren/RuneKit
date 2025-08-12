@@ -30,6 +30,18 @@ public enum Width {
     public static func displayWidth(of string: String) -> Int {
         // Fast path: no ANSI SGR sequences
         if !string.contains("\u{001B}[") {
+            // Fast path A: if the string is pure ASCII, count bytes directly without grapheme iteration
+            var allASCII = true
+            for b in string.utf8 { if b >= 0x80 { allASCII = false; break } }
+            if allASCII {
+                var w = 0
+                for b in string.utf8 {
+                    if b >= 0x20 && b <= 0x7E { w &+= 1 }
+                    else if b == 0x09 { w &+= 1 } // TAB
+                    // other controls contribute 0
+                }
+                return w
+            }
             var totalWidth = 0
             for cluster in string {
                 totalWidth += displayWidth(of: cluster)
