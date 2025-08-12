@@ -441,7 +441,7 @@ public actor RenderHandle {
     private var inputHandlers: [String: (active: Bool, handler: @Sendable (KeyEvent) async -> Void)] = [:]
 
     // Build a Streams snapshot for hooks (useStdin/useStdout/useStderr)
-    func streamsSnapshot() -> HooksRuntime.Streams {
+    func streamsSnapshot() -> IOHooks.Streams {
         // Safely determine FDs for standard streams without touching NSStdIO wrappers that can throw
         func fd(for h: FileHandle, fallback: Int32) -> Int32 {
             if h === FileHandle.standardInput { return STDIN_FILENO }
@@ -456,7 +456,7 @@ public actor RenderHandle {
         let stdoutIsTTY = isatty(stdoutFD) == 1
         let stderrIsTTY = isatty(stderrFD) == 1
         let isRaw = options.enableRawMode && stdinIsTTY
-        return HooksRuntime.Streams(
+        return IOHooks.Streams(
             stdin: options.stdin,
             stdout: options.stdout,
             stderr: options.stderr,

@@ -18,4 +18,3 @@ public struct Identity<T: AnyObject>: Hashable, CustomStringConvertible, @unchec
     // IdentityToken
     public var identityObject: AnyObject { object }
 }
-

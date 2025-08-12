@@ -19,8 +19,6 @@ public enum HooksRuntime {
     /// App context for controlling the running application (exit/clear) from within components/effects
     @TaskLocal public static var appContext: AppContext?
 
-    /// I/O streams context bound by the runtime during build/render and effect commits
-    @TaskLocal public static var ioStreams: Streams?
 
     /// Lightweight app control surface exposed to hooks. Methods are async and actor-hopping safe.
     public struct AppContext: Sendable {
@@ -36,27 +34,6 @@ public enum HooksRuntime {
         public func clear() async { await _clear() }
     }
 
-    /// Streams + metadata snapshot for hooks access. FileHandles are not Sendable; mark container unchecked.
-    public final class Streams: @unchecked Sendable {
-        public let stdin: FileHandle
-        public let stdout: FileHandle
-        public let stderr: FileHandle
-        public let stdinIsTTY: Bool
-        public let stdoutIsTTY: Bool
-        public let stderrIsTTY: Bool
-        public let stdinIsRawMode: Bool
-        public init(stdin: FileHandle, stdout: FileHandle, stderr: FileHandle,
-                    stdinIsTTY: Bool, stdoutIsTTY: Bool, stderrIsTTY: Bool,
-                    stdinIsRawMode: Bool) {
-            self.stdin = stdin
-            self.stdout = stdout
-            self.stderr = stderr
-            self.stdinIsTTY = stdinIsTTY
-            self.stdoutIsTTY = stdoutIsTTY
-            self.stderrIsTTY = stderrIsTTY
-            self.stdinIsRawMode = stdinIsRawMode
-        }
-    }
 
     // MARK: - useApp
     /// Access the application context for programmatic control from components/effects
@@ -67,38 +44,6 @@ public enum HooksRuntime {
         return AppContext(exit: { _ in }, clear: { })
     }
 
-    // MARK: - useStdin/useStdout/useStderr
-    public struct StdinInfo { public let handle: FileHandle; public let isTTY: Bool; public let isRawMode: Bool }
-    public struct StdoutInfo { public let handle: FileHandle; public let isTTY: Bool }
-    public struct StderrInfo { public let handle: FileHandle; public let isTTY: Bool }
-
-    /// Expose configured stdin stream and metadata
-    public static func useStdin() -> StdinInfo {
-        if let s = ioStreams {
-            return StdinInfo(handle: s.stdin, isTTY: s.stdinIsTTY, isRawMode: s.stdinIsRawMode)
-        }
-        // Fallback: standard input with best-effort metadata
-        let isTty = isatty(STDIN_FILENO) == 1
-        return StdinInfo(handle: FileHandle.standardInput, isTTY: isTty, isRawMode: false)
-    }
-
-    /// Expose configured stdout stream and metadata
-    public static func useStdout() -> StdoutInfo {
-        if let s = ioStreams {
-            return StdoutInfo(handle: s.stdout, isTTY: s.stdoutIsTTY)
-        }
-        let isTty = isatty(STDOUT_FILENO) == 1
-        return StdoutInfo(handle: FileHandle.standardOutput, isTTY: isTty)
-    }
-
-    /// Expose configured stderr stream and metadata
-    public static func useStderr() -> StderrInfo {
-        if let s = ioStreams {
-            return StderrInfo(handle: s.stderr, isTTY: s.stderrIsTTY)
-        }
-        let isTty = isatty(STDERR_FILENO) == 1
-        return StderrInfo(handle: FileHandle.standardError, isTTY: isTty)
-    }
 
     // MARK: - Dependency token helpers
 
