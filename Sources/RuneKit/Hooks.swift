@@ -11,6 +11,32 @@ public enum HooksRuntime {
     /// Returns a synchronous cleanup closure to unsubscribe.
     @TaskLocal public static var inputRegistrar: (@Sendable (_ id: String, _ handler: @escaping @Sendable (KeyEvent) async -> Void, _ isActive: Bool) async -> (@Sendable () -> Void))?
 
+    /// App context for controlling the running application (exit/clear) from within components/effects
+    @TaskLocal public static var appContext: AppContext?
+
+    /// Lightweight app control surface exposed to hooks. Methods are async and actor-hopping safe.
+    public struct AppContext: Sendable {
+        private let _exit: @Sendable (Error?) async -> Void
+        private let _clear: @Sendable () async -> Void
+        public init(exit: @escaping @Sendable (Error?) async -> Void, clear: @escaping @Sendable () async -> Void) {
+            self._exit = exit
+            self._clear = clear
+        }
+        /// Request application exit (graceful unmount). Error is optional and currently informational.
+        public func exit(_ error: Error? = nil) async { await _exit(error) }
+        /// Clear the current live region or screen according to render options.
+        public func clear() async { await _clear() }
+    }
+
+    // MARK: - useApp
+    /// Access the application context for programmatic control from components/effects
+    /// The runtime binds this during render/effect commit; calling outside a render/effect will be a no-op stub.
+    public static func useApp() -> AppContext {
+        if let ctx = appContext { return ctx }
+        // Fallback no-op context to keep tests/app code safe when not bound
+        return AppContext(exit: { _ in }, clear: { })
+    }
+
     // MARK: - Dependency token helpers
 
     /// Build a stable string token from a dependency array.
@@ -162,6 +188,8 @@ public enum HooksRuntime {
             let newValue = compute()
             // Keep last value cached for potential future []/non-empty deps usage at same site
             if let existing: MemoEntry<T> = StateRegistry.shared.getIfExists(path: path, key: key) {
+
+
                 StateRegistry.shared.set(path: path, key: key, value: MemoEntry(token: existing.token, value: newValue))
             } else {
                 StateRegistry.shared.set(path: path, key: key, value: MemoEntry(token: nil, value: newValue))

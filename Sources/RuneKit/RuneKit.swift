@@ -185,13 +185,14 @@ public struct RenderOptions: Sendable {
     ) -> RenderOptions {
         let isCI = isCIEnvironment(environment)
         let isInteractive = isInteractiveTerminal()
+        let isTestHarness = environment["XCTestConfigurationFilePath"] != nil || environment["SWIFTPM_TEST"] != nil
         let envProfile = RenderOptions.terminalProfileFromEnvironment(environment)
 
-        // CI-specific defaults
-        if isCI {
+        // CI/Test-harness specific defaults
+        if isCI || isTestHarness {
             return RenderOptions(
                 exitOnCtrlC: false,
-                patchConsole: false,
+                patchConsole: false, // never patch stdout/stderr under test runner
                 useAltScreen: false,
                 enableRawMode: false,
                 enableBracketedPaste: false,
@@ -200,7 +201,7 @@ public struct RenderOptions: Sendable {
             )
         }
 
-        // Interactive terminal defaults
+        // Interactive terminal defaults (outside CI/tests)
         if isInteractive {
             return RenderOptions(
                 exitOnCtrlC: true,
@@ -467,6 +468,18 @@ public actor RenderHandle {
     /// Effect state: id -> (depsToken, cleanup)
     private var effects: [String: (deps: String?, cleanup: (() -> Void)?)] = [:]
 
+    /// Exit status captured when app requests exit
+    public struct ExitStatus: Sendable { public let code: Int32; public let errorDescription: String? }
+    private var exitStatus: ExitStatus?
+
+    /// Internal: set exit status once
+    private func setExitStatusIfNeeded(_ status: ExitStatus) {
+        if exitStatus == nil { exitStatus = status }
+    }
+
+    /// Public accessor for exit status (nil until unmount requested)
+    public func getExitStatus() async -> ExitStatus? { exitStatus }
+
     /// Helper invoked from requestRerender to avoid capturing non-Sendable state
     private func rerenderUsingRoot() async { await rootRebuilder?() }
 
@@ -608,6 +621,12 @@ public actor RenderHandle {
         inputManager = mgr
     }
 
+    /// Record exit status then unmount; idempotent
+    func recordExitStatusAndUnmount(code: Int32, description: String?) async {
+        setExitStatusIfNeeded(ExitStatus(code: code, errorDescription: description))
+        await unmount()
+    }
+
     /// Clear the screen or region based on render options
     ///
     /// This method clears the terminal content according to the current render configuration:
@@ -661,8 +680,6 @@ public actor RenderHandle {
     ///
     /// - Parameter view: The new view to render
     public func rerender(_ view: some View) async {
-
-
         // Determine identity for state preservation
         let typeName = String(describing: type(of: view))
         let explicit = (view as? ViewIdentifiable)?.viewIdentity
@@ -689,8 +706,17 @@ public actor RenderHandle {
         // Render the frame
         await frameBuffer.renderFrame(frame)
 
-        // Commit effects after frame commit
-        await commitEffects(collected)
+        // Commit effects after frame commit, binding useApp() context
+        let ctx = HooksRuntime.AppContext(exit: { [weak self] _ in
+            guard let self else { return }
+            await self.unmount()
+        }, clear: { [weak self] in
+            guard let self else { return }
+            await self.clear()
+        })
+        await HooksRuntime.$appContext.withValue(ctx) {
+            await commitEffects(collected)
+        }
     }
 
     // MARK: - Effects commit/cleanup
@@ -732,7 +758,22 @@ public actor RenderHandle {
                             let cleanup = await self.registerInputHandler(id: effectId, isActive: isActive, handler: handler)
                             return cleanup
                         }, operation: {
-                            await effect()
+                            // Bind app context for useApp() within effects
+                            let ctx = HooksRuntime.AppContext(exit: { [weak self] err in
+                                guard let self else { return }
+                                // Compute exit status code
+                                let code: Int32
+                                if let prov = err as? AppExitCodeProviding { code = prov.exitCode }
+                                else if err != nil { code = 1 } else { code = 0 }
+                                let desc = err.map { String(describing: $0) }
+                                await self.recordExitStatusAndUnmount(code: code, description: desc)
+                            }, clear: { [weak self] in
+                                guard let self else { return }
+                                await self.clear()
+                            })
+                            return await HooksRuntime.$appContext.withValue(ctx) {
+                                await effect()
+                            }
                         })
                     })
                 }
@@ -1037,7 +1078,17 @@ public func render(_ view: some View, options: RenderOptions = RenderOptions.fro
     await handle.componentTree.endFrame()
 
     await frameBuffer.renderFrame(frame)
-    await handle.commitCollectedEffects(box.snapshot())
+    // Bind app context during effect commit as well for useApp() in effects
+    let ctx = HooksRuntime.AppContext(exit: { err in
+        let code: Int32
+        if let prov = err as? AppExitCodeProviding { code = prov.exitCode }
+        else if err != nil { code = 1 } else { code = 0 }
+        let desc = err.map { String(describing: $0) }
+        await handle.recordExitStatusAndUnmount(code: code, description: desc)
+    }, clear: { await handle.clear() })
+    await HooksRuntime.$appContext.withValue(ctx) {
+        await handle.commitCollectedEffects(box.snapshot())
+    }
 
     return handle
 }

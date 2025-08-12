@@ -141,5 +141,9 @@ let package = Package(
             name: "RuneKitTests",
             dependencies: ["RuneKit"]
         ),
+        .testTarget(
+            name: "RuneCLITests",
+            dependencies: ["RuneCLI"]
+        ),
     ]
 )
