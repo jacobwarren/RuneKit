@@ -70,11 +70,9 @@ public actor ConsoleCapture {
     /// Whether capture is currently active
     private var isCapturing = false
 
-    /// Original stdout file handle (saved for restoration)
-    private var originalStdout: FileHandle?
-
-    /// Original stderr file handle (saved for restoration)
-    private var originalStderr: FileHandle?
+    /// Saved duplicates of original stdout/stderr file descriptors (for restoration)
+    private var savedStdoutFD: Int32 = -1
+    private var savedStderrFD: Int32 = -1
 
     /// Pipe for capturing stdout
     private var stdoutPipe: Pipe?
@@ -120,13 +118,9 @@ public actor ConsoleCapture {
             stdoutReaderTask?.cancel()
             stderrReaderTask?.cancel()
 
-            // Restore file handles synchronously
-            if let originalStdout {
-                dup2(originalStdout.fileDescriptor, STDOUT_FILENO)
-            }
-            if let originalStderr {
-                dup2(originalStderr.fileDescriptor, STDERR_FILENO)
-            }
+            // Restore file descriptors synchronously using saved duplicates
+            if savedStdoutFD >= 0 { dup2(savedStdoutFD, STDOUT_FILENO); close(savedStdoutFD); savedStdoutFD = -1 }
+            if savedStderrFD >= 0 { dup2(savedStderrFD, STDERR_FILENO); close(savedStderrFD); savedStderrFD = -1 }
 
             // Close pipes synchronously
             try? stdoutPipe?.fileHandleForWriting.close()
@@ -163,9 +157,15 @@ public actor ConsoleCapture {
         // Install SIGPIPE handler to prevent crashes
         previousSigpipeHandler = signal(SIGPIPE, SIG_IGN)
 
-        // Save original file handles
-        originalStdout = FileHandle.standardOutput
-        originalStderr = FileHandle.standardError
+        // Duplicate original stdout/stderr FDs for restoration later
+        // Important: dup the raw FDs so restoration doesn't depend on Swift FileHandle objects
+        #if os(Linux)
+        savedStdoutFD = Glibc.dup(STDOUT_FILENO)
+        savedStderrFD = Glibc.dup(STDERR_FILENO)
+        #else
+        savedStdoutFD = Darwin.dup(STDOUT_FILENO)
+        savedStderrFD = Darwin.dup(STDERR_FILENO)
+        #endif
 
         // Create pipes for capture
         stdoutPipe = Pipe()
@@ -213,12 +213,16 @@ public actor ConsoleCapture {
         stdoutReaderTask = nil
         stderrReaderTask = nil
 
-        // Restore original file handles
-        if let originalStdout {
-            dup2(originalStdout.fileDescriptor, STDOUT_FILENO)
+        // Restore original file descriptors using saved duplicates
+        if savedStdoutFD >= 0 {
+            dup2(savedStdoutFD, STDOUT_FILENO)
+            close(savedStdoutFD)
+            savedStdoutFD = -1
         }
-        if let originalStderr {
-            dup2(originalStderr.fileDescriptor, STDERR_FILENO)
+        if savedStderrFD >= 0 {
+            dup2(savedStderrFD, STDERR_FILENO)
+            close(savedStderrFD)
+            savedStderrFD = -1
         }
 
         // Close pipes safely
@@ -239,8 +243,6 @@ public actor ConsoleCapture {
 
         stdoutPipe = nil
         stderrPipe = nil
-        originalStdout = nil
-        originalStderr = nil
 
         isCapturing = false
         debugLog("Console capture stopped successfully")
@@ -418,11 +420,14 @@ public actor ConsoleCapture {
     /// - Parameter message: Debug message to log
     private func debugLog(_ message: String) {
         if enableDebugLogging {
-            // Write directly to original stderr to avoid capture loop
-            if let originalStderr {
-                let debugMessage = "[ConsoleCapture] \(message)\n"
-                if let data = debugMessage.data(using: .utf8) {
-                    originalStderr.write(data)
+            // Write directly to saved stderr FD to avoid capture loop
+            let fd = (savedStderrFD >= 0) ? savedStderrFD : STDERR_FILENO
+            let debugMessage = "[ConsoleCapture] \(message)\n"
+            if let data = debugMessage.data(using: .utf8) {
+                data.withUnsafeBytes { (ptr: UnsafeRawBufferPointer) in
+                    if let base = ptr.baseAddress {
+                        _ = write(fd, base, data.count)
+                    }
                 }
             }
         }

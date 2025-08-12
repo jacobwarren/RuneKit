@@ -68,6 +68,8 @@ struct RuneCLI {
                 await comprehensiveComponentDemo()
             case "tickets":
                 await runTickets1318()
+            case "rune39":
+                await demoRUNE39()
             default:
                 await runTickets1318()
             }
@@ -92,6 +94,12 @@ struct RuneCLI {
             fpsCap: base.fpsCap,
             terminalProfile: base.terminalProfile
         )
+    }
+    /// Helper for CLI apps: run view and return exit code without terminating the process
+    static func runAppAndReturnExitCode<V: View>(_ view: V, options: RenderOptions) async -> Int32 {
+        let handle = await render(view, options: options)
+        await handle.waitUntilExit()
+        return await handle.getExitStatus()?.code ?? 0
     }
 
     // Run through RUNE-13 to RUNE-18 ticket demos sequentially
@@ -476,6 +484,34 @@ struct RuneCLI {
         await handle.clear()
         await handle.unmount()
         print("✅ RUNE-24 demo complete\n")
+    }
+
+    // RUNE-39: App context useApp().exit/clear demo
+    static func demoRUNE39() async {
+        print("RUNE-39: App context + useApp().exit/clear")
+        struct AppView: View {
+            var body: some View {
+                // On mount, schedule a timer that clears then exits from inside the effect
+                HooksRuntime.useEffect("timer", deps: []) {
+                    let app = HooksRuntime.useApp()
+                    Task {
+                        try? await Task.sleep(for: .milliseconds(500))
+                        await app.clear()
+                        try? await Task.sleep(for: .milliseconds(250))
+                        await app.exit(nil)
+                    }
+                    return nil
+                }
+                return Box(border: .single, children: Static([
+                    "App will clear and exit shortly…",
+                    "This demonstrates useApp().exit/clear",
+                ]))
+            }
+        }
+        let options = RenderOptions(exitOnCtrlC: true, patchConsole: true, useAltScreen: false)
+        let handle = await render(AppView(), options: options)
+        await handle.waitUntilExit()
+        print("✅ RUNE-39 demo complete\n")
     }
 
     // RUNE-13: Initialize SwiftPM library “RuneKit”
