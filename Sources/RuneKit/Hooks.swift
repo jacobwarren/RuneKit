@@ -1,10 +1,16 @@
 import Foundation
 
-// Minimal hooks-style API: useEffect and requestRerender
+// Minimal hooks-style API: useEffect, requestRerender, useRef/useMemo, and useInput
 // Effects are registered during render and executed after the frame commits.
 // Cleanups run on dependency change or unmount.
 
 public enum HooksRuntime {
+    // MARK: - Task-local registrars bound by the runtime during effect execution
+
+    /// Registrar for input handlers; bound by RenderHandle.commitEffects while invoking effects.
+    /// Returns a synchronous cleanup closure to unsubscribe.
+    @TaskLocal public static var inputRegistrar: (@Sendable (_ id: String, _ handler: @escaping @Sendable (KeyEvent) async -> Void, _ isActive: Bool) async -> (@Sendable () -> Void))?
+
     // MARK: - Dependency token helpers
 
     /// Build a stable string token from a dependency array.
@@ -76,6 +82,45 @@ public enum HooksRuntime {
         RuntimeStateContext.requestRerender?()
     }
 
+    // MARK: - useInput
+
+    /// Registers a keyboard input handler for the current component.
+    ///
+    /// Lifecycle and timing:
+    /// - The handler is subscribed during the post-render effect commit phase and unsubscribed when the effect
+    ///   cleans up (on deps change or unmount).
+    /// - Handlers are invoked on the RenderHandle actor when decoded KeyEvent values arrive from InputManager.
+    ///
+    /// isActive semantics and deps:
+    /// - Passing isActive=false prevents events from being delivered to this handler; switching to true re-subscribes.
+    /// - The hook uses useEffect internally with a stable key; it re-runs when isActive changes.
+    ///
+    /// Unsubscription:
+    /// - The cleanup ensures the handler is removed from the RenderHandle registry on deps change and unmount, avoiding leaks.
+    ///
+    /// Interaction with exitOnCtrlC:
+    /// - When RenderOptions.exitOnCtrlC is true, ctrlC/ctrlD trigger unmount and are not delivered to handlers.
+    ///   Otherwise, ctrlC/ctrlD are delivered as KeyEvent.ctrlC/ctrlD.
+    ///
+    /// - Parameters:
+    ///   - handler: Async closure receiving decoded KeyEvent values.
+    ///   - isActive: When false, events are ignored for this handler (toggled via deps).
+    public static func useInput(_ handler: @escaping @Sendable (KeyEvent) async -> Void, isActive: Bool = true, fileID: StaticString = #fileID, line: UInt = #line) {
+        let key = "__useInput::\(fileID):\(line)"
+        // Re-run when active flag changes; stable when unchanged
+        let token = isActive ? "1" : "0"
+        useEffect(key, depsToken: token) {
+            let path = RuntimeStateContext.currentPath
+            let id = path + "::" + key
+            if let registrar = inputRegistrar {
+                let cleanup = await registrar(id, handler, isActive)
+                return cleanup
+            } else {
+                return nil
+            }
+        }
+    }
+
     // MARK: - useRef
 
     public final class Ref<T>: @unchecked Sendable {
@@ -135,4 +180,3 @@ public enum HooksRuntime {
         }
     }
 }
-
