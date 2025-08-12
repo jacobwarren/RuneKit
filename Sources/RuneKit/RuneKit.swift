@@ -1042,7 +1042,8 @@ public func render(_ view: some View, options: RenderOptions = RenderOptions.fro
         controlOut: controlOut,
         enableRawMode: options.enableRawMode,
         enableBracketedPaste: options.enableBracketedPaste,
-        exitOnCtrlC: options.exitOnCtrlC
+        exitOnCtrlC: options.exitOnCtrlC,
+        closeControlOutOnStop: true
     )
     await inputMgr.setEventHandler { event in
         switch event {

@@ -47,6 +47,7 @@ public actor InputManager {
     private let enableRawMode: Bool
     private let enableBracketedPaste: Bool
     private let exitOnCtrlC: Bool
+    private let closeControlOutOnStop: Bool
 
     // Saved terminal state for raw mode
     private var originalTermios: termios?
@@ -69,13 +70,15 @@ public actor InputManager {
         controlOut: FileHandle,
         enableRawMode: Bool,
         enableBracketedPaste: Bool,
-        exitOnCtrlC: Bool
+        exitOnCtrlC: Bool,
+        closeControlOutOnStop: Bool = false
     ) {
         self.input = input
         self.controlOut = controlOut
         self.enableRawMode = enableRawMode
         self.enableBracketedPaste = enableBracketedPaste
         self.exitOnCtrlC = exitOnCtrlC
+        self.closeControlOutOnStop = closeControlOutOnStop
     }
 
     public func setEventHandler(_ handler: @escaping @Sendable (KeyEvent) async -> Void) {
@@ -97,6 +100,10 @@ public actor InputManager {
         readTask?.cancel(); readTask = nil
         if enableBracketedPaste { writeControl("\u{001B}[?2004l") }
         if enableRawMode { await restoreTermiosIfNeeded() }
+        // Close controlOut if we created a dup specifically for this session (Linux pipe EOF hygiene)
+        if closeControlOutOnStop {
+            do { try controlOut.close() } catch { /* ignore */ }
+        }
     }
 
     // MARK: - Testing hooks / direct processing
