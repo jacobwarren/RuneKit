@@ -440,6 +440,33 @@ public actor RenderHandle {
     /// Registry of active input handlers keyed by effect id
     private var inputHandlers: [String: (active: Bool, handler: @Sendable (KeyEvent) async -> Void)] = [:]
 
+    // Build a Streams snapshot for hooks (useStdin/useStdout/useStderr)
+    func streamsSnapshot() -> HooksRuntime.Streams {
+        // Safely determine FDs for standard streams without touching NSStdIO wrappers that can throw
+        func fd(for h: FileHandle, fallback: Int32) -> Int32 {
+            if h === FileHandle.standardInput { return STDIN_FILENO }
+            if h === FileHandle.standardOutput { return STDOUT_FILENO }
+            if h === FileHandle.standardError { return STDERR_FILENO }
+            return h.fileDescriptor
+        }
+        let stdinFD = fd(for: options.stdin, fallback: STDIN_FILENO)
+        let stdoutFD = fd(for: options.stdout, fallback: STDOUT_FILENO)
+        let stderrFD = fd(for: options.stderr, fallback: STDERR_FILENO)
+        let stdinIsTTY = isatty(stdinFD) == 1
+        let stdoutIsTTY = isatty(stdoutFD) == 1
+        let stderrIsTTY = isatty(stderrFD) == 1
+        let isRaw = options.enableRawMode && stdinIsTTY
+        return HooksRuntime.Streams(
+            stdin: options.stdin,
+            stdout: options.stdout,
+            stderr: options.stderr,
+            stdinIsTTY: stdinIsTTY,
+            stdoutIsTTY: stdoutIsTTY,
+            stderrIsTTY: stderrIsTTY,
+            stdinIsRawMode: isRaw
+        )
+    }
+
     /// Whether the handle has been unmounted
     private var isUnmounted = false
 
@@ -692,12 +719,18 @@ public actor RenderHandle {
 
         // Collect effects registered during this render
         let box = EffectCollectorBox()
+        let streams = streamsSnapshot()
         let frame: TerminalRenderer.Frame = await RuntimeStateContext.$effectCollector.withValue({ id, deps, effect in
             box.add(id: id, deps: deps, effect: effect)
         }, operation: {
-            // Begin a logical frame for the componentTree
-            await componentTree.beginFrame(rootPath: identity)
-            let f = convertViewToFrame(view, tree: componentTree, terminalProfile: options.terminalProfile)
+            // Bind IO streams for any hooks invoked during build/render
+            await HooksRuntime.$ioStreams.withValue(streams) {
+                // Begin a logical frame for the componentTree
+                await componentTree.beginFrame(rootPath: identity)
+            }
+            let f: TerminalRenderer.Frame = await HooksRuntime.$ioStreams.withValue(streams) {
+                convertViewToFrame(view, tree: componentTree, terminalProfile: options.terminalProfile)
+            }
             await componentTree.endFrame()
             return f
         })
@@ -706,7 +739,7 @@ public actor RenderHandle {
         // Render the frame
         await frameBuffer.renderFrame(frame)
 
-        // Commit effects after frame commit, binding useApp() context
+        // Commit effects after frame commit, binding useApp() and I/O contexts
         let ctx = HooksRuntime.AppContext(exit: { [weak self] _ in
             guard let self else { return }
             await self.unmount()
@@ -715,7 +748,9 @@ public actor RenderHandle {
             await self.clear()
         })
         await HooksRuntime.$appContext.withValue(ctx) {
-            await commitEffects(collected)
+            await HooksRuntime.$ioStreams.withValue(streams) {
+                await commitEffects(collected)
+            }
         }
     }
 
@@ -758,7 +793,7 @@ public actor RenderHandle {
                             let cleanup = await self.registerInputHandler(id: effectId, isActive: isActive, handler: handler)
                             return cleanup
                         }, operation: {
-                            // Bind app context for useApp() within effects
+                            // Bind app and I/O contexts for useApp()/useStd* within effects
                             let ctx = HooksRuntime.AppContext(exit: { [weak self] err in
                                 guard let self else { return }
                                 // Compute exit status code
@@ -771,8 +806,11 @@ public actor RenderHandle {
                                 guard let self else { return }
                                 await self.clear()
                             })
+                            let streams = self.streamsSnapshot()
                             return await HooksRuntime.$appContext.withValue(ctx) {
-                                await effect()
+                                await HooksRuntime.$ioStreams.withValue(streams) {
+                                    await effect()
+                                }
                             }
                         })
                     })
@@ -809,8 +847,10 @@ public actor RenderHandle {
             // Build the view inside the effectCollector context so HooksRuntime.useEffect during build is recorded
             // Bind currentPath to a per-handle stable buildContextPath so hooks (useRef/useMemo) within build
             // use a stable path across rerenders, independent of lastViewIdentity.
-            let view = RuntimeStateContext.$currentPath.withValue(self.buildContextPath) {
-                build()
+            let view = HooksRuntime.$ioStreams.withValue(self.streamsSnapshot()) {
+                RuntimeStateContext.$currentPath.withValue(self.buildContextPath) {
+                    build()
+                }
             }
 
             // Determine identity for state preservation
@@ -823,17 +863,24 @@ public actor RenderHandle {
                 await componentTree.reset()
             }
 
-            // Convert and render to a frame
-            await componentTree.beginFrame(rootPath: identity)
-            let f = convertViewToFrame(view, tree: componentTree, terminalProfile: options.terminalProfile)
+            // Convert and render to a frame with bound IO streams
+            await HooksRuntime.$ioStreams.withValue(self.streamsSnapshot()) {
+                await componentTree.beginFrame(rootPath: identity)
+            }
+            let f = await HooksRuntime.$ioStreams.withValue(self.streamsSnapshot()) {
+                convertViewToFrame(view, tree: componentTree, terminalProfile: options.terminalProfile)
+            }
             await componentTree.endFrame()
             return f
         })
 
         await frameBuffer.renderFrame(frame)
 
-        // Commit collected effects
-        await commitEffects(box.snapshot())
+        // Commit collected effects with app and I/O context
+        let streams = streamsSnapshot()
+        await HooksRuntime.$ioStreams.withValue(streams) {
+            await commitEffects(box.snapshot())
+        }
     }
 
     /// Schedule periodic rerenders until cancelled or unmounted
@@ -1079,7 +1126,7 @@ public func render(_ view: some View, options: RenderOptions = RenderOptions.fro
     await handle.componentTree.endFrame()
 
     await frameBuffer.renderFrame(frame)
-    // Bind app context during effect commit as well for useApp() in effects
+    // Bind app and I/O context during effect commit for useApp()/useStd* hooks
     let ctx = HooksRuntime.AppContext(exit: { err in
         let code: Int32
         if let prov = err as? AppExitCodeProviding { code = prov.exitCode }
@@ -1087,8 +1134,11 @@ public func render(_ view: some View, options: RenderOptions = RenderOptions.fro
         let desc = err.map { String(describing: $0) }
         await handle.recordExitStatusAndUnmount(code: code, description: desc)
     }, clear: { await handle.clear() })
+    let streams = await handle.streamsSnapshot()
     await HooksRuntime.$appContext.withValue(ctx) {
-        await handle.commitCollectedEffects(box.snapshot())
+        await HooksRuntime.$ioStreams.withValue(streams) {
+            await handle.commitCollectedEffects(box.snapshot())
+        }
     }
 
     return handle
