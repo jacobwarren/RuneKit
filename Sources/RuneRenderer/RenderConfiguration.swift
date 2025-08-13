@@ -73,6 +73,9 @@ public struct RenderConfiguration: Sendable {
     /// Feature flag: allow public injection of OutputEncoder/CursorManager
     public let enablePluggableIO: Bool
 
+    /// Whether to disable DECAWM autowrap during render to prevent last-column spill
+    public let disableAutowrapDuringRender: Bool
+
     // MARK: - Initialization
 
     public init(
@@ -84,6 +87,7 @@ public struct RenderConfiguration: Sendable {
         useAlternateScreen: Bool = false,
         enableConsoleCapture: Bool = false,
         enablePluggableIO: Bool = false,
+        disableAutowrapDuringRender: Bool = false
     ) {
         self.optimizationMode = optimizationMode
         self.performance = performance
@@ -93,6 +97,7 @@ public struct RenderConfiguration: Sendable {
         self.useAlternateScreen = useAlternateScreen
         self.enableConsoleCapture = enableConsoleCapture
         self.enablePluggableIO = enablePluggableIO
+        self.disableAutowrapDuringRender = disableAutowrapDuringRender
     }
 
     /// Backward-compatible initializer without the pluggable IO flag
@@ -114,6 +119,7 @@ public struct RenderConfiguration: Sendable {
             useAlternateScreen: useAlternateScreen,
             enableConsoleCapture: enableConsoleCapture,
             enablePluggableIO: false,
+            disableAutowrapDuringRender: false
         )
     }
 
