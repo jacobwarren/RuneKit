@@ -19,6 +19,7 @@ public enum KeyKind: Equatable, Sendable {
     case up, down, left, right
     case home, end, pageUp, pageDown
     case function(Int) // F1..F12
+    case tab
 }
 
 /// Key events recognized by RuneKit input system
@@ -35,6 +36,9 @@ public enum KeyEvent: Equatable, Sendable {
     case key(kind: KeyKind, modifiers: KeyModifiers)
 
     // Bracketed paste
+    /// Convenience alias for a plain Tab key event
+    public static var tabKey: KeyEvent { .key(kind: .tab, modifiers: []) }
+
     case paste(String)
 }
 
@@ -65,6 +69,40 @@ public actor InputManager {
     // Background read task
     private var readTask: Task<Void, Never>?
 
+    // Lookup tables to keep mapping logic simple (lower cyclomatic complexity)
+    private static let arrowKindMap: [UInt8: KeyKind] = [
+        0x41: .up,    // A
+        0x42: .down,  // B
+        0x43: .right, // C
+        0x44: .left   // D
+    ]
+
+    private static let tildeKindMap: [Int: KeyKind] = [
+        5: .pageUp,
+        6: .pageDown,
+        15: .function(5),
+        17: .function(6),
+        18: .function(7),
+        19: .function(8),
+        20: .function(9),
+        21: .function(10),
+        23: .function(11),
+        24: .function(12)
+    ]
+
+    private static let ss3Map: [UInt8: KeyEvent] = [
+        0x41: .arrowUp,
+        0x42: .arrowDown,
+        0x43: .arrowRight,
+        0x44: .arrowLeft,
+        0x48: .key(kind: .home, modifiers: []),
+        0x46: .key(kind: .end, modifiers: []),
+        0x50: .key(kind: .function(1), modifiers: []),
+        0x51: .key(kind: .function(2), modifiers: []),
+        0x52: .key(kind: .function(3), modifiers: []),
+        0x53: .key(kind: .function(4), modifiers: [])
+    ]
+
     public init(
         input: FileHandle,
         controlOut: FileHandle,
@@ -89,7 +127,9 @@ public actor InputManager {
         if enableRawMode { await enableRawModeIfTTY() }
         if enableBracketedPaste { writeControl("\u{001B}[?2004h") }
 
-        if isATTY(input.fileDescriptor) == 1 {
+        // In CI/test harness we don't need a background read loop; tests inject via process(bytes:).
+        // Only spawn the loop when reading is actually desired (raw or bracketed paste) AND stdin is a TTY.
+        if (enableRawMode || enableBracketedPaste) && isATTY(input.fileDescriptor) == 1 {
             readTask = Task.detached { [weak self] in
                 await self?.readLoop()
             }
@@ -118,8 +158,8 @@ public actor InputManager {
 
     private func emit(_ event: KeyEvent) async { await handler?(event) }
 
-    private func writeControl(_ s: String) {
-        if let data = s.data(using: .utf8) { controlOut.write(data) }
+    private func writeControl(_ control: String) {
+        if let data = control.data(using: .utf8) { controlOut.write(data) }
     }
 
     private func isATTY(_ fd: Int32) -> Int32 { isatty(fd) }
@@ -127,18 +167,18 @@ public actor InputManager {
     private func enableRawModeIfTTY() async {
         let fd = input.fileDescriptor
         guard isATTY(fd) == 1 else { return }
-        var t = termios()
-        if tcgetattr(fd, &t) == 0 {
-            originalTermios = t
-            cfmakeraw(&t)
+        var term = termios()
+        if tcgetattr(fd, &term) == 0 {
+            originalTermios = term
+            cfmakeraw(&term)
             // Set VMIN/VTIME: non-blocking-ish read with 100ms timeout
-            withUnsafeMutablePointer(to: &t.c_cc) { p in
-                p.withMemoryRebound(to: cc_t.self, capacity: Int(NCCS)) { ccp in
+            withUnsafeMutablePointer(to: &term.c_cc) { ctrlArrayPtr in
+                ctrlArrayPtr.withMemoryRebound(to: cc_t.self, capacity: Int(NCCS)) { ccp in
                     ccp[Int(VMIN)] = 0
                     ccp[Int(VTIME)] = 1
                 }
             }
-            _ = tcsetattr(fd, TCSAFLUSH, &t)
+            _ = tcsetattr(fd, TCSAFLUSH, &term)
         }
     }
 
@@ -154,13 +194,13 @@ public actor InputManager {
         var buf = [UInt8](repeating: 0, count: 1024)
         while !Task.isCancelled {
             #if os(Linux)
-            let n = Glibc.read(fd, &buf, buf.count)
+            let bytesRead = Glibc.read(fd, &buf, buf.count)
             #else
-            let n = Darwin.read(fd, &buf, buf.count)
+            let bytesRead = Darwin.read(fd, &buf, buf.count)
             #endif
-            if n > 0 {
-                await process(bytes: Array(buf[0..<Int(n)]))
-            } else if n == 0 {
+            if bytesRead > 0 {
+                await process(bytes: Array(buf[0..<Int(bytesRead)]))
+            } else if bytesRead == 0 {
                 break // EOF
             } else {
                 // sleep briefly to avoid spin on EAGAIN/interrupt
@@ -174,6 +214,7 @@ public actor InputManager {
         while !buffer.isEmpty {
             if await handleBracketedPasteIfNeeded() { continue }
             if await handleImmediateControlIfNeeded() { continue }
+            if await handleTabIfNeeded() { continue }
             if await handlePasteStartIfNeeded() { continue }
             if await handleEscapedSequencesIfNeeded() { continue }
             // Fallback: if ESC may start a sequence, wait for more; otherwise consume one byte
@@ -189,6 +230,8 @@ public actor InputManager {
                 let endStart = endRange.lowerBound
                 pasteBuffer.append(contentsOf: buffer[..<endStart])
                 buffer.removeFirst(endRange.upperBound)
+                // Intentionally allow lossy decoding for paste content which may contain arbitrary bytes
+                // swiftlint:disable:next optional_data_string_conversion
                 let text = String(decoding: pasteBuffer, as: UTF8.self)
                 pasteBuffer.removeAll(keepingCapacity: true)
                 isInBracketedPaste = false
@@ -203,8 +246,17 @@ public actor InputManager {
         return false
     }
 
+    private func handleTabIfNeeded() async -> Bool {
+        if let first = buffer.first, first == 0x09 { // HT (Tab)
+            buffer.removeFirst()
+            await emit(.key(kind: .tab, modifiers: []))
+            return true
+        }
+        return false
+    }
+
     private func handleImmediateControlIfNeeded() async -> Bool {
-        if let first = buffer.first, (first == 0x03 || first == 0x04) {
+        if let first = buffer.first, first == 0x03 || first == 0x04 {
             let ctrl = first == 0x03 ? KeyEvent.ctrlC : KeyEvent.ctrlD
             buffer.removeFirst()
             await emit(ctrl)
@@ -266,7 +318,9 @@ public actor InputManager {
             if (65...90).contains(Int(ch)) || ch == 0x7E { // 'A'..'Z' or '~'
                 // Parse parameters (if any) between '[' and final
                 let paramsBytes = bytes[2..<i]
-                let params = String(decoding: paramsBytes, as: UTF8.self)
+                // swiftlint:disable:next optional_data_string_conversion
+                let paramsString = String(decoding: paramsBytes, as: UTF8.self)
+                let params = paramsString
                     .split(separator: ";")
                     .compactMap { Int($0) }
                 let final = ch
@@ -283,14 +337,17 @@ public actor InputManager {
 
     private func mapCSI(params: [Int], final: UInt8) -> KeyEvent? {
         switch final {
+        case 0x5A: // CSI Z is often sent for Shift+Tab
+            // Map to tab with shift modifier via KeyKind.tab
+            return .key(kind: .tab, modifiers: [.shift])
         case 0x41, 0x42, 0x43, 0x44: // Arrows A..D
             return mapArrow(final: final, params: params)
         case 0x48: // H Home
-            let m = params.count >= 2 ? modsFrom(code: params.last!) : []
-            return .key(kind: .home, modifiers: m)
+            let mods = params.count >= 2 ? modsFrom(code: params.last!) : []
+            return .key(kind: .home, modifiers: mods)
         case 0x46: // F End
-            let m = params.count >= 2 ? modsFrom(code: params.last!) : []
-            return .key(kind: .end, modifiers: m)
+            let mods = params.count >= 2 ? modsFrom(code: params.last!) : []
+            return .key(kind: .end, modifiers: mods)
         case 0x7E: // ~ family
             return mapTildeFamily(params: params)
         default:
@@ -300,25 +357,22 @@ public actor InputManager {
 
     private func modsFrom(code: Int) -> KeyModifiers {
         // xterm: 1+shift(1)+alt(2)+ctrl(4)
-        let m = code - 1
-        var out: KeyModifiers = []
-        if (m & 1) != 0 { out.insert(.shift) }
-        if (m & 2) != 0 { out.insert(.alt) }
-        if (m & 4) != 0 { out.insert(.ctrl) }
-        return out
+        let mask = code - 1
+        var mods: KeyModifiers = []
+        if (mask & 1) != 0 { mods.insert(.shift) }
+        if (mask & 2) != 0 { mods.insert(.alt) }
+        if (mask & 4) != 0 { mods.insert(.ctrl) }
+        return mods
     }
 
     private func mapArrow(final: UInt8, params: [Int]) -> KeyEvent? {
+        // With modifiers (CSI 1;5A etc.)
         if let last = params.last, params.count >= 2 {
+            guard let kind = Self.arrowKindMap[final] else { return nil }
             let mods = modsFrom(code: last)
-            switch final {
-            case 0x41: return .key(kind: .up, modifiers: mods)
-            case 0x42: return .key(kind: .down, modifiers: mods)
-            case 0x43: return .key(kind: .right, modifiers: mods)
-            case 0x44: return .key(kind: .left, modifiers: mods)
-            default: return nil
-            }
+            return .key(kind: kind, modifiers: mods)
         }
+        // Legacy arrows without modifiers
         switch final {
         case 0x41: return .arrowUp
         case 0x42: return .arrowDown
@@ -330,20 +384,9 @@ public actor InputManager {
 
     private func mapTildeFamily(params: [Int]) -> KeyEvent? {
         guard let code = params.first else { return nil }
-        let m = params.count >= 2 ? modsFrom(code: params.last!) : []
-        switch code {
-        case 5: return .key(kind: .pageUp, modifiers: m)
-        case 6: return .key(kind: .pageDown, modifiers: m)
-        case 15: return .key(kind: .function(5), modifiers: m)
-        case 17: return .key(kind: .function(6), modifiers: m)
-        case 18: return .key(kind: .function(7), modifiers: m)
-        case 19: return .key(kind: .function(8), modifiers: m)
-        case 20: return .key(kind: .function(9), modifiers: m)
-        case 21: return .key(kind: .function(10), modifiers: m)
-        case 23: return .key(kind: .function(11), modifiers: m)
-        case 24: return .key(kind: .function(12), modifiers: m)
-        default: return nil
-        }
+        let mods = params.count >= 2 ? modsFrom(code: params.last!) : []
+        guard let kind = Self.tildeKindMap[code] else { return nil }
+        return .key(kind: kind, modifiers: mods)
     }
 
     // Parse SS3 sequences like ESC O A, ESC O P (F1)
@@ -351,19 +394,10 @@ public actor InputManager {
         guard bytes.count >= 3 else { return nil }
         let final = bytes[2]
         let consumed = 3
-        switch final {
-        case 0x41: return (consumed, .arrowUp)  // Up
-        case 0x42: return (consumed, .arrowDown)
-        case 0x43: return (consumed, .arrowRight)
-        case 0x44: return (consumed, .arrowLeft)
-        case 0x48: return (consumed, .key(kind: .home, modifiers: [])) // OH sometimes used
-        case 0x46: return (consumed, .key(kind: .end, modifiers: []))  // OF sometimes used
-        case 0x50: return (consumed, .key(kind: .function(1), modifiers: [])) // OP
-        case 0x51: return (consumed, .key(kind: .function(2), modifiers: [])) // OQ
-        case 0x52: return (consumed, .key(kind: .function(3), modifiers: [])) // OR
-        case 0x53: return (consumed, .key(kind: .function(4), modifiers: [])) // OS
-        default: return (consumed, nil)
+        if let ev = Self.ss3Map[final] {
+            return (consumed, ev)
         }
+        return (consumed, nil)
     }
 
     // Find CSI ESC [ <param> starting at any position; return range [start,end)
@@ -380,4 +414,3 @@ public actor InputManager {
         return nil
     }
 }
-

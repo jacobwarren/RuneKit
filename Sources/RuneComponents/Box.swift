@@ -204,6 +204,41 @@ public struct Box: Component {
         self.children = Array(children)
     }
 
+    /// Public convenience initializer to construct a Box from an array of Components
+    /// Useful for bridging higher-level View collections into Component children.
+    public init(childrenArray: [Component]) {
+        self.init(
+            border: .none,
+            borderColor: nil,
+            backgroundColor: nil,
+            flexDirection: .column,
+            justifyContent: .flexStart,
+            alignItems: .stretch,
+            alignSelf: .auto,
+            width: .auto,
+            height: .auto,
+            paddingTop: 0,
+            paddingRight: 0,
+            paddingBottom: 0,
+            paddingLeft: 0,
+            marginTop: 0,
+            marginRight: 0,
+            marginBottom: 0,
+            marginLeft: 0,
+            rowGap: 0,
+            columnGap: 0,
+            flexGrow: 0,
+            flexShrink: 1,
+            flexBasis: .auto,
+            flexWrap: .noWrap,
+            minWidth: .auto,
+            maxWidth: .auto,
+            minHeight: .auto,
+            maxHeight: .auto,
+            childrenArray: childrenArray
+        )
+    }
+
     /// Internal initializer for array of children (used by helper functions)
     init(
         border: BorderStyle = .none,

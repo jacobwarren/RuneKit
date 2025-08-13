@@ -357,8 +357,6 @@ public actor TerminalRenderer {
         previousLineCount = grid.height
         stats.linesChanged = grid.height
         stats.totalLines = grid.height
-
-
         return stats
     }
 

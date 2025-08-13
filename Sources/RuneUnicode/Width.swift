@@ -32,15 +32,18 @@ public enum Width {
         if !string.contains("\u{001B}[") {
             // Fast path A: if the string is pure ASCII, count bytes directly without grapheme iteration
             var allASCII = true
-            for b in string.utf8 { if b >= 0x80 { allASCII = false; break } }
+            for byte in string.utf8 where byte >= 0x80 { allASCII = false; break }
             if allASCII {
-                var w = 0
-                for b in string.utf8 {
-                    if b >= 0x20 && b <= 0x7E { w &+= 1 }
-                    else if b == 0x09 { w &+= 1 } // TAB
+                var width = 0
+                for byte in string.utf8 {
+                    if byte >= 0x20 && byte <= 0x7E {
+                        width &+= 1
+                    } else if byte == 0x09 {
+                        width &+= 1 // TAB
+                    }
                     // other controls contribute 0
                 }
-                return w
+                return width
             }
             var totalWidth = 0
             for cluster in string {
@@ -83,10 +86,9 @@ public enum Width {
                 hasCombining = true
                 // Combining characters don't add to width
                 continue
-            } else {
-                // Non-combining character
-                baseWidth += displayWidthEnhanced(of: scalar)
             }
+            // Non-combining character
+            baseWidth += displayWidthEnhanced(of: scalar)
         }
 
         // If we had combining characters, return the base width
