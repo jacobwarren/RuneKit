@@ -1,7 +1,5 @@
 import Foundation
 
-/// Types that provide an exit code for application termination
-public protocol AppExitCodeProviding {
-    var exitCode: Int32 { get }
-}
-
+/// Deprecated shim retained for compatibility after moving AppExitCodeProviding
+@available(*, deprecated, message: "AppExitCodeProviding has moved; import RuneKit and use the protocol from AppExitCodeProviding.swift")
+public enum AppExit {}

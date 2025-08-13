@@ -99,7 +99,8 @@ public extension Box {
                     if startX < ctx.rect.width {
                         if borderStyle != .none {
                             let availableWidth = max(0, ctx.contentWidth - childRect.x)
-                            renderChildLineWithinBorderOverlay(childLine, ctx: ctx, lineY: lineY, startX: startX, availableWidth: availableWidth, into: &lines)
+                            let args = OverlayArgs(lineY: lineY, startX: startX, availableWidth: availableWidth)
+                            renderChildLineWithinBorderOverlay(childLine, ctx: ctx, args: args, into: &lines)
                         } else {
                             let padding = String(repeating: " ", count: startX)
                             let availableWidth = max(0, ctx.contentWidth - childRect.x)
@@ -135,12 +136,13 @@ public extension Box {
     }
 
     private struct RenderContext { let rect: FlexLayout.Rect; let contentWidth: Int; let contentX: Int; let contentY: Int }
+    private struct OverlayArgs { let lineY: Int; let startX: Int; let availableWidth: Int }
     // Overlay content inside bordered box without overwriting borders; ANSI-safe and width-aware
-    private func renderChildLineWithinBorderOverlay(_ childLine: String, ctx: RenderContext, lineY: Int, startX: Int, availableWidth: Int, into lines: inout [String]) {
+    private func renderChildLineWithinBorderOverlay(_ childLine: String, ctx: RenderContext, args: OverlayArgs, into lines: inout [String]) {
         let middleAreaWidth = ctx.rect.width - 2
         let tokenizer = ANSITokenizer()
         let converter = ANSISpanConverter()
-        let styledLine = converter.tokensToStyledText(tokenizer.tokenize(lines[lineY]))
+        let styledLine = converter.tokensToStyledText(tokenizer.tokenize(lines[args.lineY]))
         let interiorStyled = styledLine.sliceByDisplayColumns(from: 1, to: 1 + middleAreaWidth)
         let existingMiddle = tokenizer.encode(converter.styledTextToTokens(interiorStyled))
         func padToDisplayWidth(_ content: String, to width: Int) -> String {
@@ -148,9 +150,9 @@ public extension Box {
             return content + String(repeating: " ", count: max(0, width - current))
         }
         let middleBuf = padToDisplayWidth(existingMiddle, to: middleAreaWidth)
-        let truncatedContent = ANSISafeTruncation.truncateToDisplayWidth(childLine, maxWidth: availableWidth)
-        let leftSlice = ANSISafeTruncation.truncateToDisplayWidth(middleBuf, maxWidth: max(0, startX - 1))
-        let rightStart = max(0, (startX - 1) + ANSISafeTruncation.displayWidthIgnoringANSI(truncatedContent))
+        let truncatedContent = ANSISafeTruncation.truncateToDisplayWidth(childLine, maxWidth: args.availableWidth)
+        let leftSlice = ANSISafeTruncation.truncateToDisplayWidth(middleBuf, maxWidth: max(0, args.startX - 1))
+        let rightStart = max(0, (args.startX - 1) + ANSISafeTruncation.displayWidthIgnoringANSI(truncatedContent))
         let middleStyled = converter.tokensToStyledText(tokenizer.tokenize(middleBuf))
         let rightStyledSlice = middleStyled.sliceByDisplayColumns(from: rightStart, to: middleAreaWidth)
         let rightSlice = tokenizer.encode(converter.styledTextToTokens(rightStyledSlice))
@@ -161,10 +163,8 @@ public extension Box {
         let bgOn = (backgroundColor?.backgroundSequence ?? "")
         let bgOff = backgroundColor != nil ? "\u{001B}[0m" : ""
         let middleAdjusted = BoxRenderer.adjustContentToDisplayWidth(newMiddle, targetWidth: middleAreaWidth)
-        lines[lineY] = leftBorder + bgOn + middleAdjusted + bgOff + rightBorder
+        lines[args.lineY] = leftBorder + bgOn + middleAdjusted + bgOff + rightBorder
     }
-
-
     private func ensureVerticalBorders(rect: FlexLayout.Rect, lines: inout [String]) {
         let borderChars = BoxRenderer.getBorderChars(for: borderStyle)
         let leftBorder = (borderColor?.foregroundSequence ?? "") + borderChars.vertical + (borderColor != nil ? "\u{001B}[0m" : "")

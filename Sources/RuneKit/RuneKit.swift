@@ -54,6 +54,15 @@
 /// the power of Swift's type system with efficient terminal rendering.
 public enum RuneKit {}
 
+
+public extension RuneKit {
+    /// Convert a View into Frame synchronously for tests
+    static func convertForTesting(_ view: some View) async -> TerminalRenderer.Frame {
+        let tree = ComponentTreeReconciler()
+        return convertViewToFrame(view, tree: tree, terminalProfile: TerminalProfile.xterm256)
+    }
+}
+
 // Re-export all modules for convenient access
 @_exported import RuneANSI
 @_exported import RuneComponents
@@ -404,6 +413,38 @@ extension Static: View {
 
 extension Static: ViewIdentifiable {}
 
+    // MARK: - View -> Component bridging for Box(children: ...)
+    /// Adapter that allows using any View as a Component child inside Box initializers
+    private struct ViewComponentAdapter<V: View>: Component {
+        let view: V
+        func render(in rect: FlexLayout.Rect) -> [String] {
+            // Convert the stored View to a concrete Component using the current identity path context
+            let path = RuntimeStateContext.currentPath
+            let component = convertViewToComponent(view, currentPath: path)
+            return component.render(in: rect)
+        }
+    }
+
+    /// Existential adapter wrapping any View as a Component at render time
+    private struct AnyViewComponent: Component {
+        let view: any View
+        func render(in rect: FlexLayout.Rect) -> [String] {
+            let path = RuntimeStateContext.currentPath
+            let component = convertViewToComponent(view, currentPath: path)
+            return component.render(in: rect)
+        }
+    }
+
+    /// Convenience overload to allow Box(children: ...) to accept View children with at least one element.
+    /// This avoids ambiguity with Box() and other initializers.
+    public extension Box {
+        init(children first: any View, _ rest: any View...) {
+            let items: [any View] = [first] + rest
+            let comps: [Component] = items.map { AnyViewComponent(view: $0) }
+            self.init(childrenArray: comps)
+        }
+    }
+
 /// Make Newline conform to View protocol
 extension Newline: View {
     public typealias Body = EmptyView
@@ -437,17 +478,35 @@ public actor RenderHandle {
     /// Input manager for raw-mode and key events
     private var inputManager: InputManager?
 
+    /// Entry for an input handler; avoids large tuple lint violations
+    private struct InputHandlerEntry {
+        let active: Bool
+        let requiresFocus: Bool
+        let path: String
+        let handler: @Sendable (KeyEvent) async -> Void
+    }
+
     /// Registry of active input handlers keyed by effect id
-    private var inputHandlers: [String: (active: Bool, handler: @Sendable (KeyEvent) async -> Void)] = [:]
+    /// - requiresFocus: when true, the handler only receives events if focused when any focusables exist.
+    private var inputHandlers: [String: InputHandlerEntry] = [:]
+
+    /// Focus management state
+    private var focusablesInOrder: [String] = [] // identity paths registered during last render
+    private var focusedIndex: Int = 0
+    private var focusedPath: String? {
+        guard !focusablesInOrder.isEmpty else { return nil }
+        if focusedIndex < 0 || focusedIndex >= focusablesInOrder.count { focusedIndex = 0 }
+        return focusablesInOrder[focusedIndex]
+    }
 
     // Build a Streams snapshot for hooks (useStdin/useStdout/useStderr)
     func streamsSnapshot() -> IOHooks.Streams {
         // Safely determine FDs for standard streams without touching NSStdIO wrappers that can throw
-        func fd(for h: FileHandle, fallback: Int32) -> Int32 {
-            if h === FileHandle.standardInput { return STDIN_FILENO }
-            if h === FileHandle.standardOutput { return STDOUT_FILENO }
-            if h === FileHandle.standardError { return STDERR_FILENO }
-            return h.fileDescriptor
+        func fd(for handle: FileHandle, fallback: Int32) -> Int32 {
+            if handle === FileHandle.standardInput { return STDIN_FILENO }
+            if handle === FileHandle.standardOutput { return STDOUT_FILENO }
+            if handle === FileHandle.standardError { return STDERR_FILENO }
+            return handle.fileDescriptor
         }
         let stdinFD = fd(for: options.stdin, fallback: STDIN_FILENO)
         let stdoutFD = fd(for: options.stdout, fallback: STDOUT_FILENO)
@@ -504,33 +563,73 @@ public actor RenderHandle {
         if exitStatus == nil { exitStatus = status }
     }
 
-    /// Public accessor for exit status (nil until unmount requested)
-    public func getExitStatus() async -> ExitStatus? { exitStatus }
+    // Split markers retained, but keep methods inside actor to preserve access control
+        /// Public accessor for exit status (nil until unmount requested)
+        public func getExitStatus() async -> ExitStatus? { exitStatus }
 
-    /// Helper invoked from requestRerender to avoid capturing non-Sendable state
-    private func rerenderUsingRoot() async { await rootRebuilder?() }
+        /// Helper invoked from requestRerender to avoid capturing non-Sendable state
+        private func rerenderUsingRoot() async { await rootRebuilder?() }
 
-    // MARK: - Input handler registration
+        // MARK: - Input handler registration
 
-    private func registerInputHandler(id: String, isActive: Bool, handler: @escaping @Sendable (KeyEvent) async -> Void) -> @Sendable () -> Void {
-        inputHandlers[id] = (active: isActive, handler: handler)
-        let cleanup: @Sendable () -> Void = { [weak self] in
-            Task { await self?.removeInputHandler(id: id) }
+        private func registerInputHandler(id: String, isActive: Bool, requiresFocus: Bool, path: String, handler: @escaping @Sendable (KeyEvent) async -> Void) -> @Sendable () -> Void {
+            inputHandlers[id] = InputHandlerEntry(active: isActive, requiresFocus: requiresFocus, path: path, handler: handler)
+            let cleanup: @Sendable () -> Void = { [weak self] in
+                Task { await self?.removeInputHandler(id: id) }
+            }
+            return cleanup
         }
-        return cleanup
-    }
 
-    private func removeInputHandler(id: String) {
-        inputHandlers.removeValue(forKey: id)
-    }
+        /// Dispatch input to handlers observing focus gating rules. Also handles Tab/Shift+Tab to change focus.
+        public func dispatchInput(_ event: KeyEvent) async {
+            // Handle Tab / Shift+Tab focus movement first
+            if case .key(let kind, let mods) = event {
+                if kind == .tab {
+                    if mods.contains(.shift) {
+                        await focusPrevious()
+                    } else {
+                        await focusNext()
+                    }
+                    return
+                }
+            }
 
-    public func dispatchInput(_ event: KeyEvent) async {
-        // Snapshot handlers to avoid mutation during iteration
-        let handlers = inputHandlers
-        for (_, entry) in handlers where entry.active {
-            await entry.handler(event)
+            // Snapshot handlers and focus state
+            let handlers = inputHandlers
+            let currentFocusPath = focusedPath
+            let anyFocusables = !(focusablesInOrder.isEmpty)
+
+            for (_, entry) in handlers where entry.active {
+                if !anyFocusables || !entry.requiresFocus {
+                    await entry.handler(event)
+                } else if let fp = currentFocusPath, fp == entry.path {
+                    await entry.handler(event)
+                }
+            }
         }
-    }
+
+        private func focusNext() async {
+            guard !focusablesInOrder.isEmpty else { return }
+            focusedIndex = (focusedIndex + 1) % focusablesInOrder.count
+            // Rerender so useFocus() can read updated focusedPath and indicate focus indicator
+            await rerenderUsingRoot()
+        }
+
+        private func focusPrevious() async {
+            guard !focusablesInOrder.isEmpty else { return }
+            focusedIndex = (focusedIndex - 1 + focusablesInOrder.count) % focusablesInOrder.count
+            await rerenderUsingRoot()
+        }
+
+        private func removeInputHandler(id: String) {
+            inputHandlers.removeValue(forKey: id)
+        }
+
+        // Expose setter for initial focusables
+        func setFocusables(_ paths: [String]) {
+            focusablesInOrder = paths
+            if focusedIndex >= focusablesInOrder.count { focusedIndex = max(0, focusablesInOrder.count - 1) }
+        }
 
     // MARK: - Initialization
 
@@ -687,6 +786,7 @@ public actor RenderHandle {
     /// This method is optimized for frequent updates and uses the hybrid reconciler
     /// to minimize terminal output. Multiple rapid calls are safe and efficient.
     ///
+
     /// This provides programmatic control over the rendered content and supports
     /// dynamic UI updates similar to Ink's rerender functionality.
     ///
@@ -728,11 +828,20 @@ public actor RenderHandle {
                 // Begin a logical frame for the componentTree
                 await componentTree.beginFrame(rootPath: identity)
             }
-            let f: TerminalRenderer.Frame = await HooksRuntime.$ioStreams.withValue(streams) {
-                convertViewToFrame(view, tree: componentTree, terminalProfile: options.terminalProfile)
+            // Compute frame while recording focusables and binding current focusedPath
+            let focusables = HooksFocusCollector()
+            let frame: TerminalRenderer.Frame = HooksRuntime.$focusedPath.withValue(self.focusedPath) {
+                HooksRuntime.$focusRecorder.withValue({ path in
+                    focusables.record(path)
+                }, operation: {
+                    convertViewToFrame(view, tree: componentTree, terminalProfile: options.terminalProfile)
+                })
             }
+            // Update focusables order and clamp focus index if needed
+            self.focusablesInOrder = focusables.snapshot()
+            if self.focusedIndex >= self.focusablesInOrder.count { self.focusedIndex = max(0, self.focusablesInOrder.count - 1) }
             await componentTree.endFrame()
-            return f
+            return frame
         })
         let collected = box.snapshot()
 
@@ -755,14 +864,14 @@ public actor RenderHandle {
     }
 
     // MARK: - Effects commit/cleanup
-    public func commitCollectedEffects(_ specs: [(id: String, deps: String?, effect: @Sendable () async -> (() -> Void)?)]) async {
+    public func commitCollectedEffects(_ specs: [EffectCollectorBox.Entry]) async {
         await commitEffects(specs)
     }
 
-    private func commitEffects(_ specs: [(id: String, deps: String?, effect: @Sendable () async -> (() -> Void)?)]) async {
+    private func commitEffects(_ specs: [EffectCollectorBox.Entry]) async {
         // Build lookup of new specs
         var newMap: [String: (String?, @Sendable () async -> (() -> Void)?)] = [:]
-        for s in specs { newMap[s.id] = (s.deps, s.effect) }
+        for entry in specs { newMap[entry.id] = (entry.deps, entry.effect) }
 
         // Clean up effects that disappeared
         for (id, entry) in effects where newMap[id] == nil {
@@ -788,9 +897,12 @@ public actor RenderHandle {
                         guard let self else { return }
                         Task { await self.rerenderUsingRoot() }
                     }, operation: {
-                        await HooksRuntime.$inputRegistrar.withValue({ [weak self] (effectId, handler, isActive) in
-                            guard let self else { return { } }
-                            let cleanup = await self.registerInputHandler(id: effectId, isActive: isActive, handler: handler)
+                        await HooksRuntime.$inputRegistrar.withValue({ [weak self] effectId, handler, isActive, requiresFocus in
+                            guard let self else { return {} }
+                            // Use the effectId's prefix before '::' to infer the component identity path
+                            let parts = effectId.split(separator: ":", maxSplits: 1, omittingEmptySubsequences: false)
+                            let path = parts.first.map(String.init) ?? RuntimeStateContext.currentPath
+                            let cleanup = await self.registerInputHandler(id: effectId, isActive: isActive, requiresFocus: requiresFocus, path: path, handler: handler)
                             return cleanup
                         }, operation: {
                             // Bind app and I/O contexts for useApp()/useStd* within effects
@@ -798,10 +910,9 @@ public actor RenderHandle {
                                 guard let self else { return }
                                 // Compute exit status code
                                 let code: Int32
-                                if let prov = err as? AppExitCodeProviding { code = prov.exitCode }
-                                else if err != nil { code = 1 } else { code = 0 }
-                                let desc = err.map { String(describing: $0) }
-                                await self.recordExitStatusAndUnmount(code: code, description: desc)
+                                if let prov = err as? AppExitCodeProviding { code = prov.exitCode } else if err != nil { code = 1 } else { code = 0 }
+                                let description = err.map { String(describing: $0) }
+                                await self.recordExitStatusAndUnmount(code: code, description: description)
                             }, clear: { [weak self] in
                                 guard let self else { return }
                                 await self.clear()
@@ -825,9 +936,6 @@ public actor RenderHandle {
 
     private func runAllEffectCleanups() {
         for (_, entry) in effects { entry.cleanup?() }
-        // Ensure that a depsToken of nil (no deps) is treated as always-change,
-        // while a concrete token runs only when it differs from previous.
-
     }
 
     /// Builder overload to construct the view and render within the same actor context
@@ -867,11 +975,11 @@ public actor RenderHandle {
             await HooksRuntime.$ioStreams.withValue(self.streamsSnapshot()) {
                 await componentTree.beginFrame(rootPath: identity)
             }
-            let f = await HooksRuntime.$ioStreams.withValue(self.streamsSnapshot()) {
+            let frame = HooksRuntime.$ioStreams.withValue(self.streamsSnapshot()) {
                 convertViewToFrame(view, tree: componentTree, terminalProfile: options.terminalProfile)
             }
             await componentTree.endFrame()
-            return f
+            return frame
         })
 
         await frameBuffer.renderFrame(frame)
@@ -906,19 +1014,7 @@ public actor RenderHandle {
         let frame = convertViewToFrame(view, tree: componentTree, terminalProfile: options.terminalProfile)
         await frameBuffer.renderFrame(frame)
     }
-
     }
-
-// MARK: - Internal test hook
-extension RuneKit {
-    /// Convert a View into Frame synchronously for tests
-    static func convertForTesting(_ view: some View) async -> TerminalRenderer.Frame {
-        // Use ephemeral tree and default profile; no side effects
-        let tree = ComponentTreeReconciler()
-        return convertViewToFrame(view, tree: tree, terminalProfile: .xterm256)
-    }
-}
-
 
 // MARK: - View to Component Conversion
 
@@ -993,9 +1089,9 @@ private func convertViewToComponent(_ view: some View, currentPath: String) -> C
     let explicit = (view as? ViewIdentifiable)?.viewIdentity
     let childPath = [currentPath, childTypeName, explicit].compactMap(\.self).joined(separator: "/")
 
-    func resolveComposite<V: View>(_ v: V, path: String) -> Component {
+    func resolveComposite<V: View>(_ view: V, path: String) -> Component {
         RuntimeStateContext.$currentPath.withValue(path) {
-            convertViewToComponent(v.body, currentPath: path)
+            convertViewToComponent(view.body, currentPath: path)
         }
     }
 
@@ -1027,6 +1123,16 @@ public func getTerminalSize() -> (width: Int, height: Int) {
 /// This function starts a terminal application with the given view and options.
 /// It handles all the setup including signal handlers, console capture, and
 /// frame buffer initialization based on the provided options.
+private func installSignalHandlerIfNeeded(on handle: RenderHandle, options: RenderOptions) async {
+    guard options.exitOnCtrlC else { return }
+    let handler = SignalHandler()
+    await handler.install {
+        await handle.unmount()
+        exit(0)
+    }
+    await handle.setSignalHandler(handler)
+}
+
 ///
 /// - Parameters:
 ///   - view: The root view to render
@@ -1058,17 +1164,7 @@ public func render(_ view: some View, options: RenderOptions = RenderOptions.fro
     let handle = RenderHandle(frameBuffer: frameBuffer, signalHandler: nil, options: options)
 
     // Set up signal handler if requested
-    if options.exitOnCtrlC {
-        let handler = SignalHandler()
-        await handler.install {
-            // Graceful teardown through render handle
-            await handle.unmount()
-            exit(0)
-        }
-
-        // Update the handle with the signal handler
-        await handle.setSignalHandler(handler)
-    }
+    await installSignalHandlerIfNeeded(on: handle, options: options)
 
     // Set up input manager for key events and paste detection
     // Create a controlOut handle that bypasses console capture similar to FrameBuffer
@@ -1108,38 +1204,54 @@ public func render(_ view: some View, options: RenderOptions = RenderOptions.fro
 
     // Initial render: collect effects and render without sending non-Sendable view across actor boundary.
     // Mirrors RenderHandle.rerender(view) semantics (identity/reset + effect collection/commit).
-    let box = EffectCollectorBox()
     let typeName = String(describing: type(of: view))
     let explicit = (view as? ViewIdentifiable)?.viewIdentity
     let identity = [typeName, explicit].compactMap(\.self).joined(separator: "#")
 
-    // Align diff-state reset and component tree lifecycle with actor's logic
-    await frameBuffer.resetDiffState()
-    await handle.componentTree.reset()
+    // Build frame (collecting effects) and commit them; split helpers to keep this function small
+    let (frame, effectsBox) = await buildInitialFrame(view, identity: identity, handle: handle, options: options)
+    await frameBuffer.renderFrame(frame)
+    await commitInitialEffects(for: view, identity: identity, handle: handle, options: options, effects: effectsBox)
 
+    // After initial effects commit, perform an extra pass to record focusables
     await handle.componentTree.beginFrame(rootPath: identity)
+    let initialFocusablesCollector = HooksFocusCollector()
+    _ = HooksRuntime.$focusedPath.withValue(nil) {
+        HooksRuntime.$focusRecorder.withValue({ path in
+            initialFocusablesCollector.record(path)
+        }, operation: {
+            convertViewToFrame(view, tree: handle.componentTree, terminalProfile: options.terminalProfile)
+        })
+    }
+    await handle.componentTree.endFrame()
+    await handle.setFocusables(initialFocusablesCollector.snapshot())
+
+    return handle
+}
+
+private func buildInitialFrame(_ view: some View, identity: String, handle: RenderHandle, options: RenderOptions) async -> (TerminalRenderer.Frame, EffectCollectorBox) {
+    await handle.componentTree.beginFrame(rootPath: identity)
+    let box = EffectCollectorBox()
     let frame: TerminalRenderer.Frame = await RuntimeStateContext.$effectCollector.withValue({ id, deps, effect in
         box.add(id: id, deps: deps, effect: effect)
     }, operation: {
         convertViewToFrame(view, tree: handle.componentTree, terminalProfile: options.terminalProfile)
     })
     await handle.componentTree.endFrame()
+    return (frame, box)
+}
 
-    await frameBuffer.renderFrame(frame)
-    // Bind app and I/O context during effect commit for useApp()/useStd* hooks
+private func commitInitialEffects(for view: some View, identity: String, handle: RenderHandle, options: RenderOptions, effects: EffectCollectorBox) async {
     let ctx = HooksRuntime.AppContext(exit: { err in
         let code: Int32
-        if let prov = err as? AppExitCodeProviding { code = prov.exitCode }
-        else if err != nil { code = 1 } else { code = 0 }
+        if let prov = err as? AppExitCodeProviding { code = prov.exitCode } else if err != nil { code = 1 } else { code = 0 }
         let desc = err.map { String(describing: $0) }
         await handle.recordExitStatusAndUnmount(code: code, description: desc)
     }, clear: { await handle.clear() })
     let streams = await handle.streamsSnapshot()
     await HooksRuntime.$appContext.withValue(ctx) {
         await HooksRuntime.$ioStreams.withValue(streams) {
-            await handle.commitCollectedEffects(box.snapshot())
+            await handle.commitCollectedEffects(effects.snapshot())
         }
     }
-
-    return handle
 }

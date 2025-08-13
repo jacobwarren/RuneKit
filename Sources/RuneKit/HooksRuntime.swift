@@ -14,11 +14,16 @@ public enum HooksRuntime {
 
     /// Registrar for input handlers; bound by RenderHandle.commitEffects while invoking effects.
     /// Returns a synchronous cleanup closure to unsubscribe.
-    @TaskLocal public static var inputRegistrar: (@Sendable (_ id: String, _ handler: @escaping @Sendable (KeyEvent) async -> Void, _ isActive: Bool) async -> (@Sendable () -> Void))?
+    @TaskLocal public static var inputRegistrar: (@Sendable (_ id: String, _ handler: @escaping @Sendable (KeyEvent) async -> Void, _ isActive: Bool, _ requiresFocus: Bool) async -> (@Sendable () -> Void))?
 
     /// App context for controlling the running application (exit/clear) from within components/effects
     @TaskLocal public static var appContext: AppContext?
 
+    // Focus registry task-locals
+    /// Recorder invoked during render when a component calls useFocus(); the runtime binds this to collect focusable identity paths in render order.
+    @TaskLocal public static var focusRecorder: (@Sendable (_ path: String) -> Void)?
+    /// Currently focused identity path bound during render so useFocus() can return whether the current component is focused.
+    @TaskLocal public static var focusedPath: String?
 
     /// Lightweight app control surface exposed to hooks. Methods are async and actor-hopping safe.
     public struct AppContext: Sendable {
@@ -34,7 +39,6 @@ public enum HooksRuntime {
         public func clear() async { await _clear() }
     }
 
-
     // MARK: - useApp
     /// Access the application context for programmatic control from components/effects
     /// The runtime binds this during render/effect commit; calling outside a render/effect will be a no-op stub.
@@ -44,7 +48,6 @@ public enum HooksRuntime {
         return AppContext(exit: { _ in }, clear: { })
     }
 
-
     // MARK: - Dependency token helpers
 
     /// Build a stable string token from a dependency array.
@@ -52,35 +55,71 @@ public enum HooksRuntime {
     private static func depsToken(from deps: [AnyHashable]?) -> String? {
         guard let deps else { return nil }
         if deps.isEmpty { return "" }
-        // Stable textual encoding with escaping to reduce collision risk
-        func escape(_ s: String) -> String { s.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "|", with: "\\|").replacingOccurrences(of: "=", with: "\\=") }
-        func encode(_ v: AnyHashable) -> String {
-            switch v.base {
-            case let s as String: return "Str=" + escape(s)
-            case let b as Bool: return "Bool=" + (b ? "1" : "0")
-            case let i as Int: return "Int=" + String(i)
-            case let i8 as Int8: return "Int8=" + String(i8)
-            case let i16 as Int16: return "Int16=" + String(i16)
-            case let i32 as Int32: return "Int32=" + String(i32)
-            case let i64 as Int64: return "Int64=" + String(i64)
-            case let u as UInt: return "UInt=" + String(u)
-            case let u8 as UInt8: return "UInt8=" + String(u8)
-            case let u16 as UInt16: return "UInt16=" + String(u16)
-            case let u32 as UInt32: return "UInt32=" + String(u32)
-            case let u64 as UInt64: return "UInt64=" + String(u64)
-            case let f as Float: return "Float=" + String(f)
-            case let d as Double: return "Double=" + String(d)
-            case let ident as IdentityToken:
-                // Identity wrapper: encode by object identifier only
-                return "Ident=" + String(UInt(bitPattern: ObjectIdentifier(ident.identityObject)))
-            default:
-                // Fallback to type + description only
-                let typeName = String(describing: type(of: v.base))
-                return "Val=" + escape(typeName) + "#" + escape(String(describing: v.base))
-            }
-        }
-        let parts = deps.map { encode($0) }
+        let parts = deps.map { encodeValue($0) }
         return "n=\(deps.count)|" + parts.joined(separator: "|")
+    }
+
+    // Extracted helpers to keep complexity low while preserving exact encoding behavior
+    private static func encodeValue(_ value: AnyHashable) -> String {
+        if let encoded = encodeStringBool(value) { return encoded }
+        if let encoded = encodeSignedInts(value) { return encoded }
+        if let encoded = encodeUnsignedInts(value) { return encoded }
+        if let encoded = encodeFloats(value) { return encoded }
+        if let encoded = encodeIdentity(value) { return encoded }
+        let typeName = String(describing: type(of: value.base))
+        return "Val=" + escape(typeName) + "#" + escape(String(describing: value.base))
+    }
+
+    private static func encodeStringBool(_ value: AnyHashable) -> String? {
+        switch value.base {
+        case let str as String: return "Str=" + escape(str)
+        case let bool as Bool: return "Bool=" + (bool ? "1" : "0")
+        default: return nil
+        }
+    }
+
+    private static func encodeSignedInts(_ value: AnyHashable) -> String? {
+        switch value.base {
+        case let int as Int: return "Int=" + String(int)
+        case let int8 as Int8: return "Int8=" + String(int8)
+        case let int16 as Int16: return "Int16=" + String(int16)
+        case let int32 as Int32: return "Int32=" + String(int32)
+        case let int64 as Int64: return "Int64=" + String(int64)
+        default: return nil
+        }
+    }
+
+    private static func encodeUnsignedInts(_ value: AnyHashable) -> String? {
+        switch value.base {
+        case let uint as UInt: return "UInt=" + String(uint)
+        case let uint8 as UInt8: return "UInt8=" + String(uint8)
+        case let uint16 as UInt16: return "UInt16=" + String(uint16)
+        case let uint32 as UInt32: return "UInt32=" + String(uint32)
+        case let uint64 as UInt64: return "UInt64=" + String(uint64)
+        default: return nil
+        }
+    }
+
+    private static func encodeFloats(_ value: AnyHashable) -> String? {
+        switch value.base {
+        case let float as Float: return "Float=" + String(float)
+        case let double as Double: return "Double=" + String(double)
+        default: return nil
+        }
+    }
+
+    private static func encodeIdentity(_ value: AnyHashable) -> String? {
+        if let ident = value.base as? IdentityToken {
+            return "Ident=" + String(UInt(bitPattern: ObjectIdentifier(ident.identityObject)))
+        }
+        return nil
+    }
+
+    private static func escape(_ input: String) -> String {
+        input
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "|", with: "\\|")
+            .replacingOccurrences(of: "=", with: "\\=")
     }
 
     // MARK: - Effects
@@ -111,6 +150,21 @@ public enum HooksRuntime {
         useEffect(key, depsToken: depsToken(from: deps), effect)
     }
 
+    // MARK: - useFocus / Focus Manager
+
+    /// Mark the current component as focusable and return whether it is currently focused.
+    /// The runtime collects focusable identity paths during render via `focusRecorder` and binds
+    /// the currently focused path via `focusedPath` so this returns true for exactly one element.
+    /// When no focusables are registered in a frame, focus gating is disabled (broadcast semantics).
+    public static func useFocus() -> Bool {
+        let path = RuntimeStateContext.currentPath
+        // Record this focusable in render order for the runtime to build the tab ring
+        focusRecorder?(path)
+        // Return whether this path is currently focused
+        if let fp = focusedPath { return fp == path }
+        return false
+    }
+
     /// Request a rerender of the current application (bound by the runtime during render)
     public static func requestRerender() {
         RuntimeStateContext.requestRerender?()
@@ -139,20 +193,26 @@ public enum HooksRuntime {
     /// - Parameters:
     ///   - handler: Async closure receiving decoded KeyEvent values.
     ///   - isActive: When false, events are ignored for this handler (toggled via deps).
-    public static func useInput(_ handler: @escaping @Sendable (KeyEvent) async -> Void, isActive: Bool = true, fileID: StaticString = #fileID, line: UInt = #line) {
+    ///   - requiresFocus: When true (default), events are delivered only when this component is focused if any focusables exist. When false, the handler is global and receives all events regardless of focus.
+    public static func useInput(_ handler: @escaping @Sendable (KeyEvent) async -> Void, isActive: Bool = true, requiresFocus: Bool = true, fileID: StaticString = #fileID, line: UInt = #line) {
         let key = "__useInput::\(fileID):\(line)"
-        // Re-run when active flag changes; stable when unchanged
-        let token = isActive ? "1" : "0"
+        // Re-run when active or focus requirement changes; stable when unchanged
+        let token = (isActive ? "1" : "0") + (requiresFocus ? "F" : "G")
         useEffect(key, depsToken: token) {
             let path = RuntimeStateContext.currentPath
             let id = path + "::" + key
             if let registrar = inputRegistrar {
-                let cleanup = await registrar(id, handler, isActive)
+                let cleanup = await registrar(id, handler, isActive, requiresFocus)
                 return cleanup
             } else {
                 return nil
             }
         }
+    }
+
+    /// Back-compat overload without requiresFocus parameter (defaults to true)
+    public static func useInput(_ handler: @escaping @Sendable (KeyEvent) async -> Void, isActive: Bool = true, fileID: StaticString = #fileID, line: UInt = #line) {
+        useInput(handler, isActive: isActive, requiresFocus: true, fileID: fileID, line: line)
     }
 
     // MARK: - useRef
@@ -196,8 +256,6 @@ public enum HooksRuntime {
             let newValue = compute()
             // Keep last value cached for potential future []/non-empty deps usage at same site
             if let existing: MemoEntry<T> = StateRegistry.shared.getIfExists(path: path, key: key) {
-
-
                 StateRegistry.shared.set(path: path, key: key, value: MemoEntry(token: existing.token, value: newValue))
             } else {
                 StateRegistry.shared.set(path: path, key: key, value: MemoEntry(token: nil, value: newValue))
