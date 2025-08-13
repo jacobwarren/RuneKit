@@ -478,6 +478,9 @@ public actor RenderHandle {
     /// Input manager for raw-mode and key events
     private var inputManager: InputManager?
 
+    /// Debounced resize observer
+    private var resizeObserver: ResizeObserver?
+
     /// Entry for an input handler; avoids large tuple lint violations
     private struct InputHandlerEntry {
         let active: Bool
@@ -662,6 +665,21 @@ public actor RenderHandle {
         self.frameBuffer = frameBuffer
         self.signalHandler = signalHandler
         self.options = options
+
+        // Install a debounced SIGWINCH observer when stdout is a TTY
+        if isatty(options.stdout.fileDescriptor) == 1 {
+            let observer = ResizeObserver(debounceInterval: .milliseconds(25))
+            self.resizeObserver = observer
+            Task { [weak self] in
+                guard let self else { return }
+                await observer.install { [weak self] in
+                    guard let self else { return }
+                    // Reset diff for safe full layout recompute and rerender the current root view
+                    await self.alignIdentity(self.lastViewIdentity ?? "")
+                    await self.rerenderUsingRoot()
+                }
+            }
+        }
     }
 
     // MARK: - Public Interface
@@ -676,6 +694,10 @@ public actor RenderHandle {
         // Stop input manager
         await inputManager?.stop()
         inputManager = nil
+
+        // Stop resize observer
+        await resizeObserver?.cleanup()
+        resizeObserver = nil
 
         // Clear the frame buffer
         await frameBuffer.clear()
@@ -710,6 +732,10 @@ public actor RenderHandle {
         // Stop input manager
         await inputManager?.stop()
         inputManager = nil
+
+        // Stop resize observer
+        await resizeObserver?.cleanup()
+        resizeObserver = nil
 
         // Clear the frame buffer and restore terminal state
         await frameBuffer.clear()
@@ -755,6 +781,10 @@ public actor RenderHandle {
     public func hasConsoleCapture() async -> Bool {
         await frameBuffer.isConsoleCaptureActive()
     }
+
+    // MARK: - Testing helpers for resize-driven rerender
+    func testingRerenderUsingRoot() async { await rerenderUsingRoot() }
+    func testingAlignIdentityForCurrentBuilder() async { await alignIdentity(lastViewIdentity ?? "") }
 
     /// Set the signal handler for this render session (internal use)
     /// - Parameter handler: Signal handler to associate with this session
