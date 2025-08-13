@@ -1,4 +1,9 @@
 import Foundation
+#if os(Linux)
+import Glibc
+#else
+import Darwin
+#endif
 
 // Minimal hooks-style API: useEffect, requestRerender, useRef/useMemo, and useInput
 // Effects are registered during render and executed after the frame commits.
@@ -14,6 +19,7 @@ public enum HooksRuntime {
     /// App context for controlling the running application (exit/clear) from within components/effects
     @TaskLocal public static var appContext: AppContext?
 
+
     /// Lightweight app control surface exposed to hooks. Methods are async and actor-hopping safe.
     public struct AppContext: Sendable {
         private let _exit: @Sendable (Error?) async -> Void
@@ -28,6 +34,7 @@ public enum HooksRuntime {
         public func clear() async { await _clear() }
     }
 
+
     // MARK: - useApp
     /// Access the application context for programmatic control from components/effects
     /// The runtime binds this during render/effect commit; calling outside a render/effect will be a no-op stub.
@@ -36,6 +43,7 @@ public enum HooksRuntime {
         // Fallback no-op context to keep tests/app code safe when not bound
         return AppContext(exit: { _ in }, clear: { })
     }
+
 
     // MARK: - Dependency token helpers
 
