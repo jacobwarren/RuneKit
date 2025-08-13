@@ -127,7 +127,9 @@ public actor InputManager {
         if enableRawMode { await enableRawModeIfTTY() }
         if enableBracketedPaste { writeControl("\u{001B}[?2004h") }
 
-        if isATTY(input.fileDescriptor) == 1 {
+        // In CI/test harness we don't need a background read loop; tests inject via process(bytes:).
+        // Only spawn the loop when reading is actually desired (raw or bracketed paste) AND stdin is a TTY.
+        if (enableRawMode || enableBracketedPaste) && isATTY(input.fileDescriptor) == 1 {
             readTask = Task.detached { [weak self] in
                 await self?.readLoop()
             }

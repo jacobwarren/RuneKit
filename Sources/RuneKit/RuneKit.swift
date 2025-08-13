@@ -608,17 +608,37 @@ public actor RenderHandle {
             }
         }
 
-        private func focusNext() async {
+        // Focus movement helpers
+        public func focusNext() async {
             guard !focusablesInOrder.isEmpty else { return }
             focusedIndex = (focusedIndex + 1) % focusablesInOrder.count
-            // Rerender so useFocus() can read updated focusedPath and indicate focus indicator
             await rerenderUsingRoot()
         }
 
-        private func focusPrevious() async {
+        public func focusPrevious() async {
             guard !focusablesInOrder.isEmpty else { return }
             focusedIndex = (focusedIndex - 1 + focusablesInOrder.count) % focusablesInOrder.count
             await rerenderUsingRoot()
+        }
+
+        // Programmatic focus controls
+        public nonisolated func currentFocusedPath() async -> String? { await self.focusedPath }
+        public func focus(path: String) async -> Bool {
+            guard let idx = focusablesInOrder.firstIndex(of: path) else { return false }
+            focusedIndex = idx
+            await rerenderUsingRoot()
+            return true
+        }
+        public func focus(id: String) async -> Bool {
+            guard let idx = focusablesInOrder.firstIndex(where: { path in
+                // Match id as a full path segment
+                path.split(separator: "/").contains(where: { $0 == id })
+            }) else {
+                return false
+            }
+            focusedIndex = idx
+            await rerenderUsingRoot()
+            return true
         }
 
         private func removeInputHandler(id: String) {
@@ -858,7 +878,17 @@ public actor RenderHandle {
         })
         await HooksRuntime.$appContext.withValue(ctx) {
             await HooksRuntime.$ioStreams.withValue(streams) {
-                await commitEffects(collected)
+                // Bind FocusManager during effects invocation so hooks can capture it
+                let mgr = HooksRuntime.FocusManager(
+                    next: { [weak self] in await self?.focusNext() },
+                    previous: { [weak self] in await self?.focusPrevious() },
+                    focusPath: { [weak self] path in await self?.focus(path: path) ?? false },
+                    focusId: { [weak self] id in await self?.focus(id: id) ?? false },
+                    focusedPath: { [weak self] in await self?.currentFocusedPath() }
+                )
+                await HooksRuntime.$focusManager.withValue(mgr) {
+                    await commitEffects(collected)
+                }
             }
         }
     }
@@ -920,7 +950,16 @@ public actor RenderHandle {
                             let streams = self.streamsSnapshot()
                             return await HooksRuntime.$appContext.withValue(ctx) {
                                 await HooksRuntime.$ioStreams.withValue(streams) {
-                                    await effect()
+                                    let mgr = HooksRuntime.FocusManager(
+                                        next: { [weak self] in await self?.focusNext() },
+                                        previous: { [weak self] in await self?.focusPrevious() },
+                                        focusPath: { [weak self] path in await self?.focus(path: path) ?? false },
+                                        focusId: { [weak self] id in await self?.focus(id: id) ?? false },
+                                        focusedPath: { [weak self] in await self?.currentFocusedPath() }
+                                    )
+                                    return await HooksRuntime.$focusManager.withValue(mgr) {
+                                        await effect()
+                                    }
                                 }
                             }
                         })
@@ -987,7 +1026,16 @@ public actor RenderHandle {
         // Commit collected effects with app and I/O context
         let streams = streamsSnapshot()
         await HooksRuntime.$ioStreams.withValue(streams) {
-            await commitEffects(box.snapshot())
+            let mgr = HooksRuntime.FocusManager(
+                next: { [weak self] in await self?.focusNext() },
+                previous: { [weak self] in await self?.focusPrevious() },
+                focusPath: { [weak self] path in await self?.focus(path: path) ?? false },
+                focusId: { [weak self] id in await self?.focus(id: id) ?? false },
+                focusedPath: { [weak self] in await self?.currentFocusedPath() }
+            )
+            await HooksRuntime.$focusManager.withValue(mgr) {
+                await commitEffects(box.snapshot())
+            }
         }
     }
 
@@ -1167,17 +1215,24 @@ public func render(_ view: some View, options: RenderOptions = RenderOptions.fro
     await installSignalHandlerIfNeeded(on: handle, options: options)
 
     // Set up input manager for key events and paste detection
-    // Create a controlOut handle that bypasses console capture similar to FrameBuffer
-    let controlOut: FileHandle = {
-        #if os(Linux)
-        let dupfd = Glibc.dup(options.stdout.fileDescriptor)
-        #else
-        let dupfd = Darwin.dup(options.stdout.fileDescriptor)
-        #endif
-        if dupfd >= 0 {
-            return FileHandle(fileDescriptor: dupfd, closeOnDealloc: true)
+    // Only duplicate stdout for controlOut when we actually need to emit control sequences
+    // (i.e., bracketed paste enabled or console patching enabled). Otherwise, reuse stdout
+    // so that Pipe readers see EOF as soon as the test closes the write end, even if the
+    // input manager wasn't stopped explicitly.
+    let (controlOut, shouldCloseControlOutOnStop): (FileHandle, Bool) = {
+        if options.enableBracketedPaste || options.patchConsole {
+            #if os(Linux)
+            let dupfd = Glibc.dup(options.stdout.fileDescriptor)
+            #else
+            let dupfd = Darwin.dup(options.stdout.fileDescriptor)
+            #endif
+            if dupfd >= 0 {
+                return (FileHandle(fileDescriptor: dupfd, closeOnDealloc: true), true)
+            } else {
+                return (options.stdout, false)
+            }
         } else {
-            return options.stdout
+            return (options.stdout, false)
         }
     }()
     let inputMgr = InputManager(
@@ -1186,7 +1241,7 @@ public func render(_ view: some View, options: RenderOptions = RenderOptions.fro
         enableRawMode: options.enableRawMode,
         enableBracketedPaste: options.enableBracketedPaste,
         exitOnCtrlC: options.exitOnCtrlC,
-        closeControlOutOnStop: true
+        closeControlOutOnStop: shouldCloseControlOutOnStop
     )
     await inputMgr.setEventHandler { event in
         switch event {

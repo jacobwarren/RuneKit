@@ -24,6 +24,9 @@ public enum HooksRuntime {
     @TaskLocal public static var focusRecorder: (@Sendable (_ path: String) -> Void)?
     /// Currently focused identity path bound during render so useFocus() can return whether the current component is focused.
     @TaskLocal public static var focusedPath: String?
+    /// Programmatic focus manager bound during render/effect commit for useFocusManager()
+    @TaskLocal public static var focusManager: FocusManager?
+
 
     /// Lightweight app control surface exposed to hooks. Methods are async and actor-hopping safe.
     public struct AppContext: Sendable {
@@ -147,7 +150,50 @@ public enum HooksRuntime {
     /// Ergonomic overload: deps array sugar
     /// - nil deps: run every commit; []: mount/unmount only; non-empty: rerun when any changes
     public static func useEffect(_ key: String, deps: [AnyHashable]? = nil, _ effect: @escaping @Sendable () async -> (() -> Void)?) {
+
         useEffect(key, depsToken: depsToken(from: deps), effect)
+    }
+
+
+    // MARK: - Focus Manager API
+
+    /// Manager for programmatic focus control exposed via useFocusManager()
+    public struct FocusManager: Sendable {
+        private let _next: @Sendable () async -> Void
+        private let _previous: @Sendable () async -> Void
+        private let _focusPath: @Sendable (String) async -> Bool
+        private let _focusId: @Sendable (String) async -> Bool
+        private let _focusedPath: @Sendable () async -> String?
+        public init(
+            next: @escaping @Sendable () async -> Void,
+            previous: @escaping @Sendable () async -> Void,
+            focusPath: @escaping @Sendable (String) async -> Bool,
+            focusId: @escaping @Sendable (String) async -> Bool,
+            focusedPath: @escaping @Sendable () async -> String?
+        ) {
+            self._next = next
+            self._previous = previous
+            self._focusPath = focusPath
+            self._focusId = focusId
+            self._focusedPath = focusedPath
+        }
+        public func next() async { await _next() }
+        public func previous() async { await _previous() }
+        public func focus(path: String) async -> Bool { await _focusPath(path) }
+        public func focus(id: String) async -> Bool { await _focusId(id) }
+        public func focusedPath() async -> String? { await _focusedPath() }
+    }
+
+    /// Access a FocusManager for programmatic focus control. Returns a no-op manager when not bound.
+    public static func useFocusManager() -> FocusManager {
+        if let mgr = focusManager { return mgr }
+        return FocusManager(
+            next: {},
+            previous: {},
+            focusPath: { _ in false },
+            focusId: { _ in false },
+            focusedPath: { nil }
+        )
     }
 
     // MARK: - useFocus / Focus Manager
