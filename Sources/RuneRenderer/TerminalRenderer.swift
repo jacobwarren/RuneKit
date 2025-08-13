@@ -112,6 +112,10 @@ public actor TerminalRenderer {
             await hideCursor()
         }
 
+        // Optionally disable autowrap to prevent last-column spill
+        let shouldDisableAutowrap = configuration?.disableAutowrapDuringRender ?? false
+        if shouldDisableAutowrap { await disableAutowrapIfNeeded() }
+
         // Use the provided strategy regardless of screen buffer; strategy determiner
         // and higher-level policies decide between full redraw, delta, or scroll-optimized.
         stats.strategy = strategy
@@ -137,6 +141,9 @@ public actor TerminalRenderer {
             await showCursor()
         }
 
+        // Re-enable autowrap if we disabled it
+        if shouldDisableAutowrap { await enableAutowrapIfNeeded() }
+
         return stats
     }
 
@@ -156,6 +163,10 @@ public actor TerminalRenderer {
         if shouldRestoreCursor {
             await hideCursor()
         }
+
+        // Optionally disable autowrap to prevent last-column spill
+        let shouldDisableAutowrap = configuration?.disableAutowrapDuringRender ?? false
+        if shouldDisableAutowrap { await disableAutowrapIfNeeded() }
 
         // Determine rendering strategy
         let strategy: RenderingStrategy = if forceFullRedraw {
@@ -195,6 +206,9 @@ public actor TerminalRenderer {
             await showCursor()
         }
 
+        // Re-enable autowrap if we disabled it
+        if shouldDisableAutowrap { await enableAutowrapIfNeeded() }
+
         return stats
     }
 
@@ -210,6 +224,9 @@ public actor TerminalRenderer {
         // Always ensure cursor is visible after clearing, regardless of current state
         await writeSequence("\u{001B}[?25h")
         cursorHidden = false
+
+        // Restore autowrap if we had disabled it
+        await enableAutowrapIfNeeded()
     }
 
     /// Hide the cursor
@@ -250,6 +267,8 @@ public actor TerminalRenderer {
         if cursorHidden {
             await showCursor()
         }
+        // Restore autowrap if we had disabled it
+        await enableAutowrapIfNeeded()
 
         // Reset state
         currentGrid = nil
