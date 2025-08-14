@@ -386,16 +386,16 @@ public actor TerminalRenderer {
 
         // Render each line absolutely with explicit cursor moves and EOL hygiene
         for row in 0 ..< grid.height {
-            // Move to row, column 1
-            await writeSequence("\u{001B}[\(row + 1);1H")
-            // Clear line before drawing to eliminate any leftover bg/colors
-            await writeSequence("\u{001B}[2K")
+            var lineSequence = "\u{001B}[\(row + 1);1H" // Move to row, column 1
+            lineSequence += "\u{001B}[2K" // Clear line before drawing to eliminate any leftover bg/colors
             if let rowCells = grid.getRow(row) {
                 let sequence = await renderRow(rowCells, optimizeState: true)
-                await writeSequence(sequence)
+                lineSequence += sequence
             }
             // Reset SGR at end-of-line to prevent bleed into border/newline
-            await writeSequence(TerminalState.resetSequence)
+            lineSequence += TerminalState.resetSequence
+            // CRITICAL: write the entire per-line sequence atomically to avoid interleaving
+            await writeAtomicSequence(lineSequence)
         }
 
         // Position cursor after the frame
@@ -444,30 +444,23 @@ public actor TerminalRenderer {
 
         // Render each changed line
         for lineIndex in changedLines {
-            // Move cursor to the line
-            let moveSequence = "\u{001B}[\(lineIndex + 1);1H" // Move to line (1-based), column 1
-            await writeSequence(moveSequence)
-            stats.bytesWritten += moveSequence.utf8.count
-
-            // Clear the entire line (for test compatibility)
+            var seq = "\u{001B}[\(lineIndex + 1);1H" // Move to line (1-based), column 1
             let clearSequence = "\u{001B}[2K" // Clear entire line
-            await writeSequence(clearSequence)
-            stats.bytesWritten += clearSequence.utf8.count
-
-            // Move cursor back to column 1
             let columnSequence = "\u{001B}[G" // Move to column 1
-            await writeSequence(columnSequence)
-            stats.bytesWritten += columnSequence.utf8.count
-
+            seq += clearSequence
+            seq += columnSequence
             // Render the new line content
             if lineIndex < grid.height,
                let cells = grid.getRow(lineIndex) {
                 let lineSequence = await renderRow(cells, optimizeState: true)
-                await writeSequence(lineSequence)
+                seq += lineSequence
                 stats.bytesWritten += lineSequence.utf8.count
             }
             // Reset SGR at end-of-line to prevent style bleed
-            await writeSequence(TerminalState.resetSequence)
+            seq += TerminalState.resetSequence
+            // Atomic write to avoid interleaving with external logs
+            await writeAtomicSequence(seq)
+            stats.bytesWritten += ("\u{001B}[\(lineIndex + 1);1H".utf8.count + clearSequence.utf8.count + columnSequence.utf8.count + TerminalState.resetSequence.utf8.count)
         }
 
         // Handle frame shrinkage: clear lines that are beyond the new frame
@@ -543,6 +536,15 @@ public actor TerminalRenderer {
         }
         if let data = sequence.data(using: .utf8) {
             do { try output.write(contentsOf: data) } catch { /* ignore */ }
+        }
+    }
+
+    /// Atomically write a sequence (cursor moves + content) when possible
+    private func writeAtomicSequence(_ sequence: String) async {
+        if let writer {
+            await writer.writeAtomic(sequence)
+        } else {
+            await writeSequence(sequence)
         }
     }
 
