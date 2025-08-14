@@ -1,8 +1,9 @@
 import Foundation
 import Testing
+import TestSupport
 @testable import RuneKit
 
-@Suite(.enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+@Suite(.enabled(if: !TestEnv.isCI))
 struct RenderHandleConcurrencyStressTests {
     @Test("Concurrent clear/rerender/unmount is safe")
     func concurrentClearRerenderUnmountIsSafe() async {

@@ -1,8 +1,9 @@
 import Foundation
 import Testing
+import TestSupport
 import RuneKit
 
-@Suite("RUNE-39+: App exit code propagation via useApp().exit(error:)", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+@Suite("RUNE-39+: App exit code propagation via useApp().exit(error:)", .enabled(if: !TestEnv.isCI))
 struct AppExitCodePropagationTests {
     // Protocol is in library; define custom errors for tests
     struct CustomExitError: Error, AppExitCodeProviding { let exitCode: Int32 }

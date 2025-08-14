@@ -1,9 +1,10 @@
 import Foundation
 import Testing
+import TestSupport
 @testable import RuneKit
 @testable import RuneComponents
 
-@Suite("Hooks deps equality edge cases", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+@Suite("Hooks deps equality edge cases", .enabled(if: !TestEnv.isCI))
 struct HooksDepsEdgeCasesTests {
     struct V: View, ViewIdentifiable { var id: String; var viewIdentity: String? { id }; var body: some View { Text("v") } }
 

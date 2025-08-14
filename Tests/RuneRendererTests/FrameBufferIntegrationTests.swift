@@ -10,7 +10,7 @@ import TestSupport
 struct FrameBufferIntegrationTests {
     // MARK: - Error Handling Tests
 
-    @Test("Cursor restoration on error", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test("Cursor restoration on error", .enabled(if: !TestEnv.isCI))
     func cursorRestorationOnError() async {
         // This test will fail until we implement proper error handling
         // Arrange
@@ -44,7 +44,7 @@ struct FrameBufferIntegrationTests {
         #expect(result.contains("\u{001B}[?25h"), "Should restore cursor visibility on error")
     }
 
-    @Test("Cleanup on frame buffer deinitialization", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test("Cleanup on frame buffer deinitialization", .enabled(if: !TestEnv.isCI))
     func cleanupOnDeinitialization() async {
         // This test will fail until we implement proper cleanup
         // Arrange
@@ -168,7 +168,7 @@ struct FrameBufferIntegrationTests {
         #expect(result.contains("\u{001B}[?25h"), "Should restore cursor on clear")
     }
 
-    @Test("Frame buffer cleanup on abrupt termination", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test("Frame buffer cleanup on abrupt termination", .enabled(if: !TestEnv.isCI))
     func frameBufferCleanupOnAbruptTermination() async {
         // This test simulates what happens when a process is terminated abruptly
         // Arrange
@@ -210,7 +210,7 @@ struct FrameBufferIntegrationTests {
 
     @Test(
         "Frame buffer handles multiple errors gracefully",
-        .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil),
+        .enabled(if: !TestEnv.isCI),
     )
     func frameBufferHandlesMultipleErrorsGracefully() async {
         // This test ensures that multiple error conditions don't cause issues

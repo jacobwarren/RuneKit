@@ -80,7 +80,7 @@ struct AlternateScreenBufferIntegrationTests {
 
     @Test(
         "Environment variable configuration integration",
-        .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil),
+        .enabled(if: !TestEnv.isCI),
     )
     func environmentVariableConfigurationIntegration() async {
         // Test with alternate screen enabled via environment
@@ -243,7 +243,7 @@ struct AlternateScreenBufferIntegrationTests {
         input.closeFile()
     }
 
-    @Test("Configuration precedence", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test("Configuration precedence", .enabled(if: !TestEnv.isCI))
     func configurationPrecedence() async {
         // Test that explicit configuration overrides environment
         let environment = ["RUNE_ALT_SCREEN": "true"]

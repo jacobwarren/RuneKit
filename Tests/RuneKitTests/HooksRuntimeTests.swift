@@ -1,9 +1,10 @@
 import Foundation
 import Testing
+import TestSupport
 @testable import RuneComponents
 @testable import RuneKit
 
-@Suite("Hooks runtime tests for RUNE-37", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+@Suite("Hooks runtime tests for RUNE-37", .enabled(if: !TestEnv.isCI))
 struct HooksRuntimeTests {
     @Test("useEffect runs on mount and cleanup runs on unmount; requestRerender drives ~10-12 Hz", .disabled("Timing-sensitive test that can hang"))
     func effectLifecycleAndSpinnerRate() async {
