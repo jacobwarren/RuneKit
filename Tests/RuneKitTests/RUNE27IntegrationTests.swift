@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import TestSupport
 @testable import RuneComponents
 @testable import RuneKit
 @testable import RuneLayout
@@ -40,7 +41,7 @@ struct RUNE27IntegrationTests {
         #expect(!lines.isEmpty, "Box should render content")
     }
 
-    @Test("Box works with render() function and RenderHandle", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test("Box works with render() function and RenderHandle", .enabled(if: !TestEnv.isCI))
     func boxWorksWithRenderFunction() async {
         // Arrange
         let box = Box(

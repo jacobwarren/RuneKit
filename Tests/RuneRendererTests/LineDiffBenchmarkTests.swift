@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import TestSupport
 @testable import RuneRenderer
 
 /// Performance benchmarks for line-diff vs full redraw rendering
@@ -129,7 +130,7 @@ struct LineDiffBenchmarkTests {
 
     @Test(
         "Benchmark: Single line changes favor line-diff",
-        .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil),
+        .enabled(if: !TestEnv.isCI),
     )
     func benchmarkSingleLineChangesFavorLineDiff() async {
         // Arrange
@@ -190,7 +191,7 @@ struct LineDiffBenchmarkTests {
 
     @Test(
         "Benchmark: All lines changing favors full redraw",
-        .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil),
+        .enabled(if: !TestEnv.isCI),
     )
     func benchmarkAllLinesChangingFavorsFullRedraw() async {
         // Arrange
@@ -248,7 +249,7 @@ struct LineDiffBenchmarkTests {
         )
     }
 
-    @Test("Benchmark: No changes favor line-diff", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test("Benchmark: No changes favor line-diff", .enabled(if: !TestEnv.isCI))
     func benchmarkNoChangesFavorLineDiff() async {
         // Arrange
         let baseLines = Array(1 ... 20).map { "Base line \($0)" }
@@ -308,7 +309,7 @@ struct LineDiffBenchmarkTests {
 
     @Test(
         "Benchmark: Automatic mode makes good decisions",
-        .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil),
+        .enabled(if: !TestEnv.isCI),
     )
     func benchmarkAutomaticModeMakesGoodDecisions() async {
         // Arrange

@@ -75,7 +75,7 @@ struct FrameBufferIntegrationTests {
         #expect(result.hasSuffix("\u{001B}[?25h"), "Should restore cursor on explicit cleanup")
     }
 
-    @Test("Multiple frame renders maintain state", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test("Multiple frame renders maintain state", .enabled(if: !TestEnv.isCI))
     func multipleFrameRendersMaintainState() async {
         // Test that multiple frame renders work correctly with line erasure
         // Arrange
@@ -113,7 +113,7 @@ struct FrameBufferIntegrationTests {
         #expect(result.contains("\u{001B}[?25h"), "Should restore cursor on clear")
     }
 
-    @Test("Frame buffer handles empty frames", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test("Frame buffer handles empty frames", .enabled(if: !TestEnv.isCI))
     func frameBufferHandlesEmptyFrames() async {
         // This test will fail until we implement empty frame handling
         // Arrange
@@ -141,7 +141,7 @@ struct FrameBufferIntegrationTests {
         #expect(result.contains("\u{001B}[?25h"), "Should show cursor after empty frame")
     }
 
-    @Test("Frame buffer handles cursor management", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test("Frame buffer handles cursor management", .enabled(if: !TestEnv.isCI))
     func frameBufferHandlesCursorManagement() async {
         // Test that cursor is properly hidden and restored
         // Arrange
@@ -256,7 +256,7 @@ struct FrameBufferIntegrationTests {
         input.closeFile()
     }
 
-    @Test("Frame buffer handles frame height shrinkage", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test("Frame buffer handles frame height shrinkage", .enabled(if: !TestEnv.isCI))
     func frameBufferHandlesFrameHeightShrinkage() async {
         // Test the core functionality from RUNE-20: correct erase when frame height shrinks
         // Arrange

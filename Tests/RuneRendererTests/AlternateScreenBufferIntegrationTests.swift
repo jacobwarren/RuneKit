@@ -14,7 +14,7 @@ import TestSupport
 struct AlternateScreenBufferIntegrationTests {
     // MARK: - Complete Workflow Tests
 
-    @Test("Complete alternate screen buffer workflow", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test("Complete alternate screen buffer workflow", .enabled(if: !TestEnv.isCI))
     func completeAlternateScreenBufferWorkflow() async {
         // Arrange
         let pipe = Pipe()
@@ -129,7 +129,7 @@ struct AlternateScreenBufferIntegrationTests {
         input2.closeFile()
     }
 
-    @Test("Multiple frame renders in alternate screen", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test("Multiple frame renders in alternate screen", .enabled(if: !TestEnv.isCI))
     func multipleFrameRendersInAlternateScreen() async {
         // Arrange
         let pipe = Pipe()
@@ -174,7 +174,7 @@ struct AlternateScreenBufferIntegrationTests {
         input.closeFile()
     }
 
-    @Test("Alternate screen buffer with grid rendering", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test("Alternate screen buffer with grid rendering", .enabled(if: !TestEnv.isCI))
     func alternateScreenBufferWithGridRendering() async {
         // Arrange
         let pipe = Pipe()
@@ -208,7 +208,7 @@ struct AlternateScreenBufferIntegrationTests {
         input.closeFile()
     }
 
-    @Test("Shutdown with alternate screen cleanup", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test("Shutdown with alternate screen cleanup", .enabled(if: !TestEnv.isCI))
     func shutdownWithAlternateScreenCleanup() async {
         // Arrange
         let pipe = Pipe()
