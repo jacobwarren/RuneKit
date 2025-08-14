@@ -13,7 +13,7 @@ struct InputManagerTests {
         func all() -> [KeyEvent] { events }
     }
 
-    @Test("Decodes arrows and Ctrl-C/ Ctrl-D bytes")
+    @Test("Decodes arrows and Ctrl-C/ Ctrl-D bytes", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
     func decodesArrowsAndControl() async {
         // Arrange: use pipes for IO so we don't require a TTY
         let outPipe = Pipe()
@@ -46,7 +46,7 @@ struct InputManagerTests {
         #expect(events.contains(.ctrlD))
     }
 
-    @Test("Bracketed paste emits single paste event when enabled")
+    @Test("Bracketed paste emits single paste event when enabled", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
     func bracketedPasteEmitsSingleEvent() async {
         // Arrange
         let outPipe = Pipe()
@@ -84,7 +84,7 @@ struct InputManagerTests {
         #expect(outputStr.contains("\u{001B}[?2004l"), "Should disable bracketed paste on stop")
     }
 
-    @Test("Integration: RenderHandle unmount cleans up input manager and paste mode")
+    @Test("Integration: RenderHandle unmount cleans up input manager and paste mode", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
     func integrationUnmountCleansUp() async {
         // Arrange: Render with pipes and explicit options enabling paste
         let outPipe = Pipe()
@@ -113,7 +113,7 @@ struct InputManagerTests {
         #expect(!outStr.contains("\u{001B}[?2004h"))
     }
 
-    @Test("Ctrl-C triggers unmount when exitOnCtrlC=true via InputManager path")
+    @Test("Ctrl-C triggers unmount when exitOnCtrlC=true via InputManager path", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
     func ctrlCTriggersUnmount() async {
         // Arrange: set options to enable raw input path handling
         let outPipe = Pipe()

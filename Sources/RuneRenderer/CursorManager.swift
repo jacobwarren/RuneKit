@@ -10,7 +10,7 @@ public protocol CursorManager {
     func moveToColumn1()
 }
 
-public final class ANSICursorManager: CursorManager {
+public final class ANSICursorManager: CursorManager, @unchecked Sendable {
     private let out: TerminalOutputEncoder
     public private(set) var row = 0
     public private(set) var col = 0

@@ -737,8 +737,8 @@ public actor RenderHandle {
         await resizeObserver?.cleanup()
         resizeObserver = nil
 
-        // Clear the frame buffer and restore terminal state
-        await frameBuffer.clear()
+        // Shutdown the frame buffer and restore terminal state
+        await frameBuffer.shutdown()
 
         // Run effect cleanups and clear
         runAllEffectCleanups()

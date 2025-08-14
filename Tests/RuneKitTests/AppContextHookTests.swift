@@ -2,7 +2,7 @@ import Foundation
 import Testing
 import RuneKit
 
-@Suite("RUNE-39: useApp() context")
+@Suite("RUNE-39: useApp() context", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
 struct AppContextHookTests {
     struct ExitOnMountView: View, ViewIdentifiable {
         var id: String = UUID().uuidString

@@ -35,7 +35,7 @@ struct FrameBufferIntegrationTests {
         }
 
         // Cleanup
-        await frameBuffer.clear()
+        await frameBuffer.shutdown()
 
         // Assert
         let result = await cap.finishAndReadString()
@@ -100,7 +100,7 @@ struct FrameBufferIntegrationTests {
             }
         }
 
-        await frameBuffer.clear()
+        await frameBuffer.shutdown()
 
         // Assert
         let result = await cap.finishAndReadString()
@@ -131,7 +131,7 @@ struct FrameBufferIntegrationTests {
         await frameBuffer.renderFrameImmediate(emptyFrame)
 
         // Cleanup first to ensure pipe is properly closed
-        await frameBuffer.clear()
+        await frameBuffer.shutdown()
 
         // Assert
         let result = await cap.finishAndReadString()
@@ -158,7 +158,7 @@ struct FrameBufferIntegrationTests {
         // Act
         await frameBuffer.renderFrame(frame)
         await frameBuffer.waitForPendingUpdates()
-        await frameBuffer.clear()
+        await frameBuffer.shutdown()
 
         // Assert
         let result = await cap.finishAndReadString()
@@ -177,24 +177,23 @@ struct FrameBufferIntegrationTests {
         let input = pipe.fileHandleForReading
 
         // Create a frame buffer in a scope that will end abruptly
-        do {
-            let frameBuffer = FrameBuffer(output: output)
+        let frameBuffer = FrameBuffer(output: output)
 
-            let frame = TerminalRenderer.Frame(
-                lines: ["Test content for termination"],
-                width: 25,
-                height: 1,
-            )
+        let frame = TerminalRenderer.Frame(
+            lines: ["Test content for termination"],
+            width: 25,
+            height: 1,
+        )
 
-            // Act - Render frame then let frameBuffer go out of scope suddenly
-            await frameBuffer.renderFrame(frame)
-            await frameBuffer.waitForPendingUpdates() // Wait for rendering to complete
+        // Act - Render frame then shut down properly
+        await frameBuffer.renderFrame(frame)
+        await frameBuffer.waitForPendingUpdates() // Wait for rendering to complete
 
-            // Explicitly restore cursor before termination (since deinit cannot do async operations)
-            await frameBuffer.restoreCursor()
+        // Explicitly restore cursor before termination (since deinit cannot do async operations)
+        await frameBuffer.restoreCursor()
 
-            // Simulate abrupt termination by ending the scope here
-        }
+        // Properly shutdown to ensure OutputWriter is closed
+        await frameBuffer.shutdown()
 
         output.closeFile()
 
@@ -243,7 +242,7 @@ struct FrameBufferIntegrationTests {
             // Second error
         }
 
-        await frameBuffer.clear()
+        await frameBuffer.shutdown()
         output.closeFile()
 
         // Assert
@@ -286,7 +285,7 @@ struct FrameBufferIntegrationTests {
         try? await Task.sleep(nanoseconds: 20_000_000) // 20ms
 
         await frameBuffer.renderFrameImmediate(shortFrame) // Use immediate rendering for second frame
-        await frameBuffer.clear()
+        await frameBuffer.shutdown()
         output.closeFile()
 
         // Assert

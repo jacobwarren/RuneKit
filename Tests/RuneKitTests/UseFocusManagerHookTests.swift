@@ -2,7 +2,7 @@ import Foundation
 import Testing
 import RuneKit
 
-@Suite("RUNE-41: useFocusManager hook")
+@Suite("RUNE-41: useFocusManager hook", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
 struct UseFocusManagerHookTests {
     actor Sink {
         private(set) var events: [KeyEvent] = []

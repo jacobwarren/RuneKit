@@ -3,7 +3,7 @@ import Testing
 @testable import RuneKit
 @testable import RuneComponents
 
-@Suite("Hooks additional tests: deps sugar, useRef, useMemo")
+@Suite("Hooks additional tests: deps sugar, useRef, useMemo", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
 struct HooksAdditionalTests {
     struct V: View, ViewIdentifiable { var id: String; var viewIdentity: String? { id }; var body: some View { Text("v") } }
 

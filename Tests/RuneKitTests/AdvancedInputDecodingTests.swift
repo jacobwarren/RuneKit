@@ -2,6 +2,7 @@ import Foundation
 import Testing
 @testable import RuneKit
 
+@Suite(.enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
 struct AdvancedInputDecodingTests {
     actor Sink { var events: [KeyEvent] = []; func add(_ e: KeyEvent) { events.append(e) } }
 

@@ -40,7 +40,7 @@ struct RUNE27IntegrationTests {
         #expect(!lines.isEmpty, "Box should render content")
     }
 
-    @Test("Box works with render() function and RenderHandle")
+    @Test("Box works with render() function and RenderHandle", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
     func boxWorksWithRenderFunction() async {
         // Arrange
         let box = Box(

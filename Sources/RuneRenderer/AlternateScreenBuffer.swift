@@ -33,8 +33,10 @@ import Foundation
 /// - Enter: Clear screen and move cursor to home (`ESC[2J ESC[H`)
 /// - Leave: No operation (content remains on screen)
 public actor AlternateScreenBuffer {
-    /// The output file handle for writing ANSI sequences
-    private let output: FileHandle
+    /// The output encoder for writing ANSI sequences
+    private let encoder: TerminalOutputEncoder
+    /// Optional shared writer for atomic, serialized output
+    private let writer: OutputWriter?
 
     /// Whether alternate screen buffer is currently active
     private var _isActive = false
@@ -58,12 +60,21 @@ public actor AlternateScreenBuffer {
 
     // MARK: - Initialization
 
-    /// Initialize alternate screen buffer with output handle
+    /// Initialize alternate screen buffer with output handle or encoder
     /// - Parameters:
     ///   - output: File handle for terminal output (defaults to stdout)
+    ///   - encoder: Optional encoder to route writes through single writer
+    ///   - writer: Optional OutputWriter for atomic writes
     ///   - enableFallback: Whether to use fallback clear when alternate screen is unsupported
-    public init(output: FileHandle = .standardOutput, enableFallback: Bool = true) {
-        self.output = output
+    public init(output: FileHandle = .standardOutput, encoder: TerminalOutputEncoder? = nil, writer: OutputWriter? = nil, enableFallback: Bool = true) {
+        if let encoder {
+            self.encoder = encoder
+        } else if let writer {
+            self.encoder = OutputWriterTerminalEncoder(writer: writer)
+        } else {
+            self.encoder = FileHandleOutputEncoder(handle: output)
+        }
+        self.writer = writer
         self.enableFallback = enableFallback
     }
 
@@ -85,8 +96,10 @@ public actor AlternateScreenBuffer {
     public func enter() async {
         guard !_isActive else { return }
 
-        if let data = Self.enterSequence.data(using: .utf8) {
-            output.write(data)
+        if let writer {
+            await writer.writeAtomic(Self.enterSequence)
+        } else {
+            encoder.write(Self.enterSequence)
         }
 
         _isActive = true
@@ -103,8 +116,10 @@ public actor AlternateScreenBuffer {
     public func leave() async {
         guard _isActive else { return }
 
-        if let data = Self.leaveSequence.data(using: .utf8) {
-            output.write(data)
+        if let writer {
+            await writer.writeAtomic(Self.leaveSequence)
+        } else {
+            encoder.write(Self.leaveSequence)
         }
 
         _isActive = false
@@ -154,8 +169,6 @@ public actor AlternateScreenBuffer {
     /// and moving the cursor to the home position. This is used when
     /// alternate screen buffer is not supported.
     public func clearScreen() async {
-        if let data = Self.fallbackClearSequence.data(using: .utf8) {
-            output.write(data)
-        }
+        encoder.write(Self.fallbackClearSequence)
     }
 }

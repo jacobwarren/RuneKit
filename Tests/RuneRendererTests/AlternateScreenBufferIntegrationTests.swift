@@ -49,7 +49,7 @@ struct AlternateScreenBufferIntegrationTests {
         let stateAfterSecondRender = await frameBuffer.isAlternateScreenActive()
 
         // 4. Clear should leave alternate screen
-        await frameBuffer.clear()
+        await frameBuffer.shutdown()
         let stateAfterClear = await frameBuffer.isAlternateScreenActive()
 
         output.closeFile()
@@ -95,7 +95,7 @@ struct AlternateScreenBufferIntegrationTests {
         let frame = TerminalRenderer.Frame(lines: ["Test"], width: 4, height: 1)
 
         await frameBuffer1.renderFrame(frame)
-        await frameBuffer1.clear()
+        await frameBuffer1.shutdown()
         output1.closeFile()
 
         let data1 = input1.readDataToEndOfFile()
@@ -117,7 +117,7 @@ struct AlternateScreenBufferIntegrationTests {
         let frameBuffer2 = FrameBuffer(output: output2, configuration: disabledConfig)
 
         await frameBuffer2.renderFrame(frame)
-        await frameBuffer2.clear()
+        await frameBuffer2.shutdown()
         output2.closeFile()
 
         let data2 = input2.readDataToEndOfFile()
@@ -151,7 +151,7 @@ struct AlternateScreenBufferIntegrationTests {
         for frame in frames {
             await frameBuffer.renderFrame(frame)
         }
-        await frameBuffer.clear()
+        await frameBuffer.shutdown()
         output.closeFile()
 
         // Assert
@@ -194,7 +194,7 @@ struct AlternateScreenBufferIntegrationTests {
 
         // Act
         await frameBuffer.renderGrid(mutableGrid)
-        await frameBuffer.clear()
+        await frameBuffer.shutdown()
         output.closeFile()
 
         // Assert

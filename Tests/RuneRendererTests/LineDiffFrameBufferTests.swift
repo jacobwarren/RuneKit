@@ -42,8 +42,12 @@ struct LineDiffFrameBufferTests {
         await frameBuffer.renderFrameImmediate(frame1)
         await frameBuffer.renderFrameImmediate(frame2)
 
+        // Get performance metrics from history (before shutdown)
+        let history = await frameBuffer.getPerformanceHistory()
+        #expect(history.count >= 1, "Should have at least one render in history")
+
         // Cleanup
-        await frameBuffer.clear()
+        await frameBuffer.shutdown()
         output.closeFile()
 
         // Assert
@@ -56,10 +60,6 @@ struct LineDiffFrameBufferTests {
 
         // Should contain the modified content
         #expect(result.contains("Modified Line 2"), "Should contain modified line")
-
-        // Get performance metrics from history (last render)
-        let history = await frameBuffer.getPerformanceHistory()
-        #expect(history.count >= 1, "Should have at least one render in history")
 
         if history.count >= 2 {
             let firstRender = history[0]
@@ -166,7 +166,7 @@ struct LineDiffFrameBufferTests {
         let history = await frameBuffer.getPerformanceHistory()
 
         // Cleanup
-        await frameBuffer.clear()
+        await frameBuffer.shutdown()
         output.closeFile()
         #expect(history.count >= 1, "Should have at least one render in history")
 
@@ -217,8 +217,12 @@ struct LineDiffFrameBufferTests {
         await frameBuffer.renderFrameImmediate(frame1)
         await frameBuffer.renderFrameImmediate(frame2)
 
+        // Check performance history (before shutdown)
+        let history = await frameBuffer.getPerformanceHistory()
+        #expect(history.count == 2, "Should have two renders in history")
+
         // Cleanup
-        await frameBuffer.clear()
+        await frameBuffer.shutdown()
         output.closeFile()
 
         // Assert
@@ -227,10 +231,6 @@ struct LineDiffFrameBufferTests {
 
         #expect(result.contains("Line 3"), "Should contain new line 3")
         #expect(result.contains("Line 4"), "Should contain new line 4")
-
-        // Check performance history
-        let history = await frameBuffer.getPerformanceHistory()
-        #expect(history.count == 2, "Should have two renders in history")
 
         let secondRender = history[1]
         #expect(secondRender.renderMode == .lineDiff, "Second render should use line-diff mode")
@@ -276,8 +276,12 @@ struct LineDiffFrameBufferTests {
         // Wait for any pending async operations
         try? await Task.sleep(nanoseconds: 10_000_000) // 10ms
 
+        // Check performance history (before shutdown)
+        let history = await frameBuffer.getPerformanceHistory()
+        #expect(history.count == 2, "Should have two renders in history")
+
         // Cleanup
-        await frameBuffer.clear()
+        await frameBuffer.shutdown()
         output.closeFile()
 
         // Assert
@@ -288,10 +292,6 @@ struct LineDiffFrameBufferTests {
         // Either EL (line-diff mode) or 2K (full redraw mode)
         let hasLineClear = result.contains("\u{001B}[K") || result.contains("\u{001B}[2K")
         #expect(hasLineClear, "Should clear removed lines")
-
-        // Check performance history
-        let history = await frameBuffer.getPerformanceHistory()
-        #expect(history.count == 2, "Should have two renders in history")
 
         let secondRender = history[1]
         #expect(secondRender.totalLines == 2, "Should have 2 total lines after shrinkage")
@@ -324,7 +324,7 @@ struct LineDiffFrameBufferTests {
         let history = await frameBuffer.getPerformanceHistory()
 
         // Cleanup
-        await frameBuffer.clear()
+        await frameBuffer.shutdown()
         output.closeFile()
         #expect(!history.isEmpty, "Should have performance history")
         let metrics = history.last!
@@ -362,7 +362,7 @@ struct LineDiffFrameBufferTests {
         let history = await frameBuffer.getPerformanceHistory()
 
         // Cleanup
-        await frameBuffer.clear()
+        await frameBuffer.shutdown()
         output.closeFile()
         #expect(!history.isEmpty, "Should have performance history")
         let metrics = history.last!
