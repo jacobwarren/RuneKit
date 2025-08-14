@@ -5,7 +5,7 @@ import TestSupport
 
 // MARK: - Render Function Tests
 
-@Suite("Render function tests", TestEnv.skipIntegrationInCI)
+@Suite("Render function tests", .enabled(if: !TestEnv.isCI))
 struct RenderFunctionTests {
     @Test("RenderHandle initialization and basic functionality")
     func renderHandleBasicFunctionality() async {

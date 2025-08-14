@@ -9,7 +9,7 @@ actor RerenderProbe {
     func increment() { count += 1 }
 }
 
-@Suite("Resize handling tests", TestEnv.skipIntegrationInCI)
+@Suite("Resize handling tests", .enabled(if: !TestEnv.isCI))
 struct ResizeHandlingTests {
     @Test("Debounced resize burst triggers a single rerender")
     func debouncedSingleRerender() async {

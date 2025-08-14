@@ -5,7 +5,7 @@ import TestSupport
 
 // MARK: - RUNE-25 Tests: Render Handle Rerender Methods
 
-@Suite("Render handle rerender tests", TestEnv.skipIntegrationInCI)
+@Suite("Render handle rerender tests", .enabled(if: !TestEnv.isCI))
 struct RenderHandleRerenderTests {
     @Test("rerender() updates UI content", .disabled("Disabled to prevent CI hanging on pipe reads"))
     func rerenderUpdatesUIContent() async {

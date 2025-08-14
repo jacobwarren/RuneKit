@@ -3,7 +3,7 @@ import Testing
 import TestSupport
 @testable import RuneRenderer
 
-@Suite("Output abstractions tests", TestEnv.skipIntegrationInCI)
+@Suite("Output abstractions tests", .enabled(if: !TestEnv.isCI))
 struct OutputAbstractionsTests {
     @Test("FileHandleOutputEncoder writes to pipe")
     func fileHandleEncoderWrites() {

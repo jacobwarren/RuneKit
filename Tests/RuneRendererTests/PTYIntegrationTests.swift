@@ -12,7 +12,7 @@ import TestSupport
 /// Note: These tests are disabled in CI environments because they can
 /// interfere with the test runner's own stdout/stderr handling, causing
 /// SIGPIPE errors. They work fine in local development environments.
-@Suite("PTY integration tests", TestEnv.skipIntegrationInCI)
+@Suite("PTY integration tests", .enabled(if: !TestEnv.isCI))
 struct PTYIntegrationTests {
     @Test("PTY integration validates ordering", .disabled("Interferes with test runner stdout/stderr"))
     func ptyIntegrationValidatesOrdering() async throws {

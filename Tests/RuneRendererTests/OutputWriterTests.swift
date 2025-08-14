@@ -3,7 +3,7 @@ import Testing
 @testable import RuneRenderer
 @testable import TestSupport
 
-@Suite("Output writer tests", TestEnv.skipIntegrationInCI)
+@Suite("Output writer tests", .enabled(if: !TestEnv.isCI))
 struct OutputWriterTests {
     @Test("Serializes concurrent writes without interleaving (atomic)")
     func serializesConcurrentAtomicWrites() async {

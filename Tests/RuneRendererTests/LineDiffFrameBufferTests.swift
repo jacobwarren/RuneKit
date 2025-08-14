@@ -7,7 +7,7 @@ import TestSupport
 ///
 /// These tests verify the complete line-diff rendering pipeline including
 /// performance metrics, configuration handling, and visual output correctness.
-@Suite("Line diff frame buffer tests", TestEnv.skipIntegrationInCI)
+@Suite("Line diff frame buffer tests", .enabled(if: !TestEnv.isCI))
 struct LineDiffFrameBufferTests {
     // MARK: - Basic Line-Diff Rendering Tests
 

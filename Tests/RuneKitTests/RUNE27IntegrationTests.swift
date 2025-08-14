@@ -14,7 +14,7 @@ import TestSupport
 /// - TerminalRenderer and output systems
 /// - Component rendering system
 /// - Signal handling and lifecycle management
-@Suite("RUNE-27 integration tests", TestEnv.skipIntegrationInCI)
+@Suite("RUNE-27 integration tests", .enabled(if: !TestEnv.isCI))
 struct RUNE27IntegrationTests {
     // MARK: - View Protocol Integration
 
