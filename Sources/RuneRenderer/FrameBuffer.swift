@@ -408,16 +408,16 @@ public actor FrameBuffer {
         )
     }
 
-    /// Get terminal size
+    /// Get terminal size based on the configured output handle
     /// - Returns: Terminal size (width, height)
     private func getTerminalSize() -> (width: Int, height: Int) {
-        // Try to get terminal size using ioctl
+        // Try to get terminal size using ioctl on the configured output FD
         #if os(Linux)
         var winsize = Glibc.winsize()
-        let result = ioctl(STDOUT_FILENO, UInt(TIOCGWINSZ), &winsize)
+        let result = ioctl(originalOutput.fileDescriptor, UInt(TIOCGWINSZ), &winsize)
         #else
         var winsize = Darwin.winsize()
-        let result = ioctl(STDOUT_FILENO, TIOCGWINSZ, &winsize)
+        let result = ioctl(originalOutput.fileDescriptor, TIOCGWINSZ, &winsize)
         #endif
 
         if result == 0, winsize.ws_col > 0, winsize.ws_row > 0 {

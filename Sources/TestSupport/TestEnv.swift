@@ -8,10 +8,23 @@ public enum TestEnv {
         return env["CI"] != nil || env["GITHUB_ACTIONS"] != nil || env["BUILDKITE"] != nil || env["GITLAB_CI"] != nil
     }
 
-    /// True when running under XCTest or swift test
+    /// True when running under XCTest or swift test (including swift-testing)
     public static var isUnderTestHarness: Bool {
         let env = ProcessInfo.processInfo.environment
-        return env["XCTestConfigurationFilePath"] != nil || env["SWIFTPM_TEST"] != nil
+        // Common markers for XCTest / SwiftPM
+        if env["XCTestConfigurationFilePath"] != nil || env["SWIFTPM_TEST"] != nil {
+            return true
+        }
+        // Heuristics for Apple's swift-testing runner (future-proof but harmless if absent)
+        if env["SWIFT_TESTING"] != nil || env["SWIFT_TESTING_MODE"] != nil {
+            return true
+        }
+        // Executable name/path often includes xctest when running tests
+        let argv0 = ProcessInfo.processInfo.arguments.first ?? ""
+        if argv0.contains(".xctest") || argv0.hasSuffix("xctest") {
+            return true
+        }
+        return false
     }
 
     /// True when either CI or test harness is detected

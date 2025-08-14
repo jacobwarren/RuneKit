@@ -67,5 +67,14 @@ public actor ResizeObserver {
         isInstalled = false
         await MainActor.run { globalResizeObserver = nil }
     }
+
+    /// Await completion of the currently scheduled debounced callback, if any.
+    /// Useful in tests to avoid brittle fixed-duration sleeps under variable CI load.
+    public func waitForPendingCallback() async {
+        if let task = debounceTask {
+            _ = await task.result
+        }
+    }
+
 }
 

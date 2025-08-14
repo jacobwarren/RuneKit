@@ -36,8 +36,8 @@ struct ResizeHandlingTests {
         // Act: Fire multiple resize notifications rapidly
         for _ in 0..<10 { await observer.notifyResizeEvent() }
 
-        // Allow debounce to elapse
-        try? await Task.sleep(for: .milliseconds(80))
+        // Await the debounced callback instead of fixed sleep for CI stability
+        await observer.waitForPendingCallback()
 
         // Assert: exactly one additional rerender
         let count = await probe.count
@@ -74,10 +74,10 @@ struct ResizeHandlingTests {
 
         // Act: First burst
         for _ in 0..<5 { await observer.notifyResizeEvent() }
-        try? await Task.sleep(for: .milliseconds(60))
+        await observer.waitForPendingCallback()
         // Second burst
         for _ in 0..<5 { await observer.notifyResizeEvent() }
-        try? await Task.sleep(for: .milliseconds(80))
+        await observer.waitForPendingCallback()
 
         // Assert: two additional rerenders beyond initial
         let count = await probe.count
@@ -120,7 +120,7 @@ struct ResizeHandlingTests {
 
         // Act: Trigger resize notifications while scheduling another rerender
         for _ in 0..<8 { await observer.notifyResizeEvent() }
-        try? await Task.sleep(for: .milliseconds(70))
+        await observer.waitForPendingCallback()
 
         // Assert: one additional rerender
         let count = await probe.count

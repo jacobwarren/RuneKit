@@ -949,10 +949,14 @@ struct ComponentTests {
         #expect(lines.count == 3, "Should render 3 lines")
         // Should either fit the emoji or not show it, but not clip it
         let contentLine = lines[1]
-        print("Content line: '\(contentLine)' (count: \(contentLine.count))")
-        print("Content line characters:")
-        for (index, char) in contentLine.enumerated() {
-            print("  [\(index)]: '\(char)' (scalars: \(char.unicodeScalars.map(\.value)))")
+
+        // Debug prints can overwhelm stdout under test/CI; only print in manual runs
+        if !TestEnv.isTestOrCI {
+            print("Content line: '\(contentLine)' (count: \(contentLine.count))")
+            print("Content line characters:")
+            for (index, char) in contentLine.enumerated() {
+                print("  [\(index)]: '\(char)' (scalars: \(char.unicodeScalars.map(\.value)))")
+            }
         }
 
         let contentWithoutBorders = if contentLine.count >= 2 {
@@ -961,15 +965,17 @@ struct ComponentTests {
             ""
         }
 
-        print("Content without borders: '\(contentWithoutBorders)' (count: \(contentWithoutBorders.count))")
-        print("Content without borders characters:")
-        for (index, char) in contentWithoutBorders.enumerated() {
-            print("  [\(index)]: '\(char)' (scalars: \(char.unicodeScalars.map(\.value)))")
-        }
+        if !TestEnv.isTestOrCI {
+            print("Content without borders: '\(contentWithoutBorders)' (count: \(contentWithoutBorders.count))")
+            print("Content without borders characters:")
+            for (index, char) in contentWithoutBorders.enumerated() {
+                print("  [\(index)]: '\(char)' (scalars: \(char.unicodeScalars.map(\.value)))")
+            }
 
-        print("Expected emoji: '👨‍👩‍👧‍👦' (scalars: \("👨‍👩‍👧‍👦".unicodeScalars.map(\.value)))")
-        print("Content contains full emoji: \(contentWithoutBorders.contains("👨‍👩‍👧‍👦"))")
-        print("Content equals full emoji: \(contentWithoutBorders == "👨‍👩‍👧‍👦")")
+            print("Expected emoji: '👨‍👩‍👧‍👦' (scalars: \("👨‍👩‍👧‍👦".unicodeScalars.map(\.value)))")
+            print("Content contains full emoji: \(contentWithoutBorders.contains("👨‍👩‍👧‍👦"))")
+            print("Content equals full emoji: \(contentWithoutBorders == "👨‍👩‍👧‍👦")")
+        }
 
         // Content should either be empty or contain the full emoji
         #expect(
@@ -1551,8 +1557,10 @@ struct ComponentTests {
 
         // Check that the content line contains the emoji
         let contentLine = lines[1]
-        print("Content line: '\(contentLine)'")
-        print("Content line scalars: \(contentLine.unicodeScalars.map(\.value))")
+        if !TestEnv.isTestOrCI {
+            print("Content line: '\(contentLine)'")
+            print("Content line scalars: \(contentLine.unicodeScalars.map(\.value))")
+        }
 
         // The content should contain both the text and the emoji
         #expect(contentLine.contains("Complete!"), "Should contain the text")
@@ -1567,9 +1575,11 @@ struct ComponentTests {
         // Test the exact issue: border rendering with emoji content (matching demo)
         let content = "🎯 Welcome to RuneKit!"
 
-        print("DEBUG: Border calculation analysis")
-        print("  Content: '\(content)'")
-        print("  Content display width: \(Width.displayWidth(of: content))")
+        if !TestEnv.isTestOrCI {
+            print("DEBUG: Border calculation analysis")
+            print("  Content: '\(content)'")
+            print("  Content display width: \(Width.displayWidth(of: content))")
+        }
 
         // Create a box with the exact same configuration as the demo
         let box = Box(
@@ -1680,10 +1690,12 @@ struct ComponentTests {
         let contentDisplayWidth = max(Width.displayWidth(of: content), 10)
         let totalWidth = contentDisplayWidth + 4
 
-        print("Width calculation:")
-        print("  Content: '\(content)'")
-        print("  Content display width: \(contentDisplayWidth)")
-        print("  Total width: \(totalWidth)")
+        if !TestEnv.isTestOrCI {
+            print("Width calculation:")
+            print("  Content: '\(content)'")
+            print("  Content display width: \(contentDisplayWidth)")
+            print("  Total width: \(totalWidth)")
+        }
 
         let box = Box(
             border: .single,
@@ -1742,28 +1754,30 @@ struct ComponentTests {
             }
         }
 
-        // Debug the specific line with emoji
-        let emojiLine = frame.lines[1]
-        print("Emoji line analysis:")
-        print("  Original: '\(emojiLine)'")
-        print("  Characters:")
-        for (index, char) in emojiLine.enumerated() {
-            let charString = String(char)
-            let cell = TerminalCell(content: charString)
-            print(
-                "    [\(index)] '\(charString)' -> width: \(cell.width), scalars: \(charString.unicodeScalars.map(\.value))",
-            )
-        }
+        // Debug the specific line with emoji (print only in manual runs)
+        if !TestEnv.isTestOrCI {
+            let emojiLine = frame.lines[1]
+            print("Emoji line analysis:")
+            print("  Original: '\(emojiLine)'")
+            print("  Characters:")
+            for (index, char) in emojiLine.enumerated() {
+                let charString = String(char)
+                let cell = TerminalCell(content: charString)
+                print(
+                    "    [\(index)] '\(charString)' -> width: \(cell.width), scalars: \(charString.unicodeScalars.map(\.value))",
+                )
+            }
 
-        // Test Text component with 12-column constraint
-        print("Text component with 12-column constraint:")
-        let textComponent = Text("Complete! ✅")
-        let textRect = FlexLayout.Rect(x: 0, y: 0, width: 12, height: 1)
-        let textOutput = textComponent.render(in: textRect)
-        for (index, line) in textOutput.enumerated() {
-            print(
-                "  Text line \(index): '\(line)' (length: \(line.count), display width: \(Width.displayWidth(of: line)))",
-            )
+            // Test Text component with 12-column constraint
+            print("Text component with 12-column constraint:")
+            let textComponent = Text("Complete! ✅")
+            let textRect = FlexLayout.Rect(x: 0, y: 0, width: 12, height: 1)
+            let textOutput = textComponent.render(in: textRect)
+            for (index, line) in textOutput.enumerated() {
+                print(
+                    "  Text line \(index): '\(line)' (length: \(line.count), display width: \(Width.displayWidth(of: line)))",
+                )
+            }
         }
     }
 
@@ -1822,9 +1836,11 @@ struct ComponentTests {
         #expect(lines.count == 8, "Should render 8 lines")
 
         // Check that all children are rendered
-        print("System monitor box output:")
-        for (index, line) in lines.enumerated() {
-            print("Line \(index): '\(line)'")
+        if !TestEnv.isTestOrCI {
+            print("System monitor box output:")
+            for (index, line) in lines.enumerated() {
+                print("Line \(index): '\(line)'")
+            }
         }
 
         // The content lines should contain the system monitor data

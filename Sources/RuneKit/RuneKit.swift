@@ -1104,8 +1104,9 @@ private func convertViewToFrame(
     tree: ComponentTreeReconciler,
     terminalProfile: TerminalProfile,
 ) -> TerminalRenderer.Frame {
-    // Get terminal size for layout
-    let terminalSize = getTerminalSize()
+    // Get terminal size for layout (respect configured stdout if available via hooks)
+    let fd: Int32 = HooksRuntime.ioStreams?.stdout.fileDescriptor ?? STDOUT_FILENO
+    let terminalSize = getTerminalSize(fd: fd)
 
     // Build identity path root from type name + optional explicit identity
     let typeName = String(describing: type(of: view))
@@ -1176,16 +1177,17 @@ private func convertViewToComponent(_ view: some View, currentPath: String) -> C
     return resolveComposite(view, path: childPath)
 }
 
-/// Get terminal size with fallback
+/// Get terminal size with fallback for a specific file descriptor
+/// - Parameter fd: The file descriptor to query for terminal size
 /// - Returns: Terminal size (width, height)
-public func getTerminalSize() -> (width: Int, height: Int) {
+public func getTerminalSize(fd: Int32 = STDOUT_FILENO) -> (width: Int, height: Int) {
     // Try to get terminal size using ioctl
     #if os(Linux)
     var winsize = Glibc.winsize()
-    let result = ioctl(STDOUT_FILENO, UInt(TIOCGWINSZ), &winsize)
+    let result = ioctl(fd, UInt(TIOCGWINSZ), &winsize)
     #else
     var winsize = Darwin.winsize()
-    let result = ioctl(STDOUT_FILENO, TIOCGWINSZ, &winsize)
+    let result = ioctl(fd, TIOCGWINSZ, &winsize)
     #endif
 
     if result == 0, winsize.ws_col > 0, winsize.ws_row > 0 {
@@ -1317,7 +1319,7 @@ public func render(_ view: some View, options: RenderOptions = RenderOptions.fro
 private func buildInitialFrame(_ view: some View, identity: String, handle: RenderHandle, options: RenderOptions) async -> (TerminalRenderer.Frame, EffectCollectorBox) {
     await handle.componentTree.beginFrame(rootPath: identity)
     let box = EffectCollectorBox()
-    let frame: TerminalRenderer.Frame = await RuntimeStateContext.$effectCollector.withValue({ id, deps, effect in
+    let frame: TerminalRenderer.Frame = RuntimeStateContext.$effectCollector.withValue({ id, deps, effect in
         box.add(id: id, deps: deps, effect: effect)
     }, operation: {
         convertViewToFrame(view, tree: handle.componentTree, terminalProfile: options.terminalProfile)
