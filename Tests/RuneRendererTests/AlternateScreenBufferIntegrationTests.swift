@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import TestSupport
 @testable import RuneRenderer
 
 /// Integration tests for alternate screen buffer functionality

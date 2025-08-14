@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import TestSupport
 @testable import RuneRenderer
 
 /// Integration tests for frame buffer cleanup and error handling
@@ -13,9 +14,8 @@ struct FrameBufferIntegrationTests {
     func cursorRestorationOnError() async {
         // This test will fail until we implement proper error handling
         // Arrange
-        let pipe = Pipe()
-        let output = pipe.fileHandleForWriting
-        let input = pipe.fileHandleForReading
+        let cap = PipeCapture()
+        let output = cap.start()
         let frameBuffer = FrameBuffer(output: output)
 
         let frame = TerminalRenderer.Frame(
@@ -36,26 +36,20 @@ struct FrameBufferIntegrationTests {
 
         // Cleanup
         await frameBuffer.clear()
-        output.closeFile()
 
         // Assert
-        let data = input.readDataToEndOfFile()
-        let result = String(data: data, encoding: .utf8) ?? ""
+        let result = await cap.finishAndReadString()
 
         // Should show cursor even after error
         #expect(result.contains("\u{001B}[?25h"), "Should restore cursor visibility on error")
-
-        // Cleanup
-        input.closeFile()
     }
 
     @Test("Cleanup on frame buffer deinitialization", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
     func cleanupOnDeinitialization() async {
         // This test will fail until we implement proper cleanup
         // Arrange
-        let pipe = Pipe()
-        let output = pipe.fileHandleForWriting
-        let input = pipe.fileHandleForReading
+        let cap = PipeCapture()
+        let output = cap.start()
 
         do {
             let frameBuffer = FrameBuffer(output: output)
@@ -74,26 +68,19 @@ struct FrameBufferIntegrationTests {
             await frameBuffer.restoreCursor()
         }
 
-        output.closeFile()
-
         // Assert
-        let data = input.readDataToEndOfFile()
-        let result = String(data: data, encoding: .utf8) ?? ""
+        let result = await cap.finishAndReadString()
 
         // Should restore cursor on cleanup
         #expect(result.hasSuffix("\u{001B}[?25h"), "Should restore cursor on explicit cleanup")
-
-        // Cleanup
-        input.closeFile()
     }
 
     @Test("Multiple frame renders maintain state", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
     func multipleFrameRendersMaintainState() async {
         // Test that multiple frame renders work correctly with line erasure
         // Arrange
-        let pipe = Pipe()
-        let output = pipe.fileHandleForWriting
-        let input = pipe.fileHandleForReading
+        let cap = PipeCapture()
+        let output = cap.start()
         let frameBuffer = FrameBuffer(output: output)
 
         let frames = [
@@ -114,11 +101,9 @@ struct FrameBufferIntegrationTests {
         }
 
         await frameBuffer.clear()
-        output.closeFile()
 
         // Assert
-        let data = input.readDataToEndOfFile()
-        let result = String(data: data, encoding: .utf8) ?? ""
+        let result = await cap.finishAndReadString()
 
         // Should contain all frame content and proper ANSI sequences
         #expect(result.contains("Frame 1"), "Should contain first frame")
@@ -126,18 +111,14 @@ struct FrameBufferIntegrationTests {
         #expect(result.contains("Frame 3"), "Should contain third frame")
         #expect(result.contains("\u{001B}[?25l"), "Should hide cursor during rendering")
         #expect(result.contains("\u{001B}[?25h"), "Should restore cursor on clear")
-
-        // Cleanup
-        input.closeFile()
     }
 
     @Test("Frame buffer handles empty frames", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
     func frameBufferHandlesEmptyFrames() async {
         // This test will fail until we implement empty frame handling
         // Arrange
-        let pipe = Pipe()
-        let output = pipe.fileHandleForWriting
-        let input = pipe.fileHandleForReading
+        let cap = PipeCapture()
+        let output = cap.start()
         let frameBuffer = FrameBuffer(output: output)
 
         let emptyFrame = TerminalRenderer.Frame(
@@ -151,27 +132,21 @@ struct FrameBufferIntegrationTests {
 
         // Cleanup first to ensure pipe is properly closed
         await frameBuffer.clear()
-        output.closeFile()
 
         // Assert
-        let data = input.readDataToEndOfFile()
-        let result = String(data: data, encoding: .utf8) ?? ""
+        let result = await cap.finishAndReadString()
 
         // Should handle empty frame gracefully
         #expect(result.contains("\u{001B}[?25l"), "Should hide cursor for empty frame")
         #expect(result.contains("\u{001B}[?25h"), "Should show cursor after empty frame")
-
-        // Cleanup
-        input.closeFile()
     }
 
     @Test("Frame buffer handles cursor management", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
     func frameBufferHandlesCursorManagement() async {
         // Test that cursor is properly hidden and restored
         // Arrange
-        let pipe = Pipe()
-        let output = pipe.fileHandleForWriting
-        let input = pipe.fileHandleForReading
+        let cap = PipeCapture()
+        let output = cap.start()
         let frameBuffer = FrameBuffer(output: output)
 
         let frame = TerminalRenderer.Frame(
@@ -184,18 +159,13 @@ struct FrameBufferIntegrationTests {
         await frameBuffer.renderFrame(frame)
         await frameBuffer.waitForPendingUpdates()
         await frameBuffer.clear()
-        output.closeFile()
 
         // Assert
-        let data = input.readDataToEndOfFile()
-        let result = String(data: data, encoding: .utf8) ?? ""
+        let result = await cap.finishAndReadString()
 
         // Should hide cursor during rendering and restore on clear
         #expect(result.contains("\u{001B}[?25l"), "Should hide cursor during rendering")
         #expect(result.contains("\u{001B}[?25h"), "Should restore cursor on clear")
-
-        // Cleanup
-        input.closeFile()
     }
 
     @Test("Frame buffer cleanup on abrupt termination", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
