@@ -39,6 +39,8 @@ public actor TerminalRenderer {
     private let cursorMgr: CursorManager?
     /// Optional configuration for policy decisions (cursor, etc.)
     private let configuration: RenderConfiguration?
+    /// Optional single-writer for serialized/buffered output
+    private let writer: OutputWriter?
 
     /// Current cursor position
     private var cursorRow = 0
@@ -62,6 +64,16 @@ public actor TerminalRenderer {
         outEncoder = nil
         cursorMgr = nil
         configuration = nil
+        writer = OutputWriter(handle: output)
+    }
+
+    /// Initializer that accepts a shared OutputWriter for single-writer routing
+    public init(output: FileHandle = .standardOutput, writer: OutputWriter, configuration: RenderConfiguration = .default) {
+        self.output = output
+        self.configuration = configuration
+        self.outEncoder = nil
+        self.cursorMgr = nil
+        self.writer = writer
     }
 
     /// New convenience initializer allowing pluggable abstractions (public when enabled)
@@ -77,9 +89,11 @@ public actor TerminalRenderer {
         if configuration.enablePluggableIO {
             outEncoder = encoder
             cursorMgr = cursor
+            writer = nil
         } else {
             outEncoder = nil
             cursorMgr = nil
+            writer = OutputWriter(handle: output, bufferSize: configuration.performance.writeBufferSize)
         }
     }
 
@@ -144,6 +158,8 @@ public actor TerminalRenderer {
         // Re-enable autowrap if we disabled it
         if shouldDisableAutowrap { await enableAutowrapIfNeeded() }
 
+        // Ensure buffered writes are visible to tests/terminal
+        await flushOutput()
         return stats
     }
 
@@ -209,6 +225,8 @@ public actor TerminalRenderer {
         // Re-enable autowrap if we disabled it
         if shouldDisableAutowrap { await enableAutowrapIfNeeded() }
 
+        // Ensure buffered writes are visible to tests/terminal
+        await flushOutput()
         return stats
     }
 
@@ -225,6 +243,9 @@ public actor TerminalRenderer {
         await writeSequence("\u{001B}[?25h")
         cursorHidden = false
 
+        // Ensure sequences are visible promptly in tests/pipes
+        await flushOutput()
+
         // Restore autowrap if we had disabled it
         await enableAutowrapIfNeeded()
     }
@@ -234,6 +255,8 @@ public actor TerminalRenderer {
         if !cursorHidden {
             await writeSequence("\u{001B}[?25l")
             cursorHidden = true
+            // Ensure visibility in tests/pipes when using buffered writer
+            await flushOutput()
         }
     }
 
@@ -242,6 +265,8 @@ public actor TerminalRenderer {
         if cursorHidden {
             await writeSequence("\u{001B}[?25h")
             cursorHidden = false
+            // Ensure visibility in tests/pipes when using buffered writer
+            await flushOutput()
         }
     }
 
@@ -251,6 +276,7 @@ public actor TerminalRenderer {
     ///   - column: Column position (1-based)
     public func moveCursor(to row: Int, column: Int) async {
         await moveCursorInternal(to: row - 1, column - 1) // Convert to 0-based
+        await flushOutput()
     }
 
     /// Get current performance metrics
@@ -269,6 +295,11 @@ public actor TerminalRenderer {
         }
         // Restore autowrap if we had disabled it
         await enableAutowrapIfNeeded()
+
+        // Shutdown the OutputWriter to ensure all background tasks complete
+        if let writer {
+            await writer.shutdown()
+        }
 
         // Reset state
         currentGrid = nil
@@ -506,14 +537,18 @@ public actor TerminalRenderer {
             out.write(sequence)
             return
         }
-        if let data = sequence.data(using: .utf8) {
-            do {
-                try output.write(contentsOf: data)
-            } catch {
-                // Silently ignore write errors (e.g., closed file handle in tests)
-                // This prevents crashes when tests close file handles before async operations complete
-            }
+        if let writer {
+            await writer.write(sequence)
+            return
         }
+        if let data = sequence.data(using: .utf8) {
+            do { try output.write(contentsOf: data) } catch { /* ignore */ }
+        }
+    }
+
+    /// Ensure any buffered output is flushed
+    private func flushOutput() async {
+        if let writer { await writer.flush() }
     }
 
     /// Disable terminal autowrap during rendering

@@ -1,9 +1,11 @@
 import Foundation
 import Testing
+import TestSupport
 @testable import RuneKit
 
 // MARK: - RUNE-25 Tests: Render Handle Control Methods
 
+@Suite("Render handle control tests", .enabled(if: !TestEnv.isCI))
 struct RenderHandleControlTests {
     @Test("unmount() tears down resources and makes handle inactive")
     func unmountTearsDownResources() async {

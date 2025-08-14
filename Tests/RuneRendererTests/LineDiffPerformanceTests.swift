@@ -124,9 +124,8 @@ struct LineDiffPerformanceTests {
 
         // Wait for any pending renders
         try? await Task.sleep(nanoseconds: 200_000_000) // 200ms
-        output.closeFile()
 
-        // Assert
+        // Assert (before shutdown)
         let history = await frameBuffer.getPerformanceHistory()
 
         // With a 10 FPS limit and rapid sending, some frames should be dropped
@@ -134,7 +133,8 @@ struct LineDiffPerformanceTests {
         #expect(history.count <= frames.count, "Should not render more frames than sent")
 
         // Cleanup
-        await frameBuffer.clear()
+        await frameBuffer.shutdown()
+        output.closeFile()
         input.closeFile()
     }
 
@@ -163,14 +163,14 @@ struct LineDiffPerformanceTests {
             await frameBuffer.renderFrameImmediate(frame)
             try? await Task.sleep(nanoseconds: 10_000_000) // 10ms between frames
         }
-        output.closeFile()
 
-        // Assert
+        // Assert (before shutdown)
         let history = await frameBuffer.getPerformanceHistory()
         #expect(history.count == frames.count, "Should render all frames when under rate limit")
 
         // Cleanup
-        await frameBuffer.clear()
+        await frameBuffer.shutdown()
+        output.closeFile()
         input.closeFile()
     }
 

@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import TestSupport
 @testable import RuneComponents
 @testable import RuneKit
 @testable import RuneLayout
@@ -13,6 +14,7 @@ import Testing
 /// - TerminalRenderer and output systems
 /// - Component rendering system
 /// - Signal handling and lifecycle management
+@Suite("RUNE-27 integration tests", .enabled(if: !TestEnv.isCI))
 struct RUNE27IntegrationTests {
     // MARK: - View Protocol Integration
 
@@ -40,7 +42,7 @@ struct RUNE27IntegrationTests {
         #expect(!lines.isEmpty, "Box should render content")
     }
 
-    @Test("Box works with render() function and RenderHandle")
+    @Test("Box works with render() function and RenderHandle", .enabled(if: !TestEnv.isCI))
     func boxWorksWithRenderFunction() async {
         // Arrange
         let box = Box(

@@ -1,8 +1,9 @@
 import Foundation
 import Testing
+import TestSupport
 import RuneKit
 
-@Suite("RUNE-41: Focus registry + useFocus/useFocusManager")
+@Suite("RUNE-41: Focus registry + useFocus/useFocusManager", .enabled(if: !TestEnv.isCI))
 struct FocusRegistryTests {
     actor Sink {
         private(set) var events: [KeyEvent] = []

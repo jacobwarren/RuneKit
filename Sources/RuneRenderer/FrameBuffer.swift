@@ -73,13 +73,6 @@ public actor FrameBuffer {
             }
         }()
 
-        // Create alternate screen buffer if enabled in configuration
-        if configuration.useAlternateScreen {
-            alternateScreenBuffer = AlternateScreenBuffer(output: effectiveOutput)
-        } else {
-            alternateScreenBuffer = nil
-        }
-
         alternateScreenActive = false
 
         // Create console capture if enabled in configuration
@@ -94,6 +87,7 @@ public actor FrameBuffer {
 
         // Create the terminal renderer and hybrid reconciler
         if configuration.enablePluggableIO {
+            // When pluggable IO is enabled, keep previous behavior (direct encoder)
             let encoder = FileHandleOutputEncoder(handle: effectiveOutput)
             let cursor = ANSICursorManager(out: encoder)
             let renderer = TerminalRenderer(
@@ -102,9 +96,17 @@ public actor FrameBuffer {
                 cursor: cursor,
                 configuration: configuration,
             )
+            // Initialize alternate screen if configured, using same encoder
+            let alt: AlternateScreenBuffer? = configuration.useAlternateScreen ? AlternateScreenBuffer(output: effectiveOutput, encoder: encoder) : nil
+            self.alternateScreenBuffer = alt
             reconciler = HybridReconciler(renderer: renderer, configuration: configuration)
         } else {
-            let renderer = TerminalRenderer(output: effectiveOutput)
+            // Default path: create single OutputWriter and route both renderer and alt-screen through it
+            let writer = OutputWriter(handle: effectiveOutput, bufferSize: configuration.performance.writeBufferSize)
+            let encoder = OutputWriterTerminalEncoder(writer: writer)
+            let renderer = TerminalRenderer(output: effectiveOutput, writer: writer, configuration: configuration)
+            let alt: AlternateScreenBuffer? = configuration.useAlternateScreen ? AlternateScreenBuffer(output: effectiveOutput, encoder: encoder, writer: writer) : nil
+            self.alternateScreenBuffer = alt
             reconciler = HybridReconciler(renderer: renderer, configuration: configuration)
         }
     }
@@ -408,16 +410,16 @@ public actor FrameBuffer {
         )
     }
 
-    /// Get terminal size
+    /// Get terminal size based on the configured output handle
     /// - Returns: Terminal size (width, height)
     private func getTerminalSize() -> (width: Int, height: Int) {
-        // Try to get terminal size using ioctl
+        // Try to get terminal size using ioctl on the configured output FD
         #if os(Linux)
         var winsize = Glibc.winsize()
-        let result = ioctl(STDOUT_FILENO, UInt(TIOCGWINSZ), &winsize)
+        let result = ioctl(originalOutput.fileDescriptor, UInt(TIOCGWINSZ), &winsize)
         #else
         var winsize = Darwin.winsize()
-        let result = ioctl(STDOUT_FILENO, TIOCGWINSZ, &winsize)
+        let result = ioctl(originalOutput.fileDescriptor, TIOCGWINSZ, &winsize)
         #endif
 
         if result == 0, winsize.ws_col > 0, winsize.ws_row > 0 {

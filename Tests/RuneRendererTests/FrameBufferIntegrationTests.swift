@@ -1,21 +1,22 @@
 import Foundation
 import Testing
+import TestSupport
 @testable import RuneRenderer
 
 /// Integration tests for frame buffer cleanup and error handling
 ///
 /// Note: These tests are disabled in CI environments because they use
 /// pipes extensively which can interfere with the CI test runner.
+@Suite("Frame buffer integration tests", .enabled(if: !TestEnv.isCI))
 struct FrameBufferIntegrationTests {
     // MARK: - Error Handling Tests
 
-    @Test("Cursor restoration on error", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test("Cursor restoration on error", .enabled(if: !TestEnv.isCI))
     func cursorRestorationOnError() async {
         // This test will fail until we implement proper error handling
         // Arrange
-        let pipe = Pipe()
-        let output = pipe.fileHandleForWriting
-        let input = pipe.fileHandleForReading
+        let cap = PipeCapture()
+        let output = cap.start()
         let frameBuffer = FrameBuffer(output: output)
 
         let frame = TerminalRenderer.Frame(
@@ -35,27 +36,21 @@ struct FrameBufferIntegrationTests {
         }
 
         // Cleanup
-        await frameBuffer.clear()
-        output.closeFile()
+        await frameBuffer.shutdown()
 
         // Assert
-        let data = input.readDataToEndOfFile()
-        let result = String(data: data, encoding: .utf8) ?? ""
+        let result = await cap.finishAndReadString()
 
         // Should show cursor even after error
         #expect(result.contains("\u{001B}[?25h"), "Should restore cursor visibility on error")
-
-        // Cleanup
-        input.closeFile()
     }
 
-    @Test("Cleanup on frame buffer deinitialization", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test("Cleanup on frame buffer deinitialization", .enabled(if: !TestEnv.isCI))
     func cleanupOnDeinitialization() async {
         // This test will fail until we implement proper cleanup
         // Arrange
-        let pipe = Pipe()
-        let output = pipe.fileHandleForWriting
-        let input = pipe.fileHandleForReading
+        let cap = PipeCapture()
+        let output = cap.start()
 
         do {
             let frameBuffer = FrameBuffer(output: output)
@@ -74,26 +69,19 @@ struct FrameBufferIntegrationTests {
             await frameBuffer.restoreCursor()
         }
 
-        output.closeFile()
-
         // Assert
-        let data = input.readDataToEndOfFile()
-        let result = String(data: data, encoding: .utf8) ?? ""
+        let result = await cap.finishAndReadString()
 
         // Should restore cursor on cleanup
         #expect(result.hasSuffix("\u{001B}[?25h"), "Should restore cursor on explicit cleanup")
-
-        // Cleanup
-        input.closeFile()
     }
 
-    @Test("Multiple frame renders maintain state", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test("Multiple frame renders maintain state", .enabled(if: !TestEnv.isCI))
     func multipleFrameRendersMaintainState() async {
         // Test that multiple frame renders work correctly with line erasure
         // Arrange
-        let pipe = Pipe()
-        let output = pipe.fileHandleForWriting
-        let input = pipe.fileHandleForReading
+        let cap = PipeCapture()
+        let output = cap.start()
         let frameBuffer = FrameBuffer(output: output)
 
         let frames = [
@@ -113,12 +101,10 @@ struct FrameBufferIntegrationTests {
             }
         }
 
-        await frameBuffer.clear()
-        output.closeFile()
+        await frameBuffer.shutdown()
 
         // Assert
-        let data = input.readDataToEndOfFile()
-        let result = String(data: data, encoding: .utf8) ?? ""
+        let result = await cap.finishAndReadString()
 
         // Should contain all frame content and proper ANSI sequences
         #expect(result.contains("Frame 1"), "Should contain first frame")
@@ -126,18 +112,14 @@ struct FrameBufferIntegrationTests {
         #expect(result.contains("Frame 3"), "Should contain third frame")
         #expect(result.contains("\u{001B}[?25l"), "Should hide cursor during rendering")
         #expect(result.contains("\u{001B}[?25h"), "Should restore cursor on clear")
-
-        // Cleanup
-        input.closeFile()
     }
 
-    @Test("Frame buffer handles empty frames", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test("Frame buffer handles empty frames", .enabled(if: !TestEnv.isCI))
     func frameBufferHandlesEmptyFrames() async {
         // This test will fail until we implement empty frame handling
         // Arrange
-        let pipe = Pipe()
-        let output = pipe.fileHandleForWriting
-        let input = pipe.fileHandleForReading
+        let cap = PipeCapture()
+        let output = cap.start()
         let frameBuffer = FrameBuffer(output: output)
 
         let emptyFrame = TerminalRenderer.Frame(
@@ -150,28 +132,22 @@ struct FrameBufferIntegrationTests {
         await frameBuffer.renderFrameImmediate(emptyFrame)
 
         // Cleanup first to ensure pipe is properly closed
-        await frameBuffer.clear()
-        output.closeFile()
+        await frameBuffer.shutdown()
 
         // Assert
-        let data = input.readDataToEndOfFile()
-        let result = String(data: data, encoding: .utf8) ?? ""
+        let result = await cap.finishAndReadString()
 
         // Should handle empty frame gracefully
         #expect(result.contains("\u{001B}[?25l"), "Should hide cursor for empty frame")
         #expect(result.contains("\u{001B}[?25h"), "Should show cursor after empty frame")
-
-        // Cleanup
-        input.closeFile()
     }
 
-    @Test("Frame buffer handles cursor management", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test("Frame buffer handles cursor management", .enabled(if: !TestEnv.isCI))
     func frameBufferHandlesCursorManagement() async {
         // Test that cursor is properly hidden and restored
         // Arrange
-        let pipe = Pipe()
-        let output = pipe.fileHandleForWriting
-        let input = pipe.fileHandleForReading
+        let cap = PipeCapture()
+        let output = cap.start()
         let frameBuffer = FrameBuffer(output: output)
 
         let frame = TerminalRenderer.Frame(
@@ -183,22 +159,17 @@ struct FrameBufferIntegrationTests {
         // Act
         await frameBuffer.renderFrame(frame)
         await frameBuffer.waitForPendingUpdates()
-        await frameBuffer.clear()
-        output.closeFile()
+        await frameBuffer.shutdown()
 
         // Assert
-        let data = input.readDataToEndOfFile()
-        let result = String(data: data, encoding: .utf8) ?? ""
+        let result = await cap.finishAndReadString()
 
         // Should hide cursor during rendering and restore on clear
         #expect(result.contains("\u{001B}[?25l"), "Should hide cursor during rendering")
         #expect(result.contains("\u{001B}[?25h"), "Should restore cursor on clear")
-
-        // Cleanup
-        input.closeFile()
     }
 
-    @Test("Frame buffer cleanup on abrupt termination", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test("Frame buffer cleanup on abrupt termination", .enabled(if: !TestEnv.isCI))
     func frameBufferCleanupOnAbruptTermination() async {
         // This test simulates what happens when a process is terminated abruptly
         // Arrange
@@ -207,24 +178,23 @@ struct FrameBufferIntegrationTests {
         let input = pipe.fileHandleForReading
 
         // Create a frame buffer in a scope that will end abruptly
-        do {
-            let frameBuffer = FrameBuffer(output: output)
+        let frameBuffer = FrameBuffer(output: output)
 
-            let frame = TerminalRenderer.Frame(
-                lines: ["Test content for termination"],
-                width: 25,
-                height: 1,
-            )
+        let frame = TerminalRenderer.Frame(
+            lines: ["Test content for termination"],
+            width: 25,
+            height: 1,
+        )
 
-            // Act - Render frame then let frameBuffer go out of scope suddenly
-            await frameBuffer.renderFrame(frame)
-            await frameBuffer.waitForPendingUpdates() // Wait for rendering to complete
+        // Act - Render frame then shut down properly
+        await frameBuffer.renderFrame(frame)
+        await frameBuffer.waitForPendingUpdates() // Wait for rendering to complete
 
-            // Explicitly restore cursor before termination (since deinit cannot do async operations)
-            await frameBuffer.restoreCursor()
+        // Explicitly restore cursor before termination (since deinit cannot do async operations)
+        await frameBuffer.restoreCursor()
 
-            // Simulate abrupt termination by ending the scope here
-        }
+        // Properly shutdown to ensure OutputWriter is closed
+        await frameBuffer.shutdown()
 
         output.closeFile()
 
@@ -241,7 +211,7 @@ struct FrameBufferIntegrationTests {
 
     @Test(
         "Frame buffer handles multiple errors gracefully",
-        .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil),
+        .enabled(if: !TestEnv.isCI),
     )
     func frameBufferHandlesMultipleErrorsGracefully() async {
         // This test ensures that multiple error conditions don't cause issues
@@ -273,7 +243,7 @@ struct FrameBufferIntegrationTests {
             // Second error
         }
 
-        await frameBuffer.clear()
+        await frameBuffer.shutdown()
         output.closeFile()
 
         // Assert
@@ -287,7 +257,7 @@ struct FrameBufferIntegrationTests {
         input.closeFile()
     }
 
-    @Test("Frame buffer handles frame height shrinkage", .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+    @Test("Frame buffer handles frame height shrinkage", .enabled(if: !TestEnv.isCI))
     func frameBufferHandlesFrameHeightShrinkage() async {
         // Test the core functionality from RUNE-20: correct erase when frame height shrinks
         // Arrange
@@ -316,7 +286,7 @@ struct FrameBufferIntegrationTests {
         try? await Task.sleep(nanoseconds: 20_000_000) // 20ms
 
         await frameBuffer.renderFrameImmediate(shortFrame) // Use immediate rendering for second frame
-        await frameBuffer.clear()
+        await frameBuffer.shutdown()
         output.closeFile()
 
         // Assert

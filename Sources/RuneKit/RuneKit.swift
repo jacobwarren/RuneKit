@@ -478,6 +478,9 @@ public actor RenderHandle {
     /// Input manager for raw-mode and key events
     private var inputManager: InputManager?
 
+    /// Debounced resize observer
+    private var resizeObserver: ResizeObserver?
+
     /// Entry for an input handler; avoids large tuple lint violations
     private struct InputHandlerEntry {
         let active: Bool
@@ -662,6 +665,21 @@ public actor RenderHandle {
         self.frameBuffer = frameBuffer
         self.signalHandler = signalHandler
         self.options = options
+
+        // Install a debounced SIGWINCH observer when stdout is a TTY
+        if isatty(options.stdout.fileDescriptor) == 1 {
+            let observer = ResizeObserver(debounceInterval: .milliseconds(25))
+            self.resizeObserver = observer
+            Task { [weak self] in
+                guard let self else { return }
+                await observer.install { [weak self] in
+                    guard let self else { return }
+                    // Reset diff for safe full layout recompute and rerender the current root view
+                    await self.alignIdentity(self.lastViewIdentity ?? "")
+                    await self.rerenderUsingRoot()
+                }
+            }
+        }
     }
 
     // MARK: - Public Interface
@@ -676,6 +694,10 @@ public actor RenderHandle {
         // Stop input manager
         await inputManager?.stop()
         inputManager = nil
+
+        // Stop resize observer
+        await resizeObserver?.cleanup()
+        resizeObserver = nil
 
         // Clear the frame buffer
         await frameBuffer.clear()
@@ -711,8 +733,12 @@ public actor RenderHandle {
         await inputManager?.stop()
         inputManager = nil
 
-        // Clear the frame buffer and restore terminal state
-        await frameBuffer.clear()
+        // Stop resize observer
+        await resizeObserver?.cleanup()
+        resizeObserver = nil
+
+        // Shutdown the frame buffer and restore terminal state
+        await frameBuffer.shutdown()
 
         // Run effect cleanups and clear
         runAllEffectCleanups()
@@ -755,6 +781,10 @@ public actor RenderHandle {
     public func hasConsoleCapture() async -> Bool {
         await frameBuffer.isConsoleCaptureActive()
     }
+
+    // MARK: - Testing helpers for resize-driven rerender
+    func testingRerenderUsingRoot() async { await rerenderUsingRoot() }
+    func testingAlignIdentityForCurrentBuilder() async { await alignIdentity(lastViewIdentity ?? "") }
 
     /// Set the signal handler for this render session (internal use)
     /// - Parameter handler: Signal handler to associate with this session
@@ -1074,8 +1104,9 @@ private func convertViewToFrame(
     tree: ComponentTreeReconciler,
     terminalProfile: TerminalProfile,
 ) -> TerminalRenderer.Frame {
-    // Get terminal size for layout
-    let terminalSize = getTerminalSize()
+    // Get terminal size for layout (respect configured stdout if available via hooks)
+    let fd: Int32 = HooksRuntime.ioStreams?.stdout.fileDescriptor ?? STDOUT_FILENO
+    let terminalSize = getTerminalSize(fd: fd)
 
     // Build identity path root from type name + optional explicit identity
     let typeName = String(describing: type(of: view))
@@ -1146,16 +1177,17 @@ private func convertViewToComponent(_ view: some View, currentPath: String) -> C
     return resolveComposite(view, path: childPath)
 }
 
-/// Get terminal size with fallback
+/// Get terminal size with fallback for a specific file descriptor
+/// - Parameter fd: The file descriptor to query for terminal size
 /// - Returns: Terminal size (width, height)
-public func getTerminalSize() -> (width: Int, height: Int) {
+public func getTerminalSize(fd: Int32 = STDOUT_FILENO) -> (width: Int, height: Int) {
     // Try to get terminal size using ioctl
     #if os(Linux)
     var winsize = Glibc.winsize()
-    let result = ioctl(STDOUT_FILENO, UInt(TIOCGWINSZ), &winsize)
+    let result = ioctl(fd, UInt(TIOCGWINSZ), &winsize)
     #else
     var winsize = Darwin.winsize()
-    let result = ioctl(STDOUT_FILENO, TIOCGWINSZ, &winsize)
+    let result = ioctl(fd, TIOCGWINSZ, &winsize)
     #endif
 
     if result == 0, winsize.ws_col > 0, winsize.ws_row > 0 {
@@ -1287,7 +1319,7 @@ public func render(_ view: some View, options: RenderOptions = RenderOptions.fro
 private func buildInitialFrame(_ view: some View, identity: String, handle: RenderHandle, options: RenderOptions) async -> (TerminalRenderer.Frame, EffectCollectorBox) {
     await handle.componentTree.beginFrame(rootPath: identity)
     let box = EffectCollectorBox()
-    let frame: TerminalRenderer.Frame = await RuntimeStateContext.$effectCollector.withValue({ id, deps, effect in
+    let frame: TerminalRenderer.Frame = RuntimeStateContext.$effectCollector.withValue({ id, deps, effect in
         box.add(id: id, deps: deps, effect: effect)
     }, operation: {
         convertViewToFrame(view, tree: handle.componentTree, terminalProfile: options.terminalProfile)

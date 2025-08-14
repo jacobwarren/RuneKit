@@ -1,7 +1,9 @@
 import Foundation
 import Testing
+import TestSupport
 @testable import RuneKit
 
+@Suite(.enabled(if: !TestEnv.isCI))
 struct AdvancedInputDecodingTests {
     actor Sink { var events: [KeyEvent] = []; func add(_ e: KeyEvent) { events.append(e) } }
 

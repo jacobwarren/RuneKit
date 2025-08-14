@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import TestSupport
 @testable import RuneRenderer
 
 /// Tests for terminal renderer functionality following TDD principles
@@ -53,8 +54,8 @@ struct TerminalRendererTests {
     @Test("Renderer initialization with custom output")
     func rendererInitializationCustom() async {
         // Arrange
-        let pipe = Pipe()
-        let output = pipe.fileHandleForWriting
+        let cap = PipeCapture()
+        let output = cap.start()
 
         // Act
         _ = TerminalRenderer(output: output)
@@ -64,7 +65,7 @@ struct TerminalRendererTests {
         #expect(Bool(true), "Renderer should initialize with custom output")
 
         // Cleanup
-        output.closeFile()
+        _ = await cap.finishAndReadString()
     }
 
     // MARK: - Basic Rendering Tests
@@ -72,9 +73,8 @@ struct TerminalRendererTests {
     @Test("Render simple frame")
     func renderSimpleFrame() async {
         // Arrange
-        let pipe = Pipe()
-        let output = pipe.fileHandleForWriting
-        let input = pipe.fileHandleForReading
+        let cap = PipeCapture()
+        let output = cap.start()
         let renderer = TerminalRenderer(output: output)
 
         let frame = TerminalRenderer.Frame(
@@ -85,11 +85,9 @@ struct TerminalRendererTests {
 
         // Act
         await renderer.render(frame)
-        output.closeFile()
 
         // Assert
-        let data = input.readDataToEndOfFile()
-        let result = String(data: data, encoding: .utf8) ?? ""
+        let result = await cap.finishAndReadString()
 
         // Should contain the frame content and ANSI sequences
         #expect(result.contains("Hello"), "Should contain first line content")
@@ -97,96 +95,70 @@ struct TerminalRendererTests {
         #expect(result.contains("\u{001B}[?25l"), "Should hide cursor during rendering")
         #expect(result.contains("\u{001B}[?25h"), "Should show cursor after rendering")
 
-        // Cleanup
-        input.closeFile()
     }
 
     @Test("Clear screen")
     func clearScreen() async {
         // Arrange
-        let pipe = Pipe()
-        let output = pipe.fileHandleForWriting
-        let input = pipe.fileHandleForReading
+        let cap = PipeCapture()
+        let output = cap.start()
         let renderer = TerminalRenderer(output: output)
 
         // Act
         await renderer.clear()
-        output.closeFile()
 
         // Assert
-        let data = input.readDataToEndOfFile()
-        let result = String(data: data, encoding: .utf8) ?? ""
+        let result = await cap.finishAndReadString()
         #expect(
             result == "\u{001B}[2J\u{001B}[H\u{001B}[?25h",
             "Should output clear screen ANSI sequence and show cursor",
         )
-
-        // Cleanup
-        input.closeFile()
     }
 
     @Test("Move cursor")
     func testMoveCursor() async {
         // Arrange
-        let pipe = Pipe()
-        let output = pipe.fileHandleForWriting
-        let input = pipe.fileHandleForReading
+        let cap = PipeCapture()
+        let output = cap.start()
         let renderer = TerminalRenderer(output: output)
 
         // Act
         await renderer.moveCursor(to: 5, column: 10)
-        output.closeFile()
 
         // Assert
-        let data = input.readDataToEndOfFile()
-        let result = String(data: data, encoding: .utf8) ?? ""
+        let result = await cap.finishAndReadString()
         #expect(result == "\u{001B}[5;10H", "Should output cursor move ANSI sequence")
-
-        // Cleanup
-        input.closeFile()
     }
 
     @Test("Hide cursor")
     func testHideCursor() async {
         // Arrange
-        let pipe = Pipe()
-        let output = pipe.fileHandleForWriting
-        let input = pipe.fileHandleForReading
+        let cap = PipeCapture()
+        let output = cap.start()
         let renderer = TerminalRenderer(output: output)
 
         // Act
         await renderer.hideCursor()
-        output.closeFile()
 
         // Assert
-        let data = input.readDataToEndOfFile()
-        let result = String(data: data, encoding: .utf8) ?? ""
+        let result = await cap.finishAndReadString()
         #expect(result == "\u{001B}[?25l", "Should output hide cursor ANSI sequence")
-
-        // Cleanup
-        input.closeFile()
     }
 
     @Test("Show cursor")
     func testShowCursor() async {
         // Arrange
-        let pipe = Pipe()
-        let output = pipe.fileHandleForWriting
-        let input = pipe.fileHandleForReading
+        let cap = PipeCapture()
+        let output = cap.start()
         let renderer = TerminalRenderer(output: output)
 
         // Act
         await renderer.hideCursor() // First hide cursor
         await renderer.showCursor() // Then show it
-        output.closeFile()
 
         // Assert
-        let data = input.readDataToEndOfFile()
-        let result = String(data: data, encoding: .utf8) ?? ""
+        let result = await cap.finishAndReadString()
         #expect(result == "\u{001B}[?25l\u{001B}[?25h", "Should output hide then show cursor ANSI sequences")
-
-        // Cleanup
-        input.closeFile()
     }
 
     // MARK: - Frame Buffer Tests (RUNE-20)

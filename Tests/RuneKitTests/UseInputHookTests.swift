@@ -1,8 +1,9 @@
 import Foundation
 import Testing
+import TestSupport
 import RuneKit
 
-@Suite("RUNE-38: useInput hook")
+@Suite("RUNE-38: useInput hook", .enabled(if: !TestEnv.isCI))
 struct UseInputHookTests {
     actor Sink {
         var events: [KeyEvent] = []

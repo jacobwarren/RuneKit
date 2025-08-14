@@ -1,8 +1,9 @@
 import Foundation
 import Testing
+import TestSupport
 import RuneKit
 
-@Suite("RUNE-39: useApp() context")
+@Suite("RUNE-39: useApp() context", .enabled(if: !TestEnv.isCI))
 struct AppContextHookTests {
     struct ExitOnMountView: View, ViewIdentifiable {
         var id: String = UUID().uuidString

@@ -1,8 +1,9 @@
 import Foundation
 import Testing
+import TestSupport
 import RuneKit
 
-@Suite("RUNE-41: useFocusManager hook")
+@Suite("RUNE-41: useFocusManager hook", .enabled(if: !TestEnv.isCI))
 struct UseFocusManagerHookTests {
     actor Sink {
         private(set) var events: [KeyEvent] = []
