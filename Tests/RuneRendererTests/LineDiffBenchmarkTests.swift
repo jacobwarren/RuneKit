@@ -7,6 +7,7 @@ import TestSupport
 ///
 /// These tests compare the performance characteristics of line-diff optimization
 /// versus full redraw mode under various scenarios.
+@Suite("Line diff benchmark tests", TestEnv.skipBenchmarkInCI)
 struct LineDiffBenchmarkTests {
     // MARK: - Benchmark Helper Methods
 

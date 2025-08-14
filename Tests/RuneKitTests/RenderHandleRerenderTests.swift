@@ -1,9 +1,11 @@
 import Foundation
 import Testing
+import TestSupport
 @testable import RuneKit
 
 // MARK: - RUNE-25 Tests: Render Handle Rerender Methods
 
+@Suite("Render handle rerender tests", TestEnv.skipIntegrationInCI)
 struct RenderHandleRerenderTests {
     @Test("rerender() updates UI content", .disabled("Disabled to prevent CI hanging on pipe reads"))
     func rerenderUpdatesUIContent() async {

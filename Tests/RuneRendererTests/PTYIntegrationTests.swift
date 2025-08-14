@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import TestSupport
 @testable import RuneRenderer
 
 /// PTY integration tests for console capture ordering validation
@@ -11,6 +12,7 @@ import Testing
 /// Note: These tests are disabled in CI environments because they can
 /// interfere with the test runner's own stdout/stderr handling, causing
 /// SIGPIPE errors. They work fine in local development environments.
+@Suite("PTY integration tests", TestEnv.skipIntegrationInCI)
 struct PTYIntegrationTests {
     @Test("PTY integration validates ordering", .disabled("Interferes with test runner stdout/stderr"))
     func ptyIntegrationValidatesOrdering() async throws {

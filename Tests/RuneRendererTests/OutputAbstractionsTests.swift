@@ -1,7 +1,9 @@
 import Foundation
 import Testing
+import TestSupport
 @testable import RuneRenderer
 
+@Suite("Output abstractions tests", TestEnv.skipIntegrationInCI)
 struct OutputAbstractionsTests {
     @Test("FileHandleOutputEncoder writes to pipe")
     func fileHandleEncoderWrites() {

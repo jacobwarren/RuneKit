@@ -1,11 +1,13 @@
 import Foundation
 import Testing
+import TestSupport
 @testable import RuneRenderer
 
 /// Integration tests for the enhanced FrameBuffer with line-diff support
 ///
 /// These tests verify the complete line-diff rendering pipeline including
 /// performance metrics, configuration handling, and visual output correctness.
+@Suite("Line diff frame buffer tests", TestEnv.skipIntegrationInCI)
 struct LineDiffFrameBufferTests {
     // MARK: - Basic Line-Diff Rendering Tests
 

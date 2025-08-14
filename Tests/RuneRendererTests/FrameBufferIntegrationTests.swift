@@ -7,6 +7,7 @@ import TestSupport
 ///
 /// Note: These tests are disabled in CI environments because they use
 /// pipes extensively which can interfere with the CI test runner.
+@Suite("Frame buffer integration tests", TestEnv.skipIntegrationInCI)
 struct FrameBufferIntegrationTests {
     // MARK: - Error Handling Tests
 

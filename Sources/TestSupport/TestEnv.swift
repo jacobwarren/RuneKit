@@ -1,4 +1,5 @@
 import Foundation
+import Testing
 
 /// Shared test environment helpers used by test targets to standardize CI/test detection.
 public enum TestEnv {
@@ -7,6 +8,19 @@ public enum TestEnv {
         let env = ProcessInfo.processInfo.environment
         return env["CI"] != nil || env["GITHUB_ACTIONS"] != nil || env["BUILDKITE"] != nil || env["GITLAB_CI"] != nil
     }
+
+    /// Test trait for timing-sensitive tests that should never run in CI
+    public static let skipInCI: Test.Trait = .enabled(if: !isCI)
+
+    /// Test trait for integration tests that use pipes/file handles and can hang in CI
+    public static let skipIntegrationInCI: Test.Trait = .enabled(if: !isCI)
+
+    /// Test trait for performance/benchmark tests that are unreliable in CI
+    public static let skipBenchmarkInCI: Test.Trait = .enabled(if: !isCI)
+
+    /// Test trait for input/interaction tests that don't work in headless CI
+    public static let skipInputInCI: Test.Trait = .enabled(if: !isCI)
+}
 
     /// True when running under XCTest or swift test (including swift-testing)
     public static var isUnderTestHarness: Bool {

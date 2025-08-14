@@ -1,9 +1,11 @@
 import Foundation
 import Testing
+import TestSupport
 @testable import RuneKit
 
 // MARK: - Render Function Tests
 
+@Suite("Render function tests", TestEnv.skipIntegrationInCI)
 struct RenderFunctionTests {
     @Test("RenderHandle initialization and basic functionality")
     func renderHandleBasicFunctionality() async {
