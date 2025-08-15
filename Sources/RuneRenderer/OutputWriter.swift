@@ -35,22 +35,35 @@ public actor OutputWriter {
     }
 
     /// Non-atomic write: appended to the internal buffer; flushed when thresholds are exceeded.
-    public func write(_ string: String) {
+    public func write(_ string: String) async {
         guard let data = string.data(using: .utf8) else { return }
-        // Backpressure check: if adding this would exceed cap
+
+        // If a single write is larger than the cap, bypass buffer and write directly
+        if data.count >= maxBufferedBytes {
+            if !buffer.isEmpty { flush() }
+            performSyscall(data)
+            return
+        }
+
+        // Backpressure: ensure capacity based on policy
         if buffer.count + data.count > maxBufferedBytes {
             switch policy {
             case .dropNewest:
                 dropped &+= 1
                 return
             case .dropOldest:
-                // Drop current buffer to make room
                 buffer.removeAll(keepingCapacity: true)
             case .block:
-                // Simple blocking strategy: flush current contents, then proceed
+                // True blocking: flush immediately to make space
                 flush()
+                // If still insufficient capacity after flush, the data is too large for our buffer.
+                // In this case, fall back to dropping the oldest data to make room.
+                if buffer.count + data.count > maxBufferedBytes {
+                    buffer.removeAll(keepingCapacity: true)
+                }
             }
         }
+
         buffer.append(data)
         if buffer.count >= bufferSize {
             flush()
@@ -93,4 +106,3 @@ public actor OutputWriter {
         }
     }
 }
-

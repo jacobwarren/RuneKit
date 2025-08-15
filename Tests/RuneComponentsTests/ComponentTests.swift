@@ -12,6 +12,13 @@ import TestSupport
 
 /// Tests for component functionality following TDD principles
 struct ComponentTests {
+
+    init() {
+        // Clean up shared state before each test to prevent interference between tests
+        StateRegistry.shared.clearAll()
+        StateObjectStore.shared.clearAll()
+    }
+
     // MARK: - Text Component Tests
 
     @Test("Text component with simple content")

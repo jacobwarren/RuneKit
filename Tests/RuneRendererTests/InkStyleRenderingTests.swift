@@ -46,12 +46,12 @@ struct InkStyleRenderingTests {
 }
 
 /// Minimal encoder to capture renderer output safely across actors
-final class MemoryEncoder: TerminalOutputEncoder, @unchecked Sendable {
-    private var lock = NSLock()
+actor MemoryEncoder: TerminalOutputEncoder {
     private var _buffer: String = ""
-    func write(_ text: String) { lock.lock(); _buffer += text; lock.unlock() }
-    func snapshot() -> String { lock.lock(); defer { lock.unlock() }; return _buffer }
-    func reset() { lock.lock(); _buffer = ""; lock.unlock() }
+    func write(_ text: String) async { _buffer += text }
+    func snapshot() async -> String { _buffer }
+    func reset() async { _buffer = "" }
+    func flush() async { /* no-op for memory encoder */ }
 }
 
 /// CursorManager wrapper that is Sendable for tests
@@ -59,11 +59,11 @@ struct SafeCursorManager: CursorManager, Sendable {
     let out: MemoryEncoder
     var row: Int { 0 }
     var col: Int { 0 }
-    func moveTo(row: Int, col: Int) { out.write("\u{001B}[\(row);\(col)H") }
-    func hide() { out.write("\u{001B}[?25l") }
-    func show() { out.write("\u{001B}[?25h") }
-    func clearScreen() { out.write("\u{001B}[2J\u{001B}[H") }
-    func clearLine() { out.write("\u{001B}[2K") }
-    func moveToColumn1() { out.write("\u{001B}[G") }
+    func moveTo(row: Int, col: Int) async { await out.write("\u{001B}[\(row);\(col)H") }
+    func hide() async { await out.write("\u{001B}[?25l") }
+    func show() async { await out.write("\u{001B}[?25h") }
+    func clearScreen() async { await out.write("\u{001B}[2J\u{001B}[H") }
+    func clearLine() async { await out.write("\u{001B}[2K") }
+    func moveToColumn1() async { await out.write("\u{001B}[G") }
 }
 

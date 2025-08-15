@@ -3,9 +3,16 @@ import Testing
 import TestSupport
 @testable import RuneANSI
 @testable import RuneComponents
+@testable import RuneKit
 @testable import RuneUnicode
 
 struct TextWrappingSnapshotTests {
+
+    init() {
+        // Clean up shared state before each test to prevent interference between tests
+        StateRegistry.shared.clearAll()
+        StateObjectStore.shared.clearAll()
+    }
     @Test("Snapshot: wrap mixed styles + emoji/ZWJ/CJK")
     func snapshotWrapMixed() {
         // Arrange

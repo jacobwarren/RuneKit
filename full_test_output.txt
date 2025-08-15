@@ -1,0 +1,1067 @@
+Building for debugging...
+[0/4] Write swift-version--58304C5D6DBC2206.txt
+Build complete! (0.17s)
+◇ Test run started.
+↳ Testing Library Version: 124.4
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite ComponentTests started.
+◇ Suite AlignmentSnapshotTests started.
+◇ Suite TextStyleTypeTests started.
+◇ Suite TransformANSISafetyTests started.
+◇ Suite "Hooks deps equality edge cases" started.
+◇ Suite ChildIdentityReconcilerTests started.
+◇ Suite TextStyleSnapshotTests started.
+◇ Suite TextErgonomicsTests started.
+◇ Suite "Composite View resolution renders child components (no placeholders)" started.
+◇ Suite "Hooks runtime tests for RUNE-37" started.
+◇ Suite "Transform time-aware initializer tests" started.
+◇ Suite RenderHandleConcurrencyStressTests started.
+◇ Suite BoxBorderBackgroundANSITests started.
+◇ Suite TextStyleMatrixTests started.
+◇ Suite "RUNE-39+: App exit code propagation via useApp().exit(error:)" started.
+◇ Suite TransformExactStringTests started.
+◇ Suite RuneKitTests started.
+◇ Suite "RUNE-38: useInput hook" started.
+◇ Suite TextWrappingTests started.
+✘ Suite "Ticker tests" skipped: "Timing-sensitive test that can hang"
+◇ Suite "Hooks additional tests: deps sugar, useRef, useMemo" started.
+◇ Suite SignalHandlerTests started.
+◇ Suite AlternateScreenBufferTests started.
+◇ Suite TextWrappingSnapshotTests started.
+◇ Suite "Frame buffer integration tests" started.
+◇ Suite TextStyleParityTests started.
+◇ Suite InputManagerTests started.
+◇ Suite ViewStatePreservationTests started.
+◇ Suite LogLaneTests started.
+◇ Suite LogLaneANSIWIdeWrapTests started.
+✘ Suite "Concurrency and integration tests" skipped: "Timing-sensitive tests that can hang"
+◇ Suite "Render function tests" started.
+◇ Suite "RUNE-41: useFocusManager hook" started.
+◇ Suite "Ink-style renderer behavior on main screen buffer" started.
+◇ Suite "Pluggable IO ordering tests" started.
+◇ Suite "RuneCLI exit helper" started.
+◇ Suite "RUNE-27 integration tests" started.
+◇ Suite "Render handle rerender tests" started.
+◇ Suite RuneCLISmokeTests started.
+◇ Suite SpacerCrossAxisTests started.
+◇ Suite PerformanceMetricsTests started.
+◇ Suite "Render handle control tests" started.
+◇ Suite "RUNE-39: useApp() context" started.
+◇ Suite "Output writer tests" started.
+◇ Suite CursorReturnPolicyTests started.
+◇ Suite HybridReconcilerPolicyTests started.
+◇ Suite RenderOptionsTests started.
+◇ Suite AdvancedInputDecodingTests started.
+◇ Suite "RUNE-40: useStdin/Stdout/Stderr hooks" started.
+◇ Suite "RUNE-41: Focus registry + useFocus/useFocusManager" started.
+◇ Suite "RUNE-41: useFocusManager hook integration" started.
+◇ Suite SGRAttributeToggleTests started.
+◇ Suite SGRStateMachineTests started.
+◇ Suite StrategyDeterminerTests started.
+◇ Suite ConsoleCaptureTests started.
+◇ Suite InvalidColorAndInverseTests started.
+◇ Suite TextModifiersTests started.
+◇ Suite "RUNE-38: useInput matrix" started.
+◇ Suite PerformanceTimingExposureTests started.
+◇ Suite TextAttributesTests started.
+◇ Suite LineComposerTests started.
+◇ Suite TextColorBleedTests started.
+◇ Suite ScrollOptimizationTests started.
+◇ Suite TerminalGridANSIAwareTests started.
+◇ Suite "Output writer blocking behavior" started.
+◇ Suite HybridDifferInjectionTests started.
+◇ Suite WidthEastAsianTests started.
+◇ Suite CursorPolicyTests started.
+◇ Suite SGRDiffingTests started.
+◇ Suite "Line diff frame buffer tests" started.
+◇ Suite TerminalRendererTests started.
+◇ Suite TextSpanTests started.
+◇ Suite "Output abstractions tests" started.
+◇ Suite "Resize handling tests" started.
+◇ Suite ExtendedPictographicScalarTests started.
+◇ Suite "PTY integration tests" started.
+◇ Suite SGRMicroOptimizationsTests started.
+◇ Suite UnicodeCategoriesBasicTests started.
+◇ Suite LineDiffPerformanceTests started.
+◇ Suite WidthGoldenTests started.
+◇ Suite ANSITokenizerSGRTests started.
+◇ Suite ANSIConversionTests started.
+◇ Suite ScrollOptimizationNShiftTests started.
+◇ Suite "Line diff benchmark tests" started.
+◇ Suite WidthPerformanceTests started.
+◇ Suite FlexLayoutTests started.
+◇ Suite WidthBasicTests started.
+◇ Suite ANSIAwareWrapSliceTests started.
+◇ Suite ANSITokenizerControlTests started.
+◇ Suite RenderConfigurationTests started.
+◇ Suite StyledTextExampleTests started.
+◇ Suite "Alt-screen ordering boundaries" started.
+◇ Suite WidthWcwidthTests started.
+◇ Suite WrapEmojiClippingE2ETests started.
+◇ Suite UnicodeCategoriesEnumTests started.
+◇ Suite TerminalProfileTests started.
+◇ Suite AlternateScreenBufferIntegrationTests started.
+◇ Suite SGRDiffingV2Tests started.
+◇ Suite FlexLayoutSnapshotTests started.
+◇ Suite AutowrapGuardTests started.
+◇ Suite ANSITokenizerBasicTests started.
+◇ Suite LineComposerGoldenZWJTests started.
+◇ Suite AlignmentWrapMatrixTests started.
+◇ Suite UnicodeCategoriesEdgeCasesTests started.
+◇ Suite "Yoga Integration Tests" started.
+◇ Suite BoxFlexLayoutIntegrationTests started.
+◇ Suite YogaRawValueValidationTests started.
+◇ Suite StyledTextOperationsTests started.
+◇ Suite "Output serialization integration" started.
+◇ Suite FlexAdvancedLayoutTests started.
+◇ Suite BoxLayoutTests started.
+◇ Suite UnicodeCategoriesNormalizationTests started.
+◇ Test "Truncate appends reset and prevents style bleed" started.
+◇ Suite LineDiffTests started.
+◇ Test "Text component with inverse styling" started.
+◇ Test "Box with multiple Text children renders correctly" started.
+◇ Test "Box with border style none" started.
+◇ Test "Transform with empty child renders empty" started.
+◇ Test "Text component style combination snapshots" started.
+◇ Test "Static component with height constraint" started.
+◇ Test "Text component with multiple lines prevents color bleed" started.
+◇ Test "Multiple spacers divide remaining space equally" started.
+◇ Test "Text component with dim styling" started.
+◇ Test "Text component with CJK style combinations" started.
+◇ Test "Transform handles emoji and Unicode correctly" started.
+◇ Test "Text component with 256 color" started.
+◇ Test "Box with rounded border renders correctly" started.
+◇ Test "Text component with RGB color" started.
+◇ Test "Transform preserves ANSI sequences correctly" started.
+◇ Test "Newline component View protocol conformance" started.
+◇ Test "Transform component exists and conforms to Component protocol" started.
+◇ Test "Spacer renders as empty content" started.
+◇ Test "AlignSelf auto inherits from parent alignItems" started.
+◇ Test "Box with border and padding renders correctly" started.
+◇ Test "Text component with emoji and styling" started.
+◇ Test "Newline component with zero width renders correctly" started.
+◇ Test "Spacer does not affect cross-axis sizing" started.
+◇ Test "Newline component with large count respects height constraint" started.
+◇ Test "Newline component with negative count treats as zero" started.
+◇ Test "Newline component with count 1 renders single newline" started.
+◇ Test "RUNE27 demo Spacer examples work correctly" started.
+◇ Test "Text component RGB and 256 color snapshots" started.
+◇ Test "Text component with zero dimensions" started.
+◇ Test "Box with double border renders correctly" started.
+◇ Test "Text component with empty content and styling" started.
+◇ Test "Newline component respects height constraint" started.
+◇ Test "Box with border and content renders correctly" started.
+◇ Test "Newline component with count 3 renders three newlines" started.
+◇ Test "Static component with multiple lines" started.
+◇ Test "Transform applies simple string transformation" started.
+◇ Test "Static component View protocol conformance" started.
+◇ Test "Text component with empty content has no color bleed" started.
+◇ Test "Text component with zero height" started.
+◇ Test "Newline component with count 0 renders no lines" started.
+◇ Test "Text component with content longer than width" started.
+◇ Test "Box border rendering with emoji content" started.
+◇ Test "Text component with strikethrough styling" started.
+◇ Test "Static component with emoji width constraint" started.
+◇ Test "Box with text child" started.
+◇ Test "Text component with width constraint and styling" started.
+◇ Test "AlignSelf options work correctly and override parent alignItems" started.
+◇ Test "Box with too small dimensions gracefully degrades" started.
+◇ Test "Transform with nested styled components preserves all ANSI" started.
+◇ Test "Text component reset code placement" started.
+◇ Test "Transform with zero dimensions returns empty" started.
+◇ Test "Transform chains multiple transformations correctly" started.
+◇ Test "Box with single border renders correctly" started.
+◇ Test "AlignSelf center overrides parent alignItems" started.
+◇ Test "Box with border renders correctly" started.
+◇ Test "AlignSelf stretch makes child fill cross-axis" started.
+◇ Test "Text component with background color" started.
+◇ Test "Text component with no styling should not add ANSI codes" started.
+◇ Test "Transform handles complex ANSI sequences without breaking them" started.
+◇ Test "JustifyContent options work correctly in row layout" started.
+◇ Test "Newline component exists and conforms to Component protocol" started.
+◇ Test "Static component with width constraint" started.
+◇ Test "ANSI-aware display width calculation" started.
+◇ Test "AlignItems options work correctly in row layout" started.
+◇ Test "Static component ordering consistency" started.
+◇ Test "Spacer works correctly with different alignment combinations" started.
+◇ Test "Text component prevents color bleed at line boundaries" started.
+◇ Test "Text init with style renders correctly" started.
+◇ Test "Transform with Box preserves borders correctly" started.
+◇ Test "Text component with special characters and styling" started.
+◇ Test "Empty box component" started.
+◇ Test "Box prevents emoji clipping at border edges" started.
+◇ Test "Spacer with no available space has zero size" started.
+◇ Test "Box with emoji content handles width correctly" started.
+◇ Test "Overlay last-wins and conversion to attributes" started.
+◇ Test "Box supports alignSelf property" started.
+◇ Test "Static component with empty lines" started.
+◇ Test "AlignSelf enum exists with all required cases" started.
+◇ Test "Newline component produces no SGR leakage" started.
+◇ Test "Box with zero dimensions" started.
+◇ Test "Text component plain text has no ANSI codes" started.
+◇ Test "Text component with color styling" started.
+◇ Test "Text component with simple content" started.
+◇ Test "Static component with emoji content" started.
+◇ Test "Text component with italic styling" started.
+◇ Test "Spacer in column layout consumes remaining vertical space" started.
+◇ Test "Spacer component exists and conforms to Component protocol" started.
+◇ Test "Alignment works correctly with borders and padding" started.
+◇ Test "Text component with multiple styles" started.
+◇ Test "Static component with single line" started.
+◇ Test "Box with CJK content handles width correctly" started.
+◇ Test "Box with minimum dimensions handles borders correctly" started.
+◇ Test "Signed zeroes: 0.0 and -0.0 are distinct and trigger reruns" started.
+◇ Test "Custom Hashable with changing description triggers deps change" started.
+◇ Test "Newline component with zero height renders no lines" started.
+◇ Test "Spacer in row layout consumes remaining horizontal space" started.
+◇ Test "Double.nan encodes to a stable deps token across commits" started.
+◇ Test "Box with Text child renders emoji correctly" started.
+◇ Test "Static component immutability" started.
+◇ Test "RUNE32 real-world layout patterns work correctly" started.
+◇ Test "createBoxFrame with emoji renders borders correctly" started.
+◇ Test "Text component with underline styling" started.
+◇ Test "Text component with CJK characters and styling" started.
+◇ Test "Preserve child state across reordering with stable identity" started.
+◇ Test "Box with system monitor style content renders correctly" started.
+◇ Test "Static component with zero dimensions" started.
+◇ Test "Common style combinations produce ANSI and reset" started.
+◇ Test "Identity wrapper opts into object-identity dep semantics" started.
+✘ Test "useEffect runs on mount and cleanup runs on unmount; requestRerender drives ~10-12 Hz" skipped: "Timing-sensitive test that can hang"
+◇ Test "Conditional helpers apply only when condition is true" started.
+◇ Test "Static component with CJK characters" started.
+◇ Test "Multi-children ANSI/emoji placement uses display columns and no overlap" started.
+◇ Test "Time-aware Transform with constant transform behaves like normal Transform and preserves ANSI" started.
+✘ Test "Effect re-runs on deps change and previous cleanup executes" skipped: "Timing-sensitive test that can hang"
+◇ Test "Hex color helpers parse and apply when valid, ignore when invalid" started.
+◇ Test "Plain text uppercase is applied directly" started.
+◇ Test "Text component with emoji style combinations" started.
+◇ Test "Time-based transform on plain text uses provided time" started.
+◇ Test "Borders get colored and background fills content area without bleed" started.
+◇ Test "Snapshot: 256 and truecolor" started.
+◇ Test "Text component with bold styling" started.
+◇ Test "ANSI-styled text preserves SGR and uppercases text" started.
+◇ Test "Concurrent clear/rerender/unmount is safe" started.
+◇ Test "Snapshot: 16-color + effects" started.
+◇ Test "Identity change resets diff state" started.
+◇ Test "Transform uppercasing keeps styles and transforms content only" started.
+◇ Test "Text component with zero width" started.
+◇ Test "AlternateScreenBuffer fallback behavior" started.
+◇ Test "Unsubscribe on unmount; no leaks" started.
+◇ Test "Hook receives arrow/function/ctrl/meta keys" started.
+◇ Test "Composite view body is converted to Box/Text and renders border glyphs" started.
+◇ Test "useMemo recomputes only when deps change" started.
+◇ Test "Time-based transform on single ANSI span applies to text and preserves SGR" started.
+◇ Test "useRef identity persists across rerenders and does not trigger rerender on mutation" started.
+◇ Test "FrameBuffer with alternate screen buffer disabled" started.
+◇ Test "SignalHandler graceful teardown callback" started.
+◇ Test "Frame height shrinkage cleanup" started.
+◇ Test "Region repaint with cursor management" started.
+✘ Test "Ticker ticks and cancellation stops future ticks (robust)" skipped: "Timing-sensitive test that can hang"
+◇ Test "exit(nil) yields code 0 (success)" started.
+✘ Test "Time-aware Transform produces different output over time" skipped: "Timing-sensitive test that can hang"
+◇ Test "AlternateScreenBuffer with fallback enabled" started.
+◇ Test "In-place repaint without flicker" started.
+◇ Test "SignalHandler install and cleanup" started.
+◇ Test "exit(error:) uses default code 1 for plain errors" started.
+◇ Test "useEffect deps sugar: nil runs every commit, [] mount-only, values trigger rerun" started.
+◇ Test "SignalHandler initialization" started.
+◇ Test "AlternateScreenBuffer initialization" started.
+◇ Test "isActive gates handler" started.
+◇ Test "AlternateScreenBuffer explicit cleanup" started.
+◇ Test "AlternateScreenBuffer enter sequence" started.
+◇ Test "FrameBuffer with alternate screen buffer enabled" started.
+◇ Test "Text ignores invalid color components when using RGB/256" started.
+◇ Test "AlternateScreenBuffer double leave is safe" started.
+◇ Test "Frame buffer handles cursor management" started.
+◇ Test "AlternateScreenBuffer double enter is safe" started.
+◇ Test "Frame buffer handles empty frames" started.
+◇ Test "exit(error:) uses provided custom exit code when error conforms" started.
+◇ Test "Meta: ESC-prefixed ASCII letter is delivered" started.
+◇ Test "RuneKit module loads correctly" started.
+◇ Test "Frame buffer handles multiple errors gracefully" started.
+◇ Test "Integration: RenderHandle unmount cleans up input manager and paste mode" started.
+◇ Test "Multiple frame renders maintain state" started.
+◇ Test "Frame buffer cleanup on abrupt termination" started.
+◇ Test "AlternateScreenBuffer leave sequence" started.
+◇ Test "State preserves across rerenders with stable identity" started.
+◇ Test "Wraps colored emoji/CJK by display columns and preserves right edge" started.
+◇ Test "wrappedLines preserves ANSI and avoids bleed with emojis/ZWJ/CJK" started.
+◇ Test "LogLane wraps long lines" started.
+◇ Test "Decodes arrows and Ctrl-C/ Ctrl-D bytes" started.
+◇ Test "LogLane custom configuration" started.
+◇ Test "LogLane initialization" started.
+◇ Test "Bracketed paste emits single paste event when enabled" started.
+◇ Test "Cursor restoration on error" started.
+✘ Test "Integration test: View to Component conversion" skipped: "Timing-sensitive tests that can hang"
+◇ Test "LogLane formats single log line" started.
+◇ Test "LogLane formats stderr with different prefix" started.
+◇ Test "Text supports combined styles including inverse and colors" started.
+◇ Test "Frame buffer handles frame height shrinkage" started.
+◇ Test "LogLane calculates display height" started.
+◇ Test "LogLane formats multiple logs" started.
+◇ Test "RenderHandle with signal handler" started.
+✘ Test "Integration test: Signal handler properly calls unmount" skipped: "Timing-sensitive tests that can hang"
+◇ Test "Snapshot: wrap mixed styles + emoji/ZWJ/CJK" started.
+✘ Test "Concurrency safety: unmount during other operations" skipped: "Timing-sensitive tests that can hang"
+✘ Test "Integration test: Complete render handle lifecycle" skipped: "Timing-sensitive tests that can hang"
+✘ Test "Integration test: render function with mock view" skipped: "Disabled to prevent CI interference"
+◇ Test "Direct focus by id/path works" started.
+◇ Test "LogLane includes timestamps when enabled" started.
+◇ Test "Debug: FrameBuffer default behavior without alternate screen" started.
+◇ Test "RenderHandle with console capture" started.
+◇ Test "No-focusables broadcast remains unaffected by manager" started.
+◇ Test "RenderHandle initialization and basic functionality" started.
+◇ Test "Second render clears previous region line-by-line before writing new content" started.
+◇ Test "LogLane creates separator" started.
+◇ Test "Cleanup on frame buffer deinitialization" started.
+◇ Test "LogLane respects max display lines" started.
+✘ Test "Concurrency safety: multiple waitUntilExit calls" skipped: "Timing-sensitive tests that can hang"
+◇ Test "Programmatic next/previous cycles focus and gates input" started.
+◇ Test "helper returns 0 when app exits with nil error" started.
+◇ Test "First render writes lines and positions cursor below frame (no full screen clear in ink style)" started.
+◇ Test "LogLane predefined configurations" started.
+✘ Test "RuneCLI exits promptly in test mode" skipped.
+◇ Test "Box renders borders correctly with proper layout" started.
+✘ Test "Integration test: Terminal size detection" skipped: "Timing-sensitive tests that can hang"
+◇ Test "Box integrates with existing Component system" started.
+◇ Test "rerender() is safe to call multiple times rapidly" started.
+◇ Test "Ctrl-C triggers unmount when exitOnCtrlC=true via InputManager path" started.
+◇ Test "Box layout works consistently across platforms" started.
+◇ Test "Box integrates with View protocol and render pipeline" started.
+✘ Test "Concurrency safety: multiple simultaneous operations" skipped: "Timing-sensitive tests that can hang"
+◇ Test "rerender() preserves state for same view identity" started.
+◇ Test "runAppAndReturnExitCode returns the app's exit code" started.
+✘ Test "rerender() updates UI content" skipped: "Disabled to prevent CI hanging on pipe reads"
+◇ Test "Default: Renderer and external atomic writes do not interleave" started.
+◇ Test "Opt-out: Without shared writer, ordering between lines is not guaranteed" started.
+◇ Test "Multiple renders build history" started.
+◇ Test "Box works with HybridReconciler optimization strategies" started.
+◇ Test "Set total lines updates correctly" started.
+◇ Test "rerender() handles view identity changes" started.
+◇ Test "Box layout integrates with FlexLayout coordinate system" started.
+◇ Test "Start render initializes tracking" started.
+◇ Test "Box layout maintains performance with complex hierarchies" started.
+◇ Test "Spacer remains minimal on cross-axis under alignItems: .stretch" started.
+✘ Test "clear() with alternate screen clears properly" skipped: "Disabled to prevent CI hanging on pipe reads"
+◇ Test "Initial state is empty" started.
+◇ Test "Box renders different border styles correctly" started.
+◇ Test "Efficiency with zero total lines" started.
+◇ Test "unmount() tears down resources and makes handle inactive" started.
+◇ Test "Bytes per line calculation" started.
+◇ Test "Average performance calculation" started.
+✘ Test "clear() clears screen content" skipped: "Disabled to prevent CI hanging on pipe reads"
+◇ Test "useApp().exit() triggers unmount and resolves waitUntilExit" started.
+◇ Test "Box works with render() function and RenderHandle" started.
+◇ Test "unmount() is idempotent - multiple calls are safe" started.
+◇ Test "Bytes per line with zero lines changed" started.
+◇ Test "Reset clears all metrics" started.
+◇ Test "Efficiency calculation is correct" started.
+◇ Test "Delta renders restore cursor to end-of-frame" started.
+◇ Test "History respects maximum size limit" started.
+◇ Test "Backpressure dropNewest drops when buffer is full" started.
+◇ Test "Serializes concurrent writes without interleaving (atomic)" started.
+◇ Test "Average performance with insufficient history" started.
+◇ Test "clear() is safe to call multiple times" started.
+◇ Test "Delta with no changes keeps cursor at end-of-frame" started.
+◇ Test "Record bytes written accumulates correctly" started.
+◇ Test "Finish render records duration and adds to history" started.
+◇ Test "useApp().clear() stops console capture but keeps handle active" started.
+◇ Test "Chunked ESC sequence is decoded when complete" started.
+◇ Test "Batched writes reduce syscalls vs unbatched" started.
+◇ Test "RenderMetricsRecorder records and adapts thresholds" started.
+◇ Test "Record dropped frame increments counter" started.
+◇ Test "Default environment streams are exposed with metadata" started.
+◇ Test "RenderOptions CI environment heuristics" started.
+◇ Test "Decodes SS3 arrows and F1-F4" started.
+◇ Test "RenderOptions TTY detection" started.
+◇ Test "Decodes modifiers for arrow keys (Ctrl)" started.
+◇ Test "StrategyDeterminer chooses full redraw on nil current or forced" started.
+◇ Test "Basic style enable/disable and colors" started.
+◇ Test "Concurrent access is thread-safe" started.
+◇ Test "waitUntilExit() resolves when unmount() is called" started.
+◇ Test "FullRedrawPolicy triggers by time/frames/quality" started.
+◇ Test "Record lines changed accumulates correctly" started.
+◇ Test "Global input handlers receive events regardless of focus; others are gated" started.
+◇ Test "Bracketed paste with UTF-8 payload (emoji)" started.
+◇ Test "AdaptiveQualityController reduces quality on backpressure and applies no-op" started.
+◇ Test "Color change does not emit unnecessary reset" started.
+◇ Test "Tab cycles focus among focusable elements and gates input to focused one" started.
+◇ Test "Box integrates with FrameBuffer rendering" started.
+◇ Test "Decodes CSI function keys F5-F12 and PageUp/Down" started.
+◇ Test "Reset clears all attributes" started.
+◇ Test "Style toggles maintain correctness with minimal emissions" started.
+✘ Test "Console capture buffer size limit" skipped: "Interferes with test runner stdout/stderr"
+✘ Test "Console capture maintains log order" skipped: "Interferes with test runner stdout/stderr"
+◇ Test "RenderOptions initialization with custom values" started.
+◇ Test "Hooks surface configured custom streams" started.
+✘ Test "FrameBuffer console capture integration" skipped: "Interferes with test runner stdout/stderr"
+◇ Test "Inverse with explicit fg and bg keeps both color codes" started.
+◇ Test "Generator omits SGR for invalid color values in attributes" started.
+◇ Test "waitUntilExit() resolves immediately if already unmounted" started.
+✘ Test "Console capture buffers log lines" skipped: "Interferes with test runner stdout/stderr"
+◇ Test "Tab advances focus via useFocusManager hook" started.
+✘ Test "Console capture start and stop" skipped: "Interferes with test runner stdout/stderr"
+◇ Test "Full redraw when no current grid or dimensions changed" started.
+◇ Test "When no focusables are registered, useInput remains broadcast to all active handlers (back-compat)" started.
+◇ Test "HybridReconciler exposes timing consistent with fpsCap" started.
+◇ Test "Invalid 256-color SGR parameter is ignored gracefully" started.
+✘ Test "Console capture multiple start calls are safe" skipped: "Interferes with test runner stdout/stderr"
+◇ Test "Chainable modifiers compose and render" started.
+◇ Test "256 and RGB colors" started.
+◇ Test "RenderOptions initialization with defaults" started.
+✘ Test "FrameBuffer stops console capture on clear" skipped: "Interferes with test runner stdout/stderr"
+◇ Test "Delta when small change and thresholds OK" started.
+◇ Test "Wrap produces lines that rejoin to original ignoring resets" started.
+✘ Test "Console capture handles multiple stdout messages" skipped: "Interferes with test runner stdout/stderr"
+✘ Test "Console capture multiple stop calls are safe" skipped: "Interferes with test runner stdout/stderr"
+✘ Test "Console capture clear buffer" skipped: "Interferes with test runner stdout/stderr"
+◇ Test "Console capture initialization" started.
+◇ Test "Detect one-line downward scroll and emit scroll sequence" started.
+✘ Test "Console capture recent logs" skipped: "Interferes with test runner stdout/stderr"
+◇ Test "F1-F4 (SS3), F6-F12 (CSI), Home/End/Page with modifiers, Shift+Ctrl" started.
+◇ Test "Invalid RGB SGR parameters are ignored gracefully" started.
+◇ Test "Basic ANSI colors" started.
+◇ Test "Text attributes with bold styling" started.
+◇ Test "Empty text with styling renders empty line" started.
+✘ Test "Japanese characters width" skipped: "Will be implemented in next iteration"
+◇ Test "Text attributes with color" started.
+◇ Test "East Asian Width - Fullwidth characters" started.
+◇ Test "Default text attributes should have no styling" started.
+◇ Test "256-color palette" started.
+◇ Test "Renderer respects hideCursorDuringRender=false" started.
+◇ Test "Generator avoids redundant SGR when attributes unchanged" started.
+◇ Test "HybridReconciler uses injected differ for delta path" started.
+◇ Test "Line-diff handles frame shrinkage correctly" started.
+◇ Test "Color override: last wins" started.
+◇ Test "East Asian Width - Halfwidth characters" started.
+◇ Test "ANSI SGR inside content should not consume columns; right border remains visible" started.
+◇ Test "Automatic mode chooses appropriate optimization" started.
+◇ Test "RGB colors" started.
+◇ Test "Line-diff mode renders single line change efficiently" started.
+✘ Test "Chinese characters width" skipped: "Will be implemented in next iteration"
+◇ Test "Text attributes equality" started.
+◇ Test "East Asian Width - Chinese ideographs" started.
+◇ Test "Split span by display width with emoji" started.
+◇ Test "No color bleed across lines" started.
+◇ Test "Text span with plain text" started.
+◇ Test "Full redraw mode renders all lines" started.
+◇ Test "Split span at beginning" started.
+◇ Test "Block policy flushes immediately and clears buffer for oversized data" started.
+◇ Test "Show cursor" started.
+◇ Test "Frame buffer initialization" started.
+✘ Test "FrameBuffer console capture disabled by default" skipped: "Interferes with test runner stdout/stderr"
+◇ Test "Renderer initialization with default output" started.
+◇ Test "Renderer initialization with custom output" started.
+◇ Test "Split span at end" started.
+◇ Test "Split preserves SGR and grapheme boundaries" started.
+◇ Test "Frame initialization" started.
+◇ Test "Renderer respects hideCursorDuringRender=true (default)" started.
+◇ Test "FileHandleOutputEncoder writes to pipe" started.
+◇ Test "Zero-width characters handling" started.
+◇ Test "Line-diff handles frame growth correctly" started.
+◇ Test "Split span by display width with CJK" started.
+◇ Test "Render simple frame" started.
+◇ Test "Text span with styled attributes" started.
+◇ Test "Resize during render does not crash and yields a single repaint per burst" started.
+◇ Test "Split span with last column guard" started.
+◇ Test "Large frame falls back to full redraw" started.
+◇ Test "Move cursor" started.
+◇ Test "East Asian Width - Japanese characters" started.
+◇ Test "Split span at character boundary" started.
+◇ Test "Empty frame renders correctly" started.
+◇ Test "Unicode text handling" started.
+◇ Test "Text span equality" started.
+◇ Test "Split at invalid indices" started.
+◇ Test "Two distinct bursts cause two rerenders" started.
+◇ Test "ANSICursorManager emits sequences" started.
+◇ Test "Debounced resize burst triggers a single rerender" started.
+◇ Test "ASCII letter category detection" started.
+◇ Test "Avoid final reset if already reset when transitioning to default" started.
+◇ Test "Empty frame" started.
+◇ Test "Configuration is immutable after creation" started.
+◇ Test "Combining mark detection" started.
+◇ Test "Default configuration has sensible values" started.
+✘ Test "PTY integration validates ordering" skipped: "Interferes with test runner stdout/stderr"
+◇ Test "Simple SGR color code" started.
+◇ Test "Combined SGR emitted once, avoid resets between non-default spans" started.
+◇ Test "Basic EP boundary checks" started.
+◇ Test "RUNE-23 acceptance criteria validation (CI-safe)" started.
+◇ Test "Clear screen" started.
+✘ Test "Simple emoji width" skipped: "Will be implemented in next iteration"
+◇ Test "Multiple SGR parameters" started.
+◇ Test "Golden test: Chinese ideograph" started.
+◇ Test "Performance metrics are collected correctly" started.
+◇ Test "Complex attribute combinations" started.
+◇ Test "Performance history accumulates over multiple renders" started.
+◇ Test "Convert styled spans to tokens" started.
+◇ Test "Detect two-line upward scroll and emit ESC[2T and write 2 lines at top" started.
+◇ Test "Convert RGB color tokens to spans" started.
+◇ Test "Benchmark: No changes favor line-diff" started.
+◇ Test "Golden test: Transgender flag emoji" started.
+◇ Test "Convert 256-color tokens to spans" started.
+◇ Test "Benchmark: All lines changing favors full redraw" started.
+◇ Test "Configuration is accessible and correct" started.
+◇ Test "Golden test: Japanese flag emoji" started.
+✘ Test "Console capture ordering validation" skipped: "Interferes with test runner stdout/stderr"
+◇ Test "Golden test: Slightly smiling face emoji" started.
+◇ Test "Benchmark: Automatic mode makes good decisions" started.
+✘ Test "Flag emoji width" skipped: "Will be implemented in next iteration"
+◇ Test "Golden test: End-of-line scenarios" started.
+◇ Test "Golden test: Family emoji ZWJ sequence" started.
+◇ Test "Hide cursor" started.
+◇ Test "Performance benchmark: ASCII baseline" started.
+◇ Test "Frame rate limiting allows frames when under limit" started.
+◇ Test "Emoji scalar detection" started.
+◇ Test "Benchmark: Single line changes favor line-diff" started.
+◇ Test "Frame rate limiting drops frames when appropriate" started.
+◇ Test "Performance benchmark: Enhanced width calculation" started.
+◇ Test "Convert tokens with only SGR (no text)" started.
+◇ Test "Box with padding produces correct layout" started.
+◇ Test "Handle malformed SGR parameters gracefully" started.
+◇ Test "Convert 256-color spans to tokens" started.
+◇ Test "Convert plain text tokens to spans" started.
+◇ Test "Convert mixed tokens with non-SGR sequences" started.
+◇ Test "Convert plain text spans to tokens" started.
+◇ Test "Performance benchmark for common strings" started.
+✘ Test "Mixed ASCII and emoji" skipped: "Will be implemented in next iteration"
+◇ Test "Detect two-line downward scroll and emit ESC[2S and write 2 lines" started.
+◇ Test "Box row layout with column gap" started.
+◇ Test "Box with percentage dimensions" started.
+◇ Test "Size equality" started.
+✘ Test "Complex emoji width" skipped: "Will be implemented in next iteration"
+◇ Test "Box with fixed dimensions" started.
+◇ Test "Convert empty token array" started.
+◇ Test "Empty children array returns empty rects" started.
+◇ Test "Golden test: Fullwidth comma" started.
+◇ Test "Convert multiple spans to tokens" started.
+◇ Test "Grapheme cluster API for East Asian character" started.
+◇ Test "Convert multiple SGR tokens to spans" started.
+◇ Test "East Asian scalar width" started.
+◇ Test "Rect equality" started.
+◇ Test "Handle empty text in display width operations" started.
+◇ Test "Last column guard prevents wide character overflow" started.
+◇ Test "Convert empty styled text to tokens" started.
+◇ Test "Grapheme cluster API for combining character" started.
+◇ Test "Empty string has zero width" started.
+◇ Test "ASCII characters have width 1" started.
+◇ Test "Space character width" started.
+◇ Test "Multiple children in column direction" started.
+◇ Test "Single child layout" started.
+◇ Test "Multiple children in row direction" started.
+◇ Test "Split styled text by display width with CJK characters" started.
+◇ Test "Wrap mixed ANSI styled text with emoji and CJK characters" started.
+◇ Test "Delete character width" started.
+◇ Test "Control character scalar width" started.
+◇ Test "ASCII string with spaces" started.
+◇ Test "Split styled text with grapheme cluster boundary protection" started.
+◇ Test "Slice styled text by display columns" started.
+◇ Test "Split styled text with last column guard" started.
+◇ Test "Convert RGB color spans to tokens" started.
+◇ Test "Complex SGR sequence preservation across splits" started.
+◇ Test "OSC window title with BEL terminator round-trips identically" started.
+◇ Test "Unterminated OSC is treated as plain text (no .osc token)" started.
+◇ Test "Erase display all (CSI 2J)" started.
+◇ Test "Split styled text by display width preserving grapheme clusters" started.
+◇ Test "Grapheme cluster API for simple ASCII" started.
+◇ Test "Box with margin affects positioning" started.
+◇ Test "Line diff mode respects efficiency threshold" started.
+◇ Test "ASCII scalar width" started.
+◇ Test "Optimization mode raw values are correct" started.
+◇ Test "Environment variable RUNE_ALT_SCREEN=invalid disables alternate screen" started.
+◇ Test "RUNE-19 Acceptance Criteria: ANSI-aware wrap & slice comprehensive test" started.
+◇ Test "Cursor up by 3 (CSI A)" started.
+◇ Test "Box column layout with row gap" started.
+◇ Test "Cursor right default 1 (CSI C with no param)" started.
+◇ Test "Run basic conversion example" started.
+◇ Test "Null character width" started.
+◇ Test "Run complex colors example" started.
+◇ Test "Conservative configuration has safe settings" started.
+◇ Test "Erase line to end (CSI K with default)" started.
+◇ Test "Full redraw mode always returns full redraw" started.
+◇ Test "Frame rate limiting works correctly" started.
+◇ Test "Wrap styled text preserving ANSI formatting" started.
+◇ Test "Optimization mode enum has all expected cases" started.
+◇ Test "Prevent color bleed across wrapped lines" started.
+◇ Test "Slice mixed content preserving grapheme clusters" started.
+◇ Test "Environment variable RUNE_DEBUG enables console capture" started.
+◇ Test "Environment variable RUNE_CONSOLE_CAPTURE case insensitive" started.
+◇ Test "High frame rate allows more frequent updates" started.
+◇ Test "High performance configuration has aggressive settings" started.
+◇ Test "Run splitting text example" started.
+◇ Test "Environment variable RUNE_ALT_SCREEN=0 disables alternate screen" started.
+◇ Test "OSC window title with ST terminator parses and canonicalizes to BEL on encode" started.
+◇ Test "Run merging spans example" started.
+◇ Test "Line diff mode respects frame size limits" started.
+◇ Test "Default configuration has expected values" started.
+◇ Test "Run all attributes example" started.
+◇ Test "Environment variable RUNE_CONSOLE_CAPTURE=0 disables console capture" started.
+◇ Test "Environment variable RUNE_ALT_SCREEN=TRUE enables alternate screen" started.
+◇ Test "Environment variable RUNE_CONSOLE_CAPTURE=false disables console capture" started.
+◇ Test "Strict: No content before enter; none after leave" started.
+◇ Test "Performance tuning has reasonable defaults" started.
+◇ Test "Convert simple SGR tokens to spans" started.
+◇ Test "Wrap and clip emoji with borders without exceeding width" started.
+◇ Test "Environment variable RUNE_ALT_SCREEN=1 enables alternate screen" started.
+◇ Test "Basic Latin characters" started.
+◇ Test "Punctuation category detection" started.
+◇ Test "Environment variable RUNE_ALT_SCREEN not set uses default" started.
+◇ Test "Environment variable RUNE_ALT_SCREEN=false disables alternate screen" started.
+◇ Test "Environment variable RUNE_CONSOLE_CAPTURE not set uses default" started.
+◇ Test "Performance tuning accepts custom values" started.
+◇ Test "TrueColor preserves RGB and 256" started.
+◇ Test "Custom configuration accepts all parameters" started.
+◇ Test "xterm256 maps RGB to 256" started.
+◇ Test "Control characters have zero width" started.
+◇ Test "Shutdown with alternate screen cleanup" started.
+◇ Test "Alternate screen buffer with grid rendering" started.
+◇ Test "basic16 maps RGB and 256 to 16-colors" started.
+◇ Test "Attribute-level diff emits reset when reverting to default and caches common attrs" started.
+◇ Test "Whitespace characters" started.
+◇ Test "Environment variable RUNE_CONSOLE_CAPTURE=true enables console capture" started.
+◇ Test "Snapshot: Emoji-safe terminal layout" started.
+◇ Test "Debug configuration enables extensive logging" started.
+◇ Test "Symbol category detection" started.
+◇ Test "noColor strips all color but keeps effects" started.
+◇ Test "DECAWM toggles off/on around full redraw when enabled" started.
+◇ Test "Complete alternate screen buffer workflow" started.
+◇ Test "Combining marks have zero width" started.
+◇ Test "Environment variable configuration integration" started.
+◇ Test "Snapshot: Complex dashboard layout with flex grow/shrink" started.
+◇ Test "Number category detection" started.
+◇ Test "Snapshot: Constrained layout with min/max bounds" started.
+◇ Test "Environment variable RUNE_CONSOLE_CAPTURE=1 enables console capture" started.
+◇ Test "String with combining marks" started.
+◇ Test "Multiple frame renders in alternate screen" started.
+◇ Test "Configuration precedence" started.
+◇ Test "Grid omits wide cluster at EOL (emoji)" started.
+◇ Test "DECAWM toggles off/on around delta update when enabled" started.
+◇ Test "Snapshot: Responsive card grid with wrapping" started.
+◇ Test "Grid omits wide cluster at EOL (fullwidth punctuation)" started.
+◇ Test "Automatic mode makes intelligent decisions" started.
+◇ Test "Grid omits wide cluster at EOL (CJK fullwidth)" started.
+◇ Test "Environment variable RUNE_ALT_SCREEN=true enables alternate screen" started.
+◇ Test "Environment configuration reads render mode" started.
+◇ Test "Plain text without ANSI codes" started.
+◇ Test "Empty string returns empty array" started.
+◇ Test "Split never breaks ZWJ family at boundary" started.
+◇ Test "Wrap preserves ZWJ family across lines" started.
+◇ Test "Parametric matrix: alignItems × justifyContent × flexWrap × direction" started.
+◇ Test "CJK character detection" started.
+◇ Test "Control character detection" started.
+◇ Test "Category detection performance" started.
+DEBUG: Border calculation analysis
+  Content: '🎯 Welcome to RuneKit!'
+  Content display width: 22
+  Expected total width: 28
+  Using wide width: 100
+Box with multiple children output:
+Line 0: '┌──────────┐'
+Line 1: '│  Line 1  │'
+Line 2: '│  Line 2  │'
+Line 3: '│  Line 3  │'
+Line 4: '│          │'
+Line 5: '│          │'
+Line 6: '└──────────┘'
+◇ Test "Layout calculation with zero dimensions" started.
+◇ Test "Yoga layout engine singleton" started.
+◇ Test "FlexLayout.calculateLayout still works with existing API" started.
+◇ Test "Align self center overrides parent align items" started.
+◇ Test "Box layout maintains FlexLayout immutability principles" started.
+◇ Test "Yoga node creation and cleanup" started.
+◇ Test "Float to terminal coordinate conversion" started.
+◇ Test "Margin affects element positioning" started.
+◇ Test "Multiple layout calculations don't leak memory" started.
+◇ Test "Justify content center works correctly" started.
+◇ Test "YogaWrapper mappings use expected raw values" started.
+◇ Test "Box layout respects FlexLayout coordinate system" started.
+Content line: '│👨‍👩‍👧‍👦│' (count: 3)
+Content line characters:
+◇ Test "Basic column layout calculation" started.
+◇ Test "Align items center works correctly" started.
+DEBUG: All lines:
+◇ Test "Box layout handles FlexLayout.Rect edge cases" started.
+  Line 0: '┌──────────────────┐' (length: 20)
+    Char 0: '┌' (Unicode: \u{250c})
+  [0]: '│' (scalars: [9474])
+    Char 1: '─' (Unicode: \u{2500})
+    Char 2: '─' (Unicode: \u{2500})
+    Char 3: '─' (Unicode: \u{2500})
+◇ Test "FlexLayout handles empty children" started.
+◇ Test "Box layout produces compatible rectangles with FlexLayout" started.
+  [1]: '👨‍👩‍👧‍👦' (scalars: [128104, 8205, 128105, 8205, 128103, 8205, 128102])
+◇ Test "Box layout integrates with Text component sizing" started.
+  [2]: '│' (scalars: [9474])
+    Char 4: '─' (Unicode: \u{2500})
+    Char 5: '─' (Unicode: \u{2500})
+    Char 6: '─' (Unicode: \u{2500})
+    Char 7: '─' (Unicode: \u{2500})
+    Char 8: '─' (Unicode: \u{2500})
+    Char 9: '─' (Unicode: \u{2500})
+    Char 10: '─' (Unicode: \u{2500})
+◇ Test "Box layout works with nested Box components" started.
+    Char 11: '─' (Unicode: \u{2500})
+    Char 12: '─' (Unicode: \u{2500})
+    Char 13: '─' (Unicode: \u{2500})
+    Char 14: '─' (Unicode: \u{2500})
+◇ Test "Padding affects child positioning" started.
+    Char 15: '─' (Unicode: \u{2500})
+    Char 16: '─' (Unicode: \u{2500})
+    Char 17: '─' (Unicode: \u{2500})
+    Char 18: '─' (Unicode: \u{2500})
+    Char 19: '┐' (Unicode: \u{2510})
+  Line 1: '│ [1;34mLoading.[0m         │' (length: 31)
+    Char 0: '│' (Unicode: \u{2502})
+    Char 1: ' ' (Unicode: \u{20})
+◇ Test "FlexLayout uses Yoga backend correctly" started.
+    Char 2: '' (Unicode: \u{1b})
+    Char 3: '[' (Unicode: \u{5b})
+    Char 4: '1' (Unicode: \u{31})
+    Char 5: ';' (Unicode: \u{3b})
+◇ Test "Box layout API is consistent with FlexLayout patterns" started.
+    Char 6: '3' (Unicode: \u{33})
+    Char 7: '4' (Unicode: \u{34})
+    Char 8: 'm' (Unicode: \u{6d})
+    Char 9: 'L' (Unicode: \u{4c})
+    Char 10: 'o' (Unicode: \u{6f})
+    Char 11: 'a' (Unicode: \u{61})
+    Char 12: 'd' (Unicode: \u{64})
+    Char 13: 'i' (Unicode: \u{69})
+    Char 14: 'n' (Unicode: \u{6e})
+    Char 15: 'g' (Unicode: \u{67})
+    Char 16: '.' (Unicode: \u{2e})
+    Char 17: '' (Unicode: \u{1b})
+    Char 18: '[' (Unicode: \u{5b})
+    Char 19: '0' (Unicode: \u{30})
+    Char 20: 'm' (Unicode: \u{6d})
+    Char 21: ' ' (Unicode: \u{20})
+    Char 22: ' ' (Unicode: \u{20})
+    Char 23: ' ' (Unicode: \u{20})
+    Char 24: ' ' (Unicode: \u{20})
+    Char 25: ' ' (Unicode: \u{20})
+◇ Test "Justify content space between works correctly" started.
+◇ Test "Basic row layout calculation" started.
+    Char 26: ' ' (Unicode: \u{20})
+    Char 27: ' ' (Unicode: \u{20})
+    Char 28: ' ' (Unicode: \u{20})
+    Char 29: ' ' (Unicode: \u{20})
+    Char 30: '│' (Unicode: \u{2502})
+  Line 2: '└──────────────────┘' (length: 20)
+    Char 0: '└' (Unicode: \u{2514})
+    Char 1: '─' (Unicode: \u{2500})
+    Char 2: '─' (Unicode: \u{2500})
+    Char 3: '─' (Unicode: \u{2500})
+    Char 4: '─' (Unicode: \u{2500})
+    Char 5: '─' (Unicode: \u{2500})
+    Char 6: '─' (Unicode: \u{2500})
+    Char 7: '─' (Unicode: \u{2500})
+    Char 8: '─' (Unicode: \u{2500})
+    Char 9: '─' (Unicode: \u{2500})
+    Char 10: '─' (Unicode: \u{2500})
+    Char 11: '─' (Unicode: \u{2500})
+    Char 12: '─' (Unicode: \u{2500})
+    Char 13: '─' (Unicode: \u{2500})
+    Char 14: '─' (Unicode: \u{2500})
+    Char 15: '─' (Unicode: \u{2500})
+    Char 16: '─' (Unicode: \u{2500})
+    Char 17: '─' (Unicode: \u{2500})
+    Char 18: '─' (Unicode: \u{2500})
+    Char 19: '┘' (Unicode: \u{2518})
+Content without borders: '👨‍👩‍👧‍👦' (count: 1)
+Content without borders characters:
+◇ Test "Box layout doesn't interfere with FlexLayout performance" started.
+  [0]: '👨‍👩‍👧‍👦' (scalars: [128104, 8205, 128105, 8205, 128103, 8205, 128102])
+Width calculation:
+  Content: 'Complete! ✅'
+Expected emoji: '👨‍👩‍👧‍👦' (scalars: [128104, 8205, 128105, 8205, 128103, 8205, 128102])
+Content contains full emoji: true
+Content equals full emoji: true
+  Content display width: 12
+  Total width: 16
+◇ Test "Round-trip conversion preserves RGB color" started.
+◇ Test "Styled text with single span" started.
+◇ Test "Round-trip conversion preserves complex styling" started.
+◇ Test "Merge multiple adjacent compatible spans" started.
+◇ Test "Don't merge spans with different attributes" started.
+Content line: '│ Complete! ✅     │'
+Content line scalars: [9474, 32, 67, 111, 109, 112, 108, 101, 116, 101, 33, 32, 9989, 32, 32, 32, 32, 32, 9474]
+createBoxFrame output:
+Line 0: '┌──────────────┐' (length: 16)
+Line 1: '│ Complete! ✅ │' (length: 15)
+Line 2: '└──────────────┘' (length: 16)
+
+DEBUG: Line analysis
+  Line 0: '┌──────────────────────────────────────────────────────────────────────────────────────────────────┐' (length: 100, display width: 100)
+  Line 1: '│                                                                                                  │' (length: 100, display width: 100)
+  Line 2: '│  [1;36m🎯 Welcome to RuneKit![0m                                                                          │' (length: 110, display width: 100)
+    Expected display width: 28
+    Actual display width: 100
+    Wide width: 100
+◇ Test "Large text performance" started.
+◇ Test "Merge adjacent compatible spans" started.
+◇ Test "Empty styled text" started.
+◇ Test "Round-trip conversion preserves simple styling" started.
+    Difference from expected: 72
+Frame structure:
+  Width: 16
+  Height: 3
+  Lines count: 3
+  Frame line 0: '┌──────────────┐' (length: 16)
+  Frame line 1: '│ Complete! ✅ │' (length: 15)
+  Frame line 2: '└──────────────┘' (length: 16)
+    Difference from wide: 0
+    Ends with border: true
+    Last character: '│'
+    Character analysis:
+      [0]: '│' (width: 1)
+      [1]: ' ' (width: 1)
+      [2]: ' ' (width: 1)
+      [3]: '' (width: 0)
+      [4]: '[' (width: 1)
+      [5]: '1' (width: 1)
+      [6]: ';' (width: 1)
+      [7]: '3' (width: 1)
+      [8]: '6' (width: 1)
+      [9]: 'm' (width: 1)
+      [10]: '🎯' (width: 2)
+      [11]: ' ' (width: 1)
+      [12]: 'W' (width: 1)
+      [13]: 'e' (width: 1)
+      [14]: 'l' (width: 1)
+      [15]: 'c' (width: 1)
+      [16]: 'o' (width: 1)
+      [17]: 'm' (width: 1)
+      [18]: 'e' (width: 1)
+      [19]: ' ' (width: 1)
+      [20]: 't' (width: 1)
+      [21]: 'o' (width: 1)
+      [22]: ' ' (width: 1)
+      [23]: 'R' (width: 1)
+      [24]: 'u' (width: 1)
+      [25]: 'n' (width: 1)
+      [26]: 'e' (width: 1)
+      [27]: 'K' (width: 1)
+      [28]: 'i' (width: 1)
+      [29]: 't' (width: 1)
+      [30]: '!' (width: 1)
+      [31]: '' (width: 0)
+      [32]: '[' (width: 1)
+      [33]: '0' (width: 1)
+      [34]: 'm' (width: 1)
+      [35]: ' ' (width: 1)
+      [36]: ' ' (width: 1)
+      [37]: ' ' (width: 1)
+      [38]: ' ' (width: 1)
+      [39]: ' ' (width: 1)
+      [40]: ' ' (width: 1)
+      [41]: ' ' (width: 1)
+      [42]: ' ' (width: 1)
+      [43]: ' ' (width: 1)
+      [44]: ' ' (width: 1)
+      [45]: ' ' (width: 1)
+      [46]: ' ' (width: 1)
+      [47]: ' ' (width: 1)
+      [48]: ' ' (width: 1)
+      [49]: ' ' (width: 1)
+      [50]: ' ' (width: 1)
+      [51]: ' ' (width: 1)
+      [52]: ' ' (width: 1)
+      [53]: ' ' (width: 1)
+      [54]: ' ' (width: 1)
+      [55]: ' ' (width: 1)
+      [56]: ' ' (width: 1)
+      [57]: ' ' (width: 1)
+      [58]: ' ' (width: 1)
+      [59]: ' ' (width: 1)
+      [60]: ' ' (width: 1)
+      [61]: ' ' (width: 1)
+      [62]: ' ' (width: 1)
+      [63]: ' ' (width: 1)
+      [64]: ' ' (width: 1)
+      [65]: ' ' (width: 1)
+      [66]: ' ' (width: 1)
+      [67]: ' ' (width: 1)
+      [68]: ' ' (width: 1)
+      [69]: ' ' (width: 1)
+      [70]: ' ' (width: 1)
+      [71]: ' ' (width: 1)
+      [72]: ' ' (width: 1)
+      [73]: ' ' (width: 1)
+Grid structure:
+◇ Test "Handle empty spans in merge" started.
+◇ Test "Round-trip conversion preserves plain text" started.
+◇ Test "Round-trip conversion preserves 256-color" started.
+◇ Test "Styled text with multiple spans" started.
+◇ Test "Styled text plain text extraction" started.
+◇ Test "Split styled text at column boundary" started.
+  Width: 16
+  Height: 3
+      [74]: ' ' (width: 1)
+      [75]: ' ' (width: 1)
+      [76]: ' ' (width: 1)
+      [77]: ' ' (width: 1)
+      [78]: ' ' (width: 1)
+      [79]: ' ' (width: 1)
+      [80]: ' ' (width: 1)
+  Grid line 0: '┌──────────────┐' (length: 16)
+  Grid line 1: '│ Complete! ✅ │' (length: 15)
+  Grid line 2: '└──────────────┘' (length: 16)
+      [81]: ' ' (width: 1)
+      [82]: ' ' (width: 1)
+      [83]: ' ' (width: 1)
+      [84]: ' ' (width: 1)
+      [85]: ' ' (width: 1)
+      [86]: ' ' (width: 1)
+      [87]: ' ' (width: 1)
+      [88]: ' ' (width: 1)
+      [89]: ' ' (width: 1)
+      [90]: ' ' (width: 1)
+      [91]: ' ' (width: 1)
+      [92]: ' ' (width: 1)
+      [93]: ' ' (width: 1)
+      [94]: ' ' (width: 1)
+      [95]: ' ' (width: 1)
+◇ Test "Backpressure policies are documented and configurable" started.
+Emoji line analysis:
+  Original: '│ Complete! ✅ │'
+  Characters:
+      [96]: ' ' (width: 1)
+◇ Test "Renderer per-line writes are atomic relative to external logs" started.
+◇ Test "Atomic writes reduce syscalls vs unbatched writes" started.
+      [97]: ' ' (width: 1)
+      [98]: ' ' (width: 1)
+      [99]: ' ' (width: 1)
+      [100]: ' ' (width: 1)
+      [101]: ' ' (width: 1)
+      [102]: ' ' (width: 1)
+      [103]: ' ' (width: 1)
+      [104]: ' ' (width: 1)
+      [105]: ' ' (width: 1)
+      [106]: ' ' (width: 1)
+      [107]: ' ' (width: 1)
+      [108]: ' ' (width: 1)
+      [109]: '│' (width: 1)
+  Line 3: '│                                                                                                  │' (length: 100, display width: 100)
+    [0] '│' -> width: 1, scalars: [9474]
+  Line 4: '└──────────────────────────────────────────────────────────────────────────────────────────────────┘' (length: 100, display width: 100)
+    [1] ' ' -> width: 1, scalars: [32]
+    [2] 'C' -> width: 1, scalars: [67]
+    [3] 'o' -> width: 1, scalars: [111]
+    [4] 'm' -> width: 1, scalars: [109]
+    [5] 'p' -> width: 1, scalars: [112]
+    [6] 'l' -> width: 1, scalars: [108]
+    [7] 'e' -> width: 1, scalars: [101]
+    [8] 't' -> width: 1, scalars: [116]
+    [9] 'e' -> width: 1, scalars: [101]
+    [10] '!' -> width: 1, scalars: [33]
+    [11] ' ' -> width: 1, scalars: [32]
+    [12] '✅' -> width: 2, scalars: [9989]
+    [13] ' ' -> width: 1, scalars: [32]
+    [14] '│' -> width: 1, scalars: [9474]
+Text component with 12-column constraint:
+  Text line 0: 'Complete! ✅' (length: 11, display width: 12)
+◇ Test "Vertical overflow is clipped in wrapped layout" started.
+◇ Test "Flex wrap respects emoji-safe width boundaries" started.
+◇ Test "Min width constraint prevents shrinking below minimum" started.
+◇ Test "Max width constraint prevents growing beyond maximum" started.
+◇ Test "Overflow is clipped at wrap boundaries" started.
+System monitor box output:
+Line 0: '┌────────────────────────────┐'
+Line 1: '│  System Monitor            │'
+Line 2: '│  CPU: [████████░░] 80%     │'
+Line 3: '│  RAM: [██████░░░░] 60%     │'
+Line 4: '│  DISK: [███░░░░░░░] 30%    │'
+Line 5: '│  NET: [██████████] 100%    │'
+Line 6: '│                            │'
+◇ Test "Min and max height constraints work in column direction" started.
+Line 7: '└────────────────────────────┘'
+◇ Test "Flex wrap creates new line when content overflows" started.
+[?25l[2J[H[0m[1;1H[2KLine 1                        [0m[2;1H[2K                              [0m[3;1H[2KLine 2                        [0m[4;1H[2K                              [0m[5;1H[2KLine 3                        [0m[6;1H[2K                              [0m[7;1H[2K                              [0m[8;1H[2K                              [0m[9;1H[2K                              [0m[10;1H[2K                              [0m[11;1H[?25h[?25l[3;1H[2K[GLine 2 Modified               [0m[11;1H[?25h◇ Test "Complex nested layout with mixed properties" started.
+◇ Test "Edge case: Padding larger than container" started.
+◇ Test "Rounding rules for fractional coordinates" started.
+◇ Test "Edge case: Zero dimensions" started.
+◇ Test "Justify content and align items with padding" started.
+◇ Test "Flex basis sets initial size before grow/shrink" started.
+◇ Test "Flex shrink reduces size proportionally when space is insufficient" started.
+◇ Test "Nested boxes with padding and margin" started.
+◇ Test "Flex grow distributes extra space proportionally" started.
+◇ Test "Row layout with nested column layouts" started.
+[?25l[?25l✔ Suite "RuneCLI exit helper" passed after 0.284 seconds.
+[?25l[?25l✔ Test "exit(error:) uses provided custom exit code when error conforms" passed after 0.281 seconds.
+✔ Suite InputManagerTests passed after 0.284 seconds.
+✔ Suite "RUNE-39+: App exit code propagation via useApp().exit(error:)" passed after 0.284 seconds.
+[2J[H[0m[1;1H[2K                                                                                [0m[2;1H[2K                                                                                [0m[3;1H[2K                                                                                [0m[4;1H[2K                                                                                [0m[5;1H[2K                                                                                [0m[6;1H[2K                                                                                [0m[7;1H[2K                                                                                [0m[8;1H[2K                                                                                [0m[9;1H[2K                                                                                [0m[10;1H[2K                                                                                [0m[11;1H[2K                                                                                [0m[12;1H[2K                                                                                [0m[13;1H[2K                                                                                [0m[14;1H[2K                                                                                [0m[15;1H[2K                                                                                [0m[16;1H[2K                                                                                [0m[17;1H[2K                                                                                [0m[18;1H[2K                                                                                [0m[19;1H[2K                                                                                [0m[20;1H[2K                                                                                [0m[21;1H[2K                                                                                [0m[22;1H[2K                                                                                [0m[23;1H[2K                                                                                [0m[24;1H[2K                                                                                [0m[25;1H[?25h✔ Test "useApp().clear() stops console capture but keeps handle active" passed after 0.280 seconds.
+✔ Suite "RUNE-39: useApp() context" passed after 0.284 seconds.
+[23A[2K[2;1H[2K[3;1H[2K[4;1H[2K[5;1H[2K[6;1H[2K[7;1H[2K[8;1H[2K[9;1H[2K[10;1H[2K[11;1H[2K[12;1H[2K[13;1H[2K[14;1H[2K[15;1H[2K[16;1H[2K[17;1H[2K[18;1H[2K[19;1H[2K[20;1H[2K[21;1H[2K[22;1H[2K[23;1H[2K[24;1H[2K[1;1H[0m[1;1H[2Kv                                                                               [0m[2;1H[2K                                                                                [0m[3;1H[2K                                                                                [0m[4;1H[2K                                                                                [0m[5;1H[2K                                                                                [0m[6;1H[2K                                                                                [0m[7;1H[2K                                                                                [0m[8;1H[2K                                                                                [0m[9;1H[2K                                                                                [0m[10;1H[2K                                                                                [0m[11;1H[2K                                                                                [0m[12;1H[2K                                                                                [0m[13;1H[2K                                                                                [0m[14;1H[2K                                                                                [0m[15;1H[2K                                                                                [0m[16;1H[2K                                                                                [0m[17;1H[2K                                                                                [0m[18;1H[2K                                                                                [0m[19;1H[2K                                                                                [0m[20;1H[2K                                                                                [0m[21;1H[2K                                                                                [0m[22;1H[2K                                                                                [0m[23;1H[2K                                                                                [0m[24;1H[2K                                                                                [0m[25;1H[?25h[23A[2K[2;1H[2K[3;1H[2K[4;1H[2K[5;1H[2K[6;1H[2K[7;1H[2K[8;1H[2K[9;1H[2K[10;1H[2K[11;1H[2K[12;1H[2K[13;1H[2K[14;1H[2K[15;1H[2K[16;1H[2K[17;1H[2K[18;1H[2K[19;1H[2K[20;1H[2K[21;1H[2K[22;1H[2K[23;1H[2K[24;1H[2K[1;1H[0m[1;1H[2Kv                                                                               [0m[2;1H[2K                                                                                [0m[3;1H[2K                                                                                [0m[4;1H[2K                                                                                [0m[5;1H[2K                                                                                [0m[6;1H[2K                                                                                [0m[7;1H[2K                                                                                [0m[8;1H[2K                                                                                [0m[9;1H[2K                                                                                [0m[10;1H[2K                                                                                [0m[11;1H[2K                                                                                [0m[12;1H[2K                                                                                [0m[13;1H[2K                                                                                [0m[14;1H[2K                                                                                [0m[15;1H[2K                                                                                [0m[16;1H[2K                                                                                [0m[17;1H[2K                                                                                [0m[18;1H[2K                                                                                [0m[19;1H[2K                                                                                [0m[20;1H[2K                                                                                [0m[21;1H[2K                                                                                [0m[22;1H[2K                                                                                [0m[23;1H[2K                                                                                [0m[24;1H[2K                                                                                [0m[25;1H[?25h[23A[2K[2;1H[2K[3;1H[2K[4;1H[2K[5;1H[2K[6;1H[2K[7;1H[2K[8;1H[2K[9;1H[2K[10;1H[2K[11;1H[2K[12;1H[2K[13;1H[2K[14;1H[2K[15;1H[2K[16;1H[2K[17;1H[2K[18;1H[2K[19;1H[2K[20;1H[2K[21;1H[2K[22;1H[2K[23;1H[2K[24;1H[2K[1;1H[0m[1;1H[2Kv                                                                               [0m[2;1H[2K                                                                                [0m[3;1H[2K                                                                                [0m[4;1H[2K                                                                                [0m[5;1H[2K                                                                                [0m[6;1H[2K                                                                                [0m[7;1H[2K                                                                                [0m[8;1H[2K                                                                                [0m[9;1H[2K                                                                                [0m[10;1H[2K                                                                                [0m[11;1H[2K                                                                                [0m[12;1H[2K                                                                                [0m[13;1H[2K                                                                                [0m[14;1H[2K                                                                                [0m[15;1H[2K                                                                                [0m[16;1H[2K                                                                                [0m[17;1H[2K                                                                                [0m[18;1H[2K                                                                                [0m[19;1H[2K                                                                                [0m[20;1H[2K                                                                                [0m[21;1H[2K                                                                                [0m[22;1H[2K                                                                                [0m[23;1H[2K                                                                                [0m[24;1H[2K                                                                                [0m[25;1H[?25h[23A[2K[2;1H[2K[3;1H[2K[4;1H[2K[5;1H[2K[6;1H[2K[7;1H[2K[8;1H[2K[9;1H[2K[10;1H[2K[11;1H[2K[12;1H[2K[13;1H[2K[14;1H[2K[15;1H[2K[16;1H[2K[17;1H[2K[18;1H[2K[19;1H[2K[20;1H[2K[21;1H[2K[22;1H[2K[23;1H[2K[24;1H[2K[1;1H[0m[1;1H[2Kv                                                                               [0m[2;1H[2K                                                                                [0m[3;1H[2K                                                                                [0m[4;1H[2K                                                                                [0m[5;1H[2K                                                                                [0m[6;1H[2K                                                                                [0m[7;1H[2K                                                                                [0m[8;1H[2K                                                                                [0m[9;1H[2K                                                                                [0m[10;1H[2K                                                                                [0m[11;1H[2K                                                                                [0m[12;1H[2K                                                                                [0m[13;1H[2K                                                                                [0m[14;1H[2K                                                                                [0m[15;1H[2K                                                                                [0m[16;1H[2K                                                                                [0m[17;1H[2K                                                                                [0m[18;1H[2K                                                                                [0m[19;1H[2K                                                                                [0m[20;1H[2K                                                                                [0m[21;1H[2K                                                                                [0m[22;1H[2K                                                                                [0m[23;1H[2K                                                                                [0m[24;1H[2K                                                                                [0m[25;1H[?25h[23A[2K[2;1H[2K[3;1H[2K[4;1H[2K[5;1H[2K[6;1H[2K[7;1H[2K[8;1H[2K[9;1H[2K[10;1H[2K[11;1H[2K[12;1H[2K[13;1H[2K[14;1H[2K[15;1H[2K[16;1H[2K[17;1H[2K[18;1H[2K[19;1H[2K[20;1H[2K[21;1H[2K[22;1H[2K[23;1H[2K[24;1H[2K[1;1H[0m[1;1H[2K                                                                                [0m[2;1H[2K                                                                                [0m[3;1H[2K                                                                                [0m[4;1H[2K                                                                                [0m[5;1H[2K                                                                                [0m[6;1H[2K                                                                                [0m[7;1H[2K                                                                                [0m[8;1H[2K                                                                                [0m[9;1H[2K                                                                                [0m[10;1H[2K                                                                                [0m[11;1H[2K                                                                                [0m[12;1H[2K                                                                                [0m[13;1H[2K                                                                                [0m[14;1H[2K                                                                                [0m[15;1H[2K                                                                                [0m[16;1H[2K                                                                                [0m[17;1H[2K                                                                                [0m[18;1H[2K                                                                                [0m[19;1H[2K                                                                                [0m[20;1H[2K                                                                                [0m[21;1H[2K                                                                                [0m[22;1H[2K                                                                                [0m[23;1H[2K                                                                                [0m[24;1H[2K                                                                                [0m[25;1H[?25h[23A[2K[2;1H[2K[3;1H[2K[4;1H[2K[5;1H[2K[6;1H[2K[7;1H[2K[8;1H[2K[9;1H[2K[10;1H[2K[11;1H[2K[12;1H[2K[13;1H[2K[14;1H[2K[15;1H[2K[16;1H[2K[17;1H[2K[18;1H[2K[19;1H[2K[20;1H[2K[21;1H[2K[22;1H[2K[23;1H[2K[24;1H[2K[1;1H[0m[1;1H[2K                                                                                [0m[2;1H[2K                                                                                [0m[3;1H[2K                                                                                [0m[4;1H[2K                                                                                [0m[5;1H[2K                                                                                [0m[6;1H[2K                                                                                [0m[7;1H[2K                                                                                [0m[8;1H[2K                                                                                [0m[9;1H[2K                                                                                [0m[10;1H[2K                                                                                [0m[11;1H[2K                                                                                [0m[12;1H[2K                                                                                [0m[13;1H[2K                                                                                [0m[14;1H[2K                                                                                [0m[15;1H[2K                                                                                [0m[16;1H[2K                                                                                [0m[17;1H[2K                                                                                [0m[18;1H[2K                                                                                [0m[19;1H[2K                                                                                [0m[20;1H[2K                                                                                [0m[21;1H[2K                                                                                [0m[22;1H[2K                                                                                [0m[23;1H[2K                                                                                [0m[24;1H[2K                                                                                [0m[25;1H[?25h[23A[2K[2;1H[2K[3;1H[2K[4;1H[2K[5;1H[2K[6;1H[2K[7;1H[2K[8;1H[2K[9;1H[2K[10;1H[2K[11;1H[2K[12;1H[2K[13;1H[2K[14;1H[2K[15;1H[2K[16;1H[2K[17;1H[2K[18;1H[2K[19;1H[2K[20;1H[2K[21;1H[2K[22;1H[2K[23;1H[2K[24;1H[2K[1;1H[0m[1;1H[2Kv                                                                               [0m[2;1H[2K                                                                                [0m[3;1H[2K                                                                                [0m[4;1H[2K                                                                                [0m[5;1H[2K                                                                                [0m[6;1H[2K                                                                                [0m[7;1H[2K                                                                                [0m[8;1H[2K                                                                                [0m[9;1H[2K                                                                                [0m[10;1H[2K                                                                                [0m[11;1H[2K                                                                                [0m[12;1H[2K                                                                                [0m[13;1H[2K                                                                                [0m[14;1H[2K                                                                                [0m[15;1H[2K                                                                                [0m[16;1H[2K                                                                                [0m[17;1H[2K                                                                                [0m[18;1H[2K                                                                                [0m[19;1H[2K                                                                                [0m[20;1H[2K                                                                                [0m[21;1H[2K                                                                                [0m[22;1H[2K                                                                                [0m[23;1H[2K                                                                                [0m[24;1H[2K                                                                                [0m[25;1H[?25h✔ Test "Hooks surface configured custom streams" passed after 0.282 seconds.
+[23A[2K[2;1H[2K[3;1H[2K[4;1H[2K[5;1H[2K[6;1H[2K[7;1H[2K[8;1H[2K[9;1H[2K[10;1H[2K[11;1H[2K[12;1H[2K[13;1H[2K[14;1H[2K[15;1H[2K[16;1H[2K[17;1H[2K[18;1H[2K[19;1H[2K[20;1H[2K[21;1H[2K[22;1H[2K[23;1H[2K[24;1H[2K[1;1H[0m[1;1H[2Kv                                                                               [0m[2;1H[2K                                                                                [0m[3;1H[2K                                                                                [0m[4;1H[2K                                                                                [0m[5;1H[2K                                                                                [0m[6;1H[2K                                                                                [0m[7;1H[2K                                                                                [0m[8;1H[2K                                                                                [0m[9;1H[2K                                                                                [0m[10;1H[2K                                                                                [0m[11;1H[2K                                                                                [0m[12;1H[2K                                                                                [0m[13;1H[2K                                                                                [0m[14;1H[2K                                                                                [0m[15;1H[2K                                                                                [0m[16;1H[2K                                                                                [0m[17;1H[2K                                                                                [0m[18;1H[2K                                                                                [0m[19;1H[2K                                                                                [0m[20;1H[2K                                                                                [0m[21;1H[2K                                                                                [0m[22;1H[2K                                                                                [0m[23;1H[2K                                                                                [0m[24;1H[2K                                                                                [0m[25;1H[?25h[23A[2K[2;1H[2K[3;1H[2K[4;1H[2K[5;1H[2K[6;1H[2K[7;1H[2K[8;1H[2K[9;1H[2K[10;1H[2K[11;1H[2K[12;1H[2K[13;1H[2K[14;1H[2K[15;1H[2K[16;1H[2K[17;1H[2K[18;1H[2K[19;1H[2K[20;1H[2K[21;1H[2K[22;1H[2K[23;1H[2K[24;1H[2K[1;1H[0m[1;1H[2KTop                                                                             [0m[2;1H[2K                                                                                [0m[3;1H[2KBottom                                                                          [0m[4;1H[2K                                                                                [0m[5;1H[2K                                                                                [0m[6;1H[2K                                                                                [0m[7;1H[2K                                                                                [0m[8;1H[2K                                                                                [0m[9;1H[2K                                                                                [0m[10;1H[2K                                                                                [0m[11;1H[2K                                                                                [0m[12;1H[2K                                                                                [0m[13;1H[2K                                                                                [0m[14;1H[2K                                                                                [0m[15;1H[2K                                                                                [0m[16;1H[2K                                                                                [0m[17;1H[2K                                                                                [0m[18;1H[2K                                                                                [0m[19;1H[2K                                                                                [0m[20;1H[2K                                                                                [0m[21;1H[2K                                                                                [0m[22;1H[2K                                                                                [0m[23;1H[2K                                                                                [0m[24;1H[2K                                                                                [0m[25;1H[?25h[23A[2K[2;1H[2K[3;1H[2K[4;1H[2K[5;1H[2K[6;1H[2K[7;1H[2K[8;1H[2K[9;1H[2K[10;1H[2K[11;1H[2K[12;1H[2K[13;1H[2K[14;1H[2K[15;1H[2K[16;1H[2K[17;1H[2K[18;1H[2K[19;1H[2K[20;1H[2K[21;1H[2K[22;1H[2K[23;1H[2K[24;1H[2K[1;1H[0m[1;1H[2KCount: 0                                                                        [0m[2;1H[2K                                                                                [0m[3;1H[2K                                                                                [0m[4;1H[2K                                                                                [0m[5;1H[2K                                                                                [0m[6;1H[2K                                                                                [0m[7;1H[2K                                                                                [0m[8;1H[2K                                                                                [0m[9;1H[2K                                                                                [0m[10;1H[2K                                                                                [0m[11;1H[2K                                                                                [0m[12;1H[2K                                                                                [0m[13;1H[2K                                                                                [0m[14;1H[2K                                                                                [0m[15;1H[2K                                                                                [0m[16;1H[2K                                                                                [0m[17;1H[2K                                                                                [0m[18;1H[2K                                                                                [0m[19;1H[2K                                                                                [0m[20;1H[2K                                                                                [0m[21;1H[2K                                                                                [0m[22;1H[2K                                                                                [0m[23;1H[2K                                                                                [0m[24;1H[2K                                                                                [0m[25;1H[?25h✔ Test "No-focusables broadcast remains unaffected by manager" passed after 0.283 seconds.
+✔ Test "Box works with render() function and RenderHandle" passed after 0.283 seconds.
+✔ Test "Default environment streams are exposed with metadata" passed after 0.282 seconds.
+✔ Suite "RUNE-40: useStdin/Stdout/Stderr hooks" passed after 0.287 seconds.
+✔ Suite "RUNE-27 integration tests" passed after 0.287 seconds.
+[23A[2K[2;1H[2K[3;1H[2K[4;1H[2K[5;1H[2K[6;1H[2K[7;1H[2K[8;1H[2K[9;1H[2K[10;1H[2K[11;1H[2K[12;1H[2K[13;1H[2K[14;1H[2K[15;1H[2K[16;1H[2K[17;1H[2K[18;1H[2K[19;1H[2K[20;1H[2K[21;1H[2K[22;1H[2K[23;1H[2K[24;1H[2K[1;1H[0m[1;1H[2Kv                                                                               [0m[2;1H[2K                                                                                [0m[3;1H[2K                                                                                [0m[4;1H[2K                                                                                [0m[5;1H[2K                                                                                [0m[6;1H[2K                                                                                [0m[7;1H[2K                                                                                [0m[8;1H[2K                                                                                [0m[9;1H[2K                                                                                [0m[10;1H[2K                                                                                [0m[11;1H[2K                                                                                [0m[12;1H[2K                                                                                [0m[13;1H[2K                                                                                [0m[14;1H[2K                                                                                [0m[15;1H[2K                                                                                [0m[16;1H[2K                                                                                [0m[17;1H[2K                                                                                [0m[18;1H[2K                                                                                [0m[19;1H[2K                                                                                [0m[20;1H[2K                                                                                [0m[21;1H[2K                                                                                [0m[22;1H[2K                                                                                [0m[23;1H[2K                                                                                [0m[24;1H[2K                                                                                [0m[25;1H[?25h[?25l[?25l[25;1H[?25h[25;1H[?25h[?25l[25;1H[?25h[?25l✔ Test "Signed zeroes: 0.0 and -0.0 are distinct and trigger reruns" passed after 0.285 seconds.
+[25;1H[?25h[?25l[?25l[25;1H[?25h[?25l[25;1H[?25h[25;1H[?25h✔ Test "useRef identity persists across rerenders and does not trigger rerender on mutation" passed after 0.285 seconds.
+[?25l[?25l[25;1H[?25h[25;1H[?25h[?25l[25;1H[?25h✔ Test "useMemo recomputes only when deps change" passed after 0.285 seconds.
+[?25l[?25l[25;1H[?25h[?25l✔ Test "Concurrent clear/rerender/unmount is safe" passed after 0.285 seconds.
+[25;1H[?25h✔ Suite RenderHandleConcurrencyStressTests passed after 0.288 seconds.
+✔ Test "Custom Hashable with changing description triggers deps change" passed after 0.286 seconds.
+[?25l[25;1H[?25h[?25l✔ Test "Frame rate limiting allows frames when under limit" passed after 0.283 seconds.
+[25;1H[?25h✔ Suite LineDiffPerformanceTests passed after 0.288 seconds.
+✔ Test "Identity wrapper opts into object-identity dep semantics" passed after 0.286 seconds.
+[?25l[25;1H[?25h✔ Test "Double.nan encodes to a stable deps token across commits" passed after 0.286 seconds.
+✔ Suite "Hooks deps equality edge cases" passed after 0.289 seconds.
+All lines changing benchmark:
+  Line-diff: 9801 bytes, 266.72ms
+  Full redraw: 10445 bytes, 6.60ms
+  Efficiency: 0.0%
+[23A[2K[2;1H[2K[3;1H[2K[4;1H[2K[5;1H[2K[6;1H[2K[7;1H[2K[8;1H[2K[9;1H[2K[10;1H[2K[11;1H[2K[12;1H[2K[13;1H[2K[14;1H[2K[15;1H[2K[16;1H[2K[17;1H[2K[18;1H[2K[19;1H[2K[20;1H[2K[21;1H[2K[22;1H[2K[23;1H[2K[24;1H[2K[1;1H[0m[1;1H[2KCount: 0                                                                        [0m[2;1H[2K                                                                                [0m[3;1H[2K                                                                                [0m[4;1H[2K                                                                                [0m[5;1H[2K                                                                                [0m[6;1H[2K                                                                                [0m[7;1H[2K                                                                                [0m[8;1H[2K                                                                                [0m[9;1H[2K                                                                                [0m[10;1H[2K                                                                                [0m[11;1H[2K                                                                                [0m[12;1H[2K                                                                                [0m[13;1H[2K                                                                                [0m[14;1H[2K                                                                                [0m[15;1H[2K                                                                                [0m[16;1H[2K                                                                                [0m[17;1H[2K                                                                                [0m[18;1H[2K                                                                                [0m[19;1H[2K                                                                                [0m[20;1H[2K                                                                                [0m[21;1H[2K                                                                                [0m[22;1H[2K                                                                                [0m[23;1H[2K                                                                                [0m[24;1H[2K                                                                                [0m[25;1H[?25h✔ Test "Benchmark: All lines changing favors full redraw" passed after 0.283 seconds.
+✔ Test "State preserves across rerenders with stable identity" passed after 0.286 seconds.
+✔ Suite ViewStatePreservationTests passed after 0.289 seconds.
+[?25l[25;1H[?25h[?25l[25;1H[?25h✔ Test "useEffect deps sugar: nil runs every commit, [] mount-only, values trigger rerun" passed after 0.287 seconds.
+✔ Suite "Hooks additional tests: deps sugar, useRef, useMemo" passed after 0.290 seconds.
+[?25l[23A[2K[2;1H[2K[3;1H[2K[4;1H[2K[5;1H[2K[6;1H[2K[7;1H[2K[8;1H[2K[9;1H[2K[10;1H[2K[11;1H[2K[12;1H[2K[13;1H[2K[14;1H[2K[15;1H[2K[16;1H[2K[17;1H[2K[18;1H[2K[19;1H[2K[20;1H[2K[21;1H[2K[22;1H[2K[23;1H[2K[24;1H[2K[1;1H[0m[1;1H[2K┌──────────────────────────────────────────────────────────────────────────────┐[0m[2;1H[2K│[37m[1mAlt Screen Demo[39m[0m                                                               │[0m[3;1H[2K│                                                                              │[0m[4;1H[2K│                                                                              │[0m[5;1H[2K│                                                                              │[0m[6;1H[2K│                                                                              │[0m[7;1H[2K│                                                                              │[0m[8;1H[2K│                                                                              │[0m[9;1H[2K│                                                                              │[0m[10;1H[2K│                                                                              │[0m[11;1H[2K│                                                                              │[0m[12;1H[2K│                                                                              │[0m[13;1H[2K│                                                                              │[0m[14;1H[2K│                                                                              │[0m[15;1H[2K│                                                                              │[0m[16;1H[2K│                                                                              │[0m[17;1H[2K│                                                                              │[0m[18;1H[2K│                                                                              │[0m[19;1H[2K│                                                                              │[0m[20;1H[2K│                                                                              │[0m[21;1H[2K│                                                                              │[0m[22;1H[2K│                                                                              │[0m[23;1H[2K│                                                                              │[0m[24;1H[2K└──────────────────────────────────────────────────────────────────────────────┘[0m[25;1H[?25hNo changes benchmark:
+  Line-diff: 2092 bytes, 272.12ms
+  Full redraw: 21100 bytes, 10.41ms
+  Bytes saved: 19008
+  Efficiency: 90.0%
+✔ Test "Benchmark: No changes favor line-diff" passed after 0.292 seconds.
+✔ Test "Debounced resize burst triggers a single rerender" passed after 0.293 seconds.
+Single line changes benchmark:
+  Line-diff: 2966 bytes, 272.41ms
+  Full redraw: 21100 bytes, 11.16ms
+  Bytes saved: 18134
+  Efficiency: 85.5%
+✔ Test "Benchmark: Single line changes favor line-diff" passed after 0.293 seconds.
+✔ Test "In-place repaint without flicker" passed after 0.298 seconds.
+✔ Test "Frame buffer handles frame height shrinkage" passed after 0.297 seconds.
+✔ Test "Frame height shrinkage cleanup" passed after 0.298 seconds.
+✔ Suite AlternateScreenBufferTests passed after 0.301 seconds.
+Automatic mode benchmark:
+  Automatic: 13040 bytes, 273.73ms
+  Full redraw: 21100 bytes, 12.33ms
+  Bytes saved: 8060
+  Efficiency: 38.0%
+✔ Test "Benchmark: Automatic mode makes good decisions" passed after 0.296 seconds.
+✔ Suite "Line diff benchmark tests" passed after 0.301 seconds.
+[?25l✔ Test "Resize during render does not crash and yields a single repaint per burst" passed after 0.299 seconds.
+[23A[2K[2;1H[2K[3;1H[2K[4;1H[2K[5;1H[2K[6;1H[2K[7;1H[2K[8;1H[2K[9;1H[2K[10;1H[2K[11;1H[2K[12;1H[2K[13;1H[2K[14;1H[2K[15;1H[2K[16;1H[2K[17;1H[2K[18;1H[2K[19;1H[2K[20;1H[2K[21;1H[2K[22;1H[2K[23;1H[2K[24;1H[2K[1;1H[0m[1;1H[2K                                                                                [0m[2;1H[2K                                                                                [0m[3;1H[2K                                                                                [0m[4;1H[2K                                                                                [0m[5;1H[2K                                                                                [0m[6;1H[2K                                                                                [0m[7;1H[2K                                                                                [0m[8;1H[2K                                                                                [0m[9;1H[2K                                                                                [0m[10;1H[2K                                                                                [0m[11;1H[2K                                                                                [0m[12;1H[2K                                                                                [0m[13;1H[2K                                                                                [0m[14;1H[2K                                                                                [0m[15;1H[2K                                                                                [0m[16;1H[2K                                                                                [0m[17;1H[2K                                                                                [0m[18;1H[2K                                                                                [0m[19;1H[2K                                                                                [0m[20;1H[2K                                                                                [0m[21;1H[2K                                                                                [0m[22;1H[2K                                                                                [0m[23;1H[2K                                                                                [0m[24;1H[2K                                                                                [0m[25;1H[?25h✔ Test "Composite view body is converted to Box/Text and renders border glyphs" passed after 0.303 seconds.
+✔ Suite "Composite View resolution renders child components (no placeholders)" passed after 0.306 seconds.
+✔ Test "When no focusables are registered, useInput remains broadcast to all active handlers (back-compat)" passed after 0.311 seconds.
+✔ Test "Meta: ESC-prefixed ASCII letter is delivered" passed after 0.313 seconds.
+✔ Test "Two distinct bursts cause two rerenders" passed after 0.315 seconds.
+✔ Suite "Resize handling tests" passed after 0.320 seconds.
+✔ Test "Unsubscribe on unmount; no leaks" passed after 0.322 seconds.
+✔ Test "Multiple frame renders maintain state" passed after 0.322 seconds.
+✔ Suite "Frame buffer integration tests" passed after 0.325 seconds.
+[?25l[1S[24;1H                                                                                [25;1H[?25h✔ Test "F1-F4 (SS3), F6-F12 (CSI), Home/End/Page with modifiers, Shift+Ctrl" passed after 0.332 seconds.
+✔ Test "Hook receives arrow/function/ctrl/meta keys" passed after 0.335 seconds.
+✔ Suite "RUNE-38: useInput matrix" passed after 0.337 seconds.
+✔ Test "Global input handlers receive events regardless of focus; others are gated" passed after 0.342 seconds.
+✔ Test "Direct focus by id/path works" passed after 0.343 seconds.
+✔ Test "Tab advances focus via useFocusManager hook" passed after 0.342 seconds.
+✔ Suite "RUNE-41: useFocusManager hook integration" passed after 0.346 seconds.
+✔ Test "isActive gates handler" passed after 0.346 seconds.
+✔ Suite "RUNE-38: useInput hook" passed after 0.349 seconds.
+✔ Test "Tab cycles focus among focusable elements and gates input to focused one" passed after 0.374 seconds.
+✔ Suite "RUNE-41: Focus registry + useFocus/useFocusManager" passed after 0.378 seconds.
+✔ Test "Programmatic next/previous cycles focus and gates input" passed after 0.423 seconds.
+✔ Suite "RUNE-41: useFocusManager hook" passed after 0.427 seconds.
+✘ Test run with 609 tests failed after 0.427 seconds with 1 issue.

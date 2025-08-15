@@ -527,7 +527,7 @@ public actor TerminalRenderer {
     /// Write a sequence to the output
     func writeSequence(_ sequence: String) async {
         if let out = outEncoder {
-            out.write(sequence)
+            await out.write(sequence)
             return
         }
         if let writer {
@@ -550,7 +550,12 @@ public actor TerminalRenderer {
 
     /// Ensure any buffered output is flushed
     private func flushOutput() async {
-        if let writer { await writer.flush() }
+        // Always flush through the encoder to maintain serialization order
+        if let encoder = outEncoder {
+            await encoder.flush()
+        } else if let writer {
+            await writer.flush()
+        }
     }
 
     /// Disable terminal autowrap during rendering

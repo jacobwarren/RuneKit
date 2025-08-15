@@ -3,10 +3,17 @@ import Testing
 import TestSupport
 @testable import RuneANSI
 @testable import RuneComponents
+@testable import RuneKit
 @testable import RuneLayout
 
 /// Snapshot tests for Text style matrices (RUNE-35 acceptance)
 struct TextStyleSnapshotTests {
+
+    init() {
+        // Clean up shared state before each test to prevent interference between tests
+        StateRegistry.shared.clearAll()
+        StateObjectStore.shared.clearAll()
+    }
     private func render(_ text: Text) -> [String] {
         let rect = FlexLayout.Rect(x: 0, y: 0, width: 20, height: 1)
         return text.render(in: rect)

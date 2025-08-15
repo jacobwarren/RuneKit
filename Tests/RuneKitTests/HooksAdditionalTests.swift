@@ -6,6 +6,12 @@ import TestSupport
 
 @Suite("Hooks additional tests: deps sugar, useRef, useMemo", .enabled(if: !TestEnv.isCI))
 struct HooksAdditionalTests {
+
+    init() {
+        // Clean up shared state before each test to prevent interference between tests
+        StateRegistry.shared.clearAll()
+        StateObjectStore.shared.clearAll()
+    }
     struct V: View, ViewIdentifiable { var id: String; var viewIdentity: String? { id }; var body: some View { Text("v") } }
 
     // Helper that calls useMemo at a single call site to keep the key stable across rerenders

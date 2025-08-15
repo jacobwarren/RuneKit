@@ -1,10 +1,17 @@
 import Testing
 @testable import RuneANSI
 @testable import RuneComponents
+@testable import RuneKit
 @testable import RuneLayout
 @testable import RuneUnicode
 
 struct WrapEmojiClippingE2ETests {
+
+    init() {
+        // Clean up shared state before each test to prevent interference between tests
+        StateRegistry.shared.clearAll()
+        StateObjectStore.shared.clearAll()
+    }
     @Test("Wrap and clip emoji with borders without exceeding width")
     func wrapAndClipEmojiWithBorders() {
         // Container width forces wrapping/truncation

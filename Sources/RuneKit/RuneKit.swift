@@ -762,12 +762,22 @@ public actor RenderHandle {
     /// This provides a way to wait for the application to terminate gracefully,
     /// similar to Ink's waitUntilExit functionality.
     public func waitUntilExit() async {
-        // If already unmounted, return immediately
-        guard !isUnmounted else { return }
-
-        // Suspend until unmount() is called
-        await withCheckedContinuation { continuation in
-            exitContinuations.append(continuation)
+        // Atomically check state and register waiter to avoid TOCTOU race
+        let shouldWait = !isUnmounted
+        if shouldWait {
+            await withCheckedContinuation { continuation in
+                exitContinuations.append(continuation)
+                // Double-check after adding to waiters list to handle race where
+                // unmount finished between our check and adding to waiters
+                if isUnmounted {
+                    // Unmount finished while we were adding ourselves to waiters
+                    // Remove ourselves and resume immediately
+                    if !exitContinuations.isEmpty {
+                        _ = exitContinuations.removeLast()
+                    }
+                    continuation.resume()
+                }
+            }
         }
     }
 
@@ -1235,6 +1245,7 @@ public func render(_ view: some View, options: RenderOptions = RenderOptions.fro
         hideCursorDuringRender: true,
         useAlternateScreen: options.useAltScreen,
         enableConsoleCapture: options.patchConsole,
+        enablePluggableIO: true,
     )
 
     // Create frame buffer with custom output

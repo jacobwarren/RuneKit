@@ -2,9 +2,16 @@ import Foundation
 import Testing
 @testable import RuneANSI
 @testable import RuneComponents
+@testable import RuneKit
 @testable import RuneUnicode
 
 struct TextWrappingTests {
+
+    init() {
+        // Clean up shared state before each test to prevent interference between tests
+        StateRegistry.shared.clearAll()
+        StateObjectStore.shared.clearAll()
+    }
     @Test("wrappedLines preserves ANSI and avoids bleed with emojis/ZWJ/CJK")
     func wrappedLinesPreservesANSI() {
         // Arrange

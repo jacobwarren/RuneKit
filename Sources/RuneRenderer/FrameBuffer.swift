@@ -87,17 +87,22 @@ public actor FrameBuffer {
 
         // Create the terminal renderer and hybrid reconciler
         if configuration.enablePluggableIO {
-            // When pluggable IO is enabled, keep previous behavior (direct encoder)
-            let encoder = FileHandleOutputEncoder(handle: effectiveOutput)
+            // In pluggable mode, always use single-writer for consistency
+            // This ensures all terminal output (renderer, cursor, alt-screen) is properly serialized
+            let writer = OutputWriter(handle: effectiveOutput, bufferSize: configuration.performance.writeBufferSize)
+            let encoder = OutputWriterTerminalEncoder(writer: writer)
             let cursor = ANSICursorManager(out: encoder)
-            let renderer = TerminalRenderer(
+
+            // In pluggable mode, always route renderer through the encoder so that
+            // renderer and cursor operations share the same serialization path.
+            let renderer: TerminalRenderer = TerminalRenderer(
                 output: effectiveOutput,
                 encoder: encoder,
                 cursor: cursor,
-                configuration: configuration,
+                configuration: configuration
             )
-            // Initialize alternate screen if configured, using same encoder
-            let alt: AlternateScreenBuffer? = configuration.useAlternateScreen ? AlternateScreenBuffer(output: effectiveOutput, encoder: encoder) : nil
+            // Initialize alternate screen if configured, using same writer/encoder
+            let alt: AlternateScreenBuffer? = configuration.useAlternateScreen ? AlternateScreenBuffer(encoder: encoder, writer: writer) : nil
             self.alternateScreenBuffer = alt
             reconciler = HybridReconciler(renderer: renderer, configuration: configuration)
         } else {
@@ -105,7 +110,7 @@ public actor FrameBuffer {
             let writer = OutputWriter(handle: effectiveOutput, bufferSize: configuration.performance.writeBufferSize)
             let encoder = OutputWriterTerminalEncoder(writer: writer)
             let renderer = TerminalRenderer(output: effectiveOutput, writer: writer, configuration: configuration)
-            let alt: AlternateScreenBuffer? = configuration.useAlternateScreen ? AlternateScreenBuffer(output: effectiveOutput, encoder: encoder, writer: writer) : nil
+            let alt: AlternateScreenBuffer? = configuration.useAlternateScreen ? AlternateScreenBuffer(encoder: encoder, writer: writer) : nil
             self.alternateScreenBuffer = alt
             reconciler = HybridReconciler(renderer: renderer, configuration: configuration)
         }
