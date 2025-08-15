@@ -2,9 +2,16 @@ import Foundation
 import Testing
 @testable import RuneANSI
 @testable import RuneComponents
+@testable import RuneKit
 @testable import RuneUnicode
 
 struct BoxBorderBackgroundANSITests {
+
+    init() {
+        // Clean up shared state before each test to prevent interference between tests
+        StateRegistry.shared.clearAll()
+        StateObjectStore.shared.clearAll()
+    }
     @Test("Borders get colored and background fills content area without bleed")
     func borderAndBackgroundColoring() {
         let child = Text("A🙂B", color: .yellow)

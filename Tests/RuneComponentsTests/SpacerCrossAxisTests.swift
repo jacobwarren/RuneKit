@@ -1,9 +1,16 @@
 import Testing
 @testable import RuneComponents
+@testable import RuneKit
 @testable import RuneLayout
 @testable import RuneUnicode
 
 struct SpacerCrossAxisTests {
+
+    init() {
+        // Clean up shared state before each test to prevent interference between tests
+        StateRegistry.shared.clearAll()
+        StateObjectStore.shared.clearAll()
+    }
     @Test("Spacer remains minimal on cross-axis under alignItems: .stretch")
     func spacerMinimalCrossAxis() {
         let spacer = Spacer()

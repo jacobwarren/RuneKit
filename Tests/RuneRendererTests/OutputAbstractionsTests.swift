@@ -6,10 +6,10 @@ import TestSupport
 @Suite("Output abstractions tests", .enabled(if: !TestEnv.isCI))
 struct OutputAbstractionsTests {
     @Test("FileHandleOutputEncoder writes to pipe")
-    func fileHandleEncoderWrites() {
+    func fileHandleEncoderWrites() async {
         let pipe = Pipe(); defer { pipe.fileHandleForReading.closeFile() }
         let out = FileHandleOutputEncoder(handle: pipe.fileHandleForWriting)
-        out.write("hello")
+        await out.write("hello")
         pipe.fileHandleForWriting.closeFile()
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         let s = String(data: data, encoding: .utf8) ?? ""
@@ -17,11 +17,11 @@ struct OutputAbstractionsTests {
     }
 
     @Test("ANSICursorManager emits sequences")
-    func cursorManagerSequences() {
+    func cursorManagerSequences() async {
         let pipe = Pipe(); defer { pipe.fileHandleForReading.closeFile() }
         let out = FileHandleOutputEncoder(handle: pipe.fileHandleForWriting)
         let cm = ANSICursorManager(out: out)
-        cm.hide(); cm.show(); cm.clearScreen(); cm.clearLine(); cm.moveTo(row: 2, col: 3); cm.moveToColumn1()
+        await cm.hide(); await cm.show(); await cm.clearScreen(); await cm.clearLine(); await cm.moveTo(row: 2, col: 3); await cm.moveToColumn1()
         pipe.fileHandleForWriting.closeFile()
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         let s = String(data: data, encoding: .utf8) ?? ""

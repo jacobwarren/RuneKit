@@ -2,8 +2,15 @@ import Foundation
 import Testing
 @testable import RuneANSI
 @testable import RuneComponents
+@testable import RuneKit
 
 struct TextErgonomicsTests {
+
+    init() {
+        // Clean up shared state before each test to prevent interference between tests
+        StateRegistry.shared.clearAll()
+        StateObjectStore.shared.clearAll()
+    }
     @Test("Hex color helpers parse and apply when valid, ignore when invalid")
     func hexHelpers() {
         let t1 = Text("Hi").color(hex: "#FF0000")

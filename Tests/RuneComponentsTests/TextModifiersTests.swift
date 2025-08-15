@@ -2,9 +2,16 @@ import Foundation
 import Testing
 @testable import RuneANSI
 @testable import RuneComponents
+@testable import RuneKit
 @testable import RuneLayout
 
 struct TextModifiersTests {
+
+    init() {
+        // Clean up shared state before each test to prevent interference between tests
+        StateRegistry.shared.clearAll()
+        StateObjectStore.shared.clearAll()
+    }
     @Test("Chainable modifiers compose and render")
     func chainableModifiersCompose() {
         // Arrange

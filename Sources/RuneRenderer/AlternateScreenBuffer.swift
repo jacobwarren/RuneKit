@@ -60,20 +60,13 @@ public actor AlternateScreenBuffer {
 
     // MARK: - Initialization
 
-    /// Initialize alternate screen buffer with output handle or encoder
+    /// Initialize alternate screen buffer with shared encoder
     /// - Parameters:
-    ///   - output: File handle for terminal output (defaults to stdout)
-    ///   - encoder: Optional encoder to route writes through single writer
-    ///   - writer: Optional OutputWriter for atomic writes
+    ///   - encoder: Required encoder to route writes through the app's single writer path
+    ///   - writer: Optional OutputWriter for atomic writes (used only for writeAtomic)
     ///   - enableFallback: Whether to use fallback clear when alternate screen is unsupported
-    public init(output: FileHandle = .standardOutput, encoder: TerminalOutputEncoder? = nil, writer: OutputWriter? = nil, enableFallback: Bool = true) {
-        if let encoder {
-            self.encoder = encoder
-        } else if let writer {
-            self.encoder = OutputWriterTerminalEncoder(writer: writer)
-        } else {
-            self.encoder = FileHandleOutputEncoder(handle: output)
-        }
+    public init(encoder: TerminalOutputEncoder, writer: OutputWriter? = nil, enableFallback: Bool = true) {
+        self.encoder = encoder
         self.writer = writer
         self.enableFallback = enableFallback
     }
@@ -98,8 +91,9 @@ public actor AlternateScreenBuffer {
 
         if let writer {
             await writer.writeAtomic(Self.enterSequence)
+            await writer.flush()
         } else {
-            encoder.write(Self.enterSequence)
+            await encoder.write(Self.enterSequence)
         }
 
         _isActive = true
@@ -118,8 +112,9 @@ public actor AlternateScreenBuffer {
 
         if let writer {
             await writer.writeAtomic(Self.leaveSequence)
+            await writer.flush()
         } else {
-            encoder.write(Self.leaveSequence)
+            await encoder.write(Self.leaveSequence)
         }
 
         _isActive = false
@@ -169,6 +164,6 @@ public actor AlternateScreenBuffer {
     /// and moving the cursor to the home position. This is used when
     /// alternate screen buffer is not supported.
     public func clearScreen() async {
-        encoder.write(Self.fallbackClearSequence)
+        await encoder.write(Self.fallbackClearSequence)
     }
 }

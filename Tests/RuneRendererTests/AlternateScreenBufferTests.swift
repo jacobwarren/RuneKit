@@ -13,11 +13,11 @@ struct AlternateScreenBufferTests {
     @Test("AlternateScreenBuffer initialization")
     func alternateScreenBufferInitialization() async {
         // Arrange
-        let cap = PipeCapture()
-        let output = cap.start()
+        let cap = PipeCapture(); let output = cap.start()
+        let encoder = FileHandleOutputEncoder(handle: output)
 
         // Act
-        let altScreen = AlternateScreenBuffer(output: output)
+        let altScreen = AlternateScreenBuffer(encoder: encoder)
 
         // Assert
         let isActive = await altScreen.isActive
@@ -30,9 +30,9 @@ struct AlternateScreenBufferTests {
     @Test("AlternateScreenBuffer enter sequence")
     func alternateScreenBufferEnterSequence() async {
         // Arrange
-        let cap = PipeCapture()
-        let output = cap.start()
-        let altScreen = AlternateScreenBuffer(output: output)
+        let cap = PipeCapture(); let output = cap.start()
+        let encoder = FileHandleOutputEncoder(handle: output)
+        let altScreen = AlternateScreenBuffer(encoder: encoder)
 
         // Act
         await altScreen.enter()
@@ -48,9 +48,9 @@ struct AlternateScreenBufferTests {
     @Test("AlternateScreenBuffer leave sequence")
     func alternateScreenBufferLeaveSequence() async {
         // Arrange
-        let cap = PipeCapture()
-        let output = cap.start()
-        let altScreen = AlternateScreenBuffer(output: output)
+        let cap = PipeCapture(); let output = cap.start()
+        let encoder = FileHandleOutputEncoder(handle: output)
+        let altScreen = AlternateScreenBuffer(encoder: encoder)
 
         // Enter first, then leave
         await altScreen.enter()
@@ -70,9 +70,9 @@ struct AlternateScreenBufferTests {
     @Test("AlternateScreenBuffer double enter is safe")
     func alternateScreenBufferDoubleEnterIsSafe() async {
         // Arrange
-        let cap = PipeCapture()
-        let output = cap.start()
-        let altScreen = AlternateScreenBuffer(output: output)
+        let cap = PipeCapture(); let output = cap.start()
+        let encoder = FileHandleOutputEncoder(handle: output)
+        let altScreen = AlternateScreenBuffer(encoder: encoder)
 
         // Act - Enter twice
         await altScreen.enter()
@@ -90,9 +90,9 @@ struct AlternateScreenBufferTests {
     @Test("AlternateScreenBuffer double leave is safe")
     func alternateScreenBufferDoubleLeaveIsSafe() async {
         // Arrange
-        let cap = PipeCapture()
-        let output = cap.start()
-        let altScreen = AlternateScreenBuffer(output: output)
+        let cap = PipeCapture(); let output = cap.start()
+        let encoder = FileHandleOutputEncoder(handle: output)
+        let altScreen = AlternateScreenBuffer(encoder: encoder)
 
         // Enter first, then leave twice
         await altScreen.enter()
@@ -113,11 +113,11 @@ struct AlternateScreenBufferTests {
     @Test("AlternateScreenBuffer explicit cleanup")
     func alternateScreenBufferExplicitCleanup() async {
         // Arrange
-        let cap = PipeCapture()
-        let output = cap.start()
+        let cap = PipeCapture(); let output = cap.start()
+        let encoder = FileHandleOutputEncoder(handle: output)
 
         // Act - Create, enter, and explicitly leave alternate screen
-        let altScreen = AlternateScreenBuffer(output: output)
+        let altScreen = AlternateScreenBuffer(encoder: encoder)
         await altScreen.enter()
         await altScreen.leave()
 
@@ -310,7 +310,8 @@ struct AlternateScreenBufferTests {
         let output = cap.start()
 
         // Create alternate screen buffer with fallback disabled
-        let altScreen = AlternateScreenBuffer(output: output, enableFallback: false)
+        let encoder = FileHandleOutputEncoder(handle: output)
+        let altScreen = AlternateScreenBuffer(encoder: encoder, enableFallback: false)
 
         // Act
         await altScreen.enterWithFallback()
@@ -331,7 +332,8 @@ struct AlternateScreenBufferTests {
         let output = cap.start()
 
         // Create alternate screen buffer with fallback enabled
-        let altScreen = AlternateScreenBuffer(output: output, enableFallback: true)
+        let encoder = FileHandleOutputEncoder(handle: output)
+        let altScreen = AlternateScreenBuffer(encoder: encoder, enableFallback: true)
 
         // Act
         await altScreen.enterWithFallback()

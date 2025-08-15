@@ -73,6 +73,9 @@ public struct RenderConfiguration: Sendable {
     /// Feature flag: allow public injection of OutputEncoder/CursorManager
     public let enablePluggableIO: Bool
 
+
+
+
     /// Whether to disable DECAWM autowrap during render to prevent last-column spill
     public let disableAutowrapDuringRender: Bool
 
@@ -127,7 +130,7 @@ public struct RenderConfiguration: Sendable {
 
     /// Default configuration optimized for most use cases
     /// Uses line-diff optimization with balanced performance settings
-    public static let `default` = RenderConfiguration(enablePluggableIO: false)
+    public static let `default` = RenderConfiguration(enablePluggableIO: true)
 
     /// High-performance configuration for fast terminals
     /// Aggressive optimization settings for maximum throughput

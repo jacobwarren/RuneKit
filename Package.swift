@@ -69,7 +69,8 @@ let package = Package(
         ),
         .target(
             name: "RuneUnicode",
-            dependencies: ["Cutf8proc"]
+            dependencies: ["Cutf8proc"],
+            exclude: ["Generated/README.md"]
         ),
         .target(
             name: "RuneLayout",
@@ -107,7 +108,8 @@ let package = Package(
         .target(
             name: "TestSupport",
             dependencies: [],
-            path: "Sources/TestSupport"
+            path: "Sources/TestSupport",
+            exclude: ["__snapshots__"]
         ),
 
         // CLI executable
