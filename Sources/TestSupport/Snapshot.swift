@@ -24,12 +24,12 @@ public enum Snapshot {
 
         if regenerate {
             try? content.write(to: fileURL, atomically: true, encoding: .utf8)
-            #expect(true, "Regenerated snapshot: \(fileURL.path)")
+            #expect(Bool(true), "Regenerated snapshot: \(fileURL.path)")
             return
         }
 
         guard let data = try? Data(contentsOf: fileURL), let expected = String(data: data, encoding: .utf8) else {
-            #expect(false, "Missing snapshot file: \(fileURL.path). Run with RUNEKIT_REGENERATE_SNAPSHOTS=1 to create.")
+            #expect(Bool(false), "Missing snapshot file: \(fileURL.path). Run with RUNEKIT_REGENERATE_SNAPSHOTS=1 to create.")
             return
         }
         let actual = content
